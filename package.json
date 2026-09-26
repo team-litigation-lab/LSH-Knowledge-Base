@@ -1,0 +1,15 @@
+{
+  "name": "lsh-knowledge-base",
+  "version": "1.0.0",
+  "description": "LSH Knowledge Base: the LSH VA community library",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "seed:local": "wrangler d1 execute lshcasemanagementtraining-trainingcrmlogins --local --file tests/seed-accounts.sql && wrangler d1 execute lsh-training-activities-db --local --file tests/seed-old-kb.sql",
+    "test": "python3 tests/e2e.py"
+  },
+  "dependencies": {
+    "wrangler": "^3.114.17"
+  },
+  "private": true
+}

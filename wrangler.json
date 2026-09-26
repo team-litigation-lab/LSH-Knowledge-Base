@@ -1,0 +1,13 @@
+{
+  "name": "lsh-knowledge-base",
+  "main": "src/index.js",
+  "compatibility_date": "2024-09-23",
+  "assets": { "directory": "public", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "TRAINING_DB", "database_name": "lsh-training-activities-db", "database_id": "6d23429e-e69b-413b-b9fe-0e724f7992e7" },
+    { "binding": "DB", "database_name": "lshcasemanagementtraining-trainingcrmlogins", "database_id": "9b1afc1b-a26f-4fc2-aadf-acb9e704b75f" }
+  ],
+  "r2_buckets": [
+    { "binding": "FILES", "bucket_name": "lshtraining" }
+  ]
+}
