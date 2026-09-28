@@ -29,7 +29,7 @@ h3{font-size:16px;margin:0 0 6px;}
 .top{background:var(--navy-deep);color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 1px 0 rgba(255,255,255,.06);}
 .top-in{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:10px;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;}
-.brand img{border-radius:8px;}
+.brand img{border-radius:0;background:#fff;padding:3px;object-fit:contain;}
 .brand b{display:block;font-size:16px;letter-spacing:.01em;}
 .brand small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#aab6cf;}
 .top-search{flex:1;min-width:220px;max-width:520px;}
