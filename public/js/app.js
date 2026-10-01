@@ -718,5 +718,10 @@
         };
     }
 
+    // 📊 Server request meter, for admins: how much of the Cloudflare account's monthly request allowance
+    // (shared by every LSH site) is used (js/request-budget.js; README → Server request meter).
+    if (window.RequestBudget) RequestBudget.start({ load: () => api('/api/request-budget'), isAdmin: () => !!(S.session && S.session.admin), site: 'lsh-knowledge-base',
+        offset: { x: 16, y: 76 } });   // above the toasts (bottom centre)
+
     route();
 })();
