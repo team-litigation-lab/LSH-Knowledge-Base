@@ -43,6 +43,9 @@ export default {
                     if (!reader.admin) return fail('Admin sign-in required.', 403);
                     if (seg[1] === 'export') return await exportAll(ctx);
                     return write ? await adminAction(ctx) : await adminInfo(ctx);
+                case 'request-budget':
+                    if (!reader.admin) return fail('Admin sign-in required.', 403);
+                    return await requestBudget(ctx);
             }
             return fail('Not found.', 404);
         } catch (err) {
@@ -592,4 +595,14 @@ async function exportAll({ db }) {
     };
     return new Response(JSON.stringify(out, null, 1), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store',
         'Content-Disposition': `attachment; filename="lsh-knowledge-base-${out.exportedAt.slice(0, 10)}.json"` } });
+}
+
+// 📊 The month's server requests for the admins' meter (public/js/request-budget.js; README → Server request
+// meter), as the Request budget workflow in EA-PA-TRAINING saved them to the shared LSH_KV namespace
+// ("_request-usage"), without its own working data. usage is null until it has run.
+async function requestBudget({ env }) {
+    const raw = env.LSH_KV ? await env.LSH_KV.get('_request-usage') : null;
+    let usage = null;
+    if (raw) { try { usage = JSON.parse(raw); delete usage.cache; } catch (e) { usage = null; } }
+    return json({ success: true, ok: true, usage });
 }

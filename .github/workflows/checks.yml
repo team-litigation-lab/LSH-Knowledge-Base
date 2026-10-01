@@ -1,0 +1,56 @@
+# Runs on every pull request and every push to the default branch (claude/brave-newton-xors2t, or main if it's
+# renamed). A failure shows as a red "Checks" status on the PR/commit with a readable log, and GitHub emails the
+# person who pushed. Nothing here deploys.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [claude/brave-newton-xors2t, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Build and browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Wrangler, Playwright (Python for the end-to-end tests, Node for the meter test) and Chromium
+        run: |
+          npm ci
+          pip install playwright
+          python -m playwright install --with-deps chromium
+          npm install --no-save --no-package-lock --prefix "$RUNNER_TEMP/pw" playwright@1.56.1
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+          npm pack pdfjs-dist@3.11.174 --pack-destination "$RUNNER_TEMP"
+          mkdir -p tests/.cache/pdfjs && tar xzf "$RUNNER_TEMP/pdfjs-dist-3.11.174.tgz" -C tests/.cache/pdfjs
+      - name: Build the Worker without deploying (wrangler dry run)
+        run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/dist"
+      - name: Start the site locally (fresh data, seeded)
+        run: |
+          npm run seed:local
+          echo "SESSION_SECRET=ci-secret" > .dev.vars
+          npx wrangler dev --port 8787 --ip 127.0.0.1 > "$RUNNER_TEMP/dev.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && break; sleep 1; done
+      - name: End-to-end (sign-in, import, uploads, video, search, review, history)
+        run: python tests/e2e.py || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
+      - name: Server request meter (admins only, on the server and the page; the meter itself)
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+        run: |
+          python tests/request_meter.py || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
+          node tests/request-meter-widget.cjs public/js/request-budget.js
