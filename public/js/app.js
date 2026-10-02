@@ -10,6 +10,7 @@
     const app = document.getElementById('app');
     const esc = window.KBmd.esc;
     const S = { session: null, lib: null, sections: {} };
+    window.KB_SESSION = () => S.session;   // for the 🧭 Blueprint (blueprint-content.js): who is signed in
     let leaveGuard = null;   // set while uploads are running
 
     /* ---------- helpers ---------- */
@@ -92,6 +93,7 @@
             `<a class="cta" href="#/new">+ Add to the library</a>`,
             `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Sign out</button>`
         ].join('');
+        if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
         document.getElementById('signout').onclick = async () => {
             await post('/api/session', { action: s.admin ? 'admin-logout' : 'signout' }).catch(() => {});
             S.session = null; S.lib = null; location.hash = '#/'; route();
@@ -718,10 +720,6 @@
         };
     }
 
-    // 📊 Server request meter, for admins: how much of the Cloudflare account's monthly request allowance
-    // (shared by every LSH site) is used (js/request-budget.js; README → Server request meter).
-    if (window.RequestBudget) RequestBudget.start({ load: () => api('/api/request-budget'), isAdmin: () => !!(S.session && S.session.admin), site: 'lsh-knowledge-base',
-        offset: { x: 16, y: 76 } });   // above the toasts (bottom centre)
 
     route();
 })();
