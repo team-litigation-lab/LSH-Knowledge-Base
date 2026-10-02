@@ -9,8 +9,5 @@
   ],
   "r2_buckets": [
     { "binding": "FILES", "bucket_name": "lshtraining" }
-  ],
-  "kv_namespaces": [
-    { "binding": "LSH_KV", "id": "b121aa911590471bbad351d03274d7f4" }
   ]
 }
