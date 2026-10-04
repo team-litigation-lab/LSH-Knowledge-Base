@@ -35,6 +35,7 @@ The LSH VA community library: official SOPs, training videos, guides and know-ho
 - **Admin blueprint** (shown as the Trainer blueprint; admins only; a cover and 8 slides): signing in as an admin, the team access code, the review queue, reviewers, Official and Featured, history, restore, archive and delete, collections and sections, and import and backup.
 - Admins get both as tabs; VAs and reviewers only the VA deck.
 - **Moving around:** ◀ ▶, the ← → keys or the contents strip. Esc closes it.
+- **Numbering:** the cover is ★ Cover (the counter says "Cover · 8 slides"); the slides are 1 to 8 everywhere: the contents strip, the counter ("8 / 8" on the last), the slide's heading and footer, and the PDF's page footers.
 - **⬇ Download PDF:** the deck that's showing, as a landscape PDF with one page per slide, made from the deployed site each time and stamped with the deploy (the page's ETag) and the date.
 - **Files:** the slides are in `public/js/blueprint-content.js`. `public/js/lsh-blueprint.js` (the page and the PDFs) is the same file on every LSH platform: change it in one, copy it to all. Test: `tests/blueprint.cjs`.
 
@@ -98,6 +99,6 @@ The tests cover:
 - video Range requests and playback
 - search inside a PDF
 - suggestions, review, history, restore, official, archive and purge
-- the 🧭 Blueprint (`tests/blueprint.cjs`): a VA gets the VA deck only and an admin both; every slide fits on a laptop and on a phone; both PDFs have a page per slide
+- the 🧭 Blueprint (`tests/blueprint.cjs`): a VA gets the VA deck only and an admin both; every slide fits on a laptop and on a phone; both PDFs have a page per slide; the numbers match everywhere (Cover, then 1 to n, never n + 1)
 
 **Checks on GitHub** (`.github/workflows/checks.yml`): every pull request and every push to the default branch builds the Worker without deploying (`wrangler deploy --dry-run`) and runs all of the tests above against a local `wrangler dev` with fresh, seeded data. A red **Checks** status means something broke; the log says which step.
