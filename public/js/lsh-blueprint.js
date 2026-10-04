@@ -1,8 +1,9 @@
 /* =========================================================
    🧭 LSH BLUEPRINT — the same file on every LSH platform (change it in one, copy it to all)
-   A full-screen slide deck that explains a platform, in two versions:
+   A full-screen slide deck that explains a platform, in two versions (three where a platform has an Admin deck):
    - the Trainee blueprint, for trainees;
-   - the Trainer blueprint, for admins only.
+   - the Trainer blueprint, for admins only;
+   - the Admin blueprint (optional), for whoever canAdmin() says: the person who runs the platform itself.
    Trainees (and an admin in Trainee view) get the trainee deck only; admins get both as tabs,
    so they can share the Trainee blueprint in Google Meet. ◀ ▶, the ← → keys or the contents strip
    move through it; Esc closes it. ⬇ Download PDF saves the deck that's showing: a landscape PDF,
@@ -14,15 +15,23 @@
      product   the platform's name on the cover, e.g. "Case Management System"
      site      the footer line, e.g. "LSH Case Management System"
      file      the PDF file name's start, e.g. "LSH_CMS" → LSH_CMS_Blueprint_Trainee.pdf
-     logo      an image for the navy cover band (the white-lettered LSH logo)
+     logo      an image for the navy cover band (the white-lettered LSH logo, or with brand: the LSH mark)
+     brand     optional: the name shown as real text under the logo, e.g. "Legal Support Help" (sharp at any
+               size; a name drawn into the logo image blurs when it's scaled down)
      trainee   { sub, slides } or null      trainer   { sub, slides } or null
-               a slide is { icon, title, points: [...], where, tip }
+     admin     { sub, slides } or null (optional), shown only when canAdmin() returns true
+               a slide is { icon, title, points: [...], where, tip, shot, shotAlt }
+               shot (optional): a screenshot of the platform for that slide (a .jpg or .png path), shown
+               beside the points and in the PDF; a click on it shows it full size. shotAlt describes it.
+     canAdmin()   optional: may this admin see the Admin blueprint? (no function: nobody does)
      role()    'trainer' (an admin, not in Trainee view), 'trainee', or null (signed out)
      version() the platform's version (a string, or a Promise of one)
      mount(html)  optional: puts the "🧭 Blueprint" button (html) where the platform wants it
      traineeTab   optional { label, open() }: the trainee deck lives elsewhere (the courses'
                   Orientation); the tab calls open() instead of showing a deck
-   API: LSHBlueprint.open('trainer'|'trainee'), .close(), .go(n, absolute), .deck(which), .pdf()
+   Numbering: the cover is the Cover (★); the slides are 1 to n, the same on the buttons, the counter, the
+   slide's kicker and footer, and the PDF's footers.
+   API: LSHBlueprint.open('admin'|'trainer'|'trainee'), .close(), .go(n, absolute), .deck(which), .pdf(), .zoom(src)
    ========================================================= */
 (function () {
     'use strict';
@@ -31,7 +40,9 @@
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cfg = () => window.LSH_BLUEPRINT || {};
     const role = () => { try { return (cfg().role && cfg().role()) || null; } catch (e) { return null; } };
-    const NAMES = { trainee: 'Trainee blueprint', trainer: 'Trainer blueprint' };
+    const NAMES = { trainee: 'Trainee blueprint', trainer: 'Trainer blueprint', admin: 'Admin blueprint' };
+    const FILES = { trainee: 'Trainee', trainer: 'Trainer', admin: 'Admin' };
+    const canAdmin = () => { try { return typeof cfg().canAdmin === 'function' && !!cfg().canAdmin(); } catch (e) { return false; } };
     const deckOf = (which) => { const d = cfg()[which]; return d && d.slides && d.slides.length ? Object.assign({ key: which, name: NAMES[which] }, d) : null; };
     let cur = 'trainee', at = 0, version = '';
 
@@ -54,7 +65,7 @@
     #lbp-nav{display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
     #lbp-nav>button{width:40px;height:34px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f2148;font-size:13px;font-weight:800;cursor:pointer}
     #lbp-nav>button:disabled{opacity:.35;cursor:default}
-    #lbp-count{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700;color:#475569;min-width:52px;text-align:center}
+    #lbp-count{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:700;color:#475569;min-width:52px;text-align:center;white-space:nowrap}
     #lbp-toc{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
     #lbp-toc button{min-width:26px;height:26px;padding:0 6px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-size:11px;font-weight:800;cursor:pointer}
     #lbp-toc button.on{background:#0f2148;border-color:#0f2148;color:#fff;box-shadow:inset 0 -2px 0 #f97316}
@@ -66,12 +77,15 @@
     .lbp-cover{height:100%;display:flex;flex-direction:column}
     .lbp-cover-top{display:flex;align-items:center;gap:48px;background:#0f2148;border-bottom:6px solid #f97316;padding:46px 70px 42px}
     .lbp-cover-logo{height:128px;width:auto;display:block;flex-shrink:0}
+    .lbp-brand{display:flex;flex-direction:column;align-items:center;gap:12px;flex-shrink:0}
+    .lbp-brand img{height:112px;width:auto;display:block}
+    #lbp-slide .lbp-brand-name{color:#fff;font-size:17px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1.1;-webkit-font-smoothing:antialiased}
     .lbp-cover h1{margin:8px 0 0;color:#fff;font-size:50px;font-weight:800;letter-spacing:.01em;line-height:1.1}
     .lbp-cover-body{flex:1;min-height:0;padding:34px 70px 24px;display:flex;flex-direction:column}
     .lbp-cover-sub{margin:0 0 26px;font-size:26px;color:#334155;font-weight:600}
     .lbp-contents{list-style:none;margin:0;padding:0;columns:2;column-gap:50px;flex:1}
     .lbp-contents li{break-inside:avoid;display:flex;align-items:center;gap:14px;font-size:calc(22px * var(--lbp-k,1));color:#1e293b;margin-bottom:calc(15px * var(--lbp-k,1))}
-    .lbp-contents li span{flex:0 0 auto;width:32px;height:28px;border-radius:6px;background:#f97316;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center}
+    .lbp-contents li span{flex:0 0 auto;width:calc(32px * var(--lbp-k,1));height:calc(28px * var(--lbp-k,1));border-radius:6px;background:#f97316;color:#fff;font-size:calc(15px * var(--lbp-k,1));font-weight:800;display:flex;align-items:center;justify-content:center}
     .lbp-version{font-size:14px;font-weight:700;color:#94a3b8;letter-spacing:.03em}
     .lbp-card{height:100%;display:flex;flex-direction:column}
     .lbp-head{display:flex;align-items:center;gap:24px;background:#0f2148;padding:30px 52px 28px;border-bottom:6px solid #f97316}
@@ -86,14 +100,32 @@
     .lbp-where{background:#f1f5f9;border:1px solid #e2e8f0}
     .lbp-tip{background:#fff7ed;border:1px solid #fed7aa;border-left:6px solid #f97316}
     #lbp-slide .lbp-tip .lbp-label{color:#c2410c}
+    .lbp-main.lbp-has-shot{gap:36px}
+    .lbp-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:calc(20px * var(--lbp-k,1))}
+    .lbp-col.lbp-col-shot{flex:0 0 calc(560px * var(--lbp-k,1))}
+    .lbp-col .lbp-points{flex:1 1 auto}
+    .lbp-col .lbp-side{flex:0 0 auto}
+    .lbp-shot{margin:0;display:block;border-radius:10px;overflow:hidden;border:1px solid #cbd5e1;box-shadow:0 6px 18px rgba(15,33,72,.14);cursor:zoom-in;background:#f8fafc;position:relative}
+    .lbp-shot img{display:block;width:100%;height:auto}
+    .lbp-shot span{position:absolute;right:8px;bottom:8px;background:rgba(15,33,72,.82);color:#fff;font-size:12px;font-weight:800;letter-spacing:.04em;padding:5px 9px;border-radius:6px}
+    #lbp-zoom{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;background:rgba(15,33,72,.94);cursor:zoom-out;padding:44px 20px 16px}
+    #lbp-zoom.open{display:flex}
+    #lbp-zoom img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.4);background:#fff}
+    #lbp-zoom span{position:absolute;top:14px;right:20px;color:#fff;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
     .lbp-foot{display:flex;justify-content:space-between;gap:20px;padding:14px 52px 18px;border-top:1px solid #e2e8f0;font-size:14px;font-weight:700;color:#94a3b8;letter-spacing:.04em}
     #lbp-slide.portrait .lbp-head{padding:28px 34px;gap:18px}
     #lbp-slide.portrait .lbp-head h1{font-size:36px}
     #lbp-slide.portrait .lbp-main{flex-direction:column;padding:28px 34px 16px;gap:22px}
     #lbp-slide.portrait .lbp-points li{font-size:calc(23px * var(--lbp-k,1))}
     #lbp-slide.portrait .lbp-side{flex:0 0 auto}
+    #lbp-slide.portrait .lbp-col,#lbp-slide.portrait .lbp-col.lbp-col-shot{flex:0 0 auto}
+    .lbp-shot .lbp-shot-btn{display:none}
+    #lbp-slide.portrait .lbp-shot{background:#0f2148;border-color:#0f2148;box-shadow:none}
+    #lbp-slide.portrait .lbp-shot img,#lbp-slide.portrait .lbp-shot .lbp-shot-hint{display:none}
+    #lbp-slide.portrait .lbp-shot .lbp-shot-btn{display:block;position:static;background:none;padding:14px 16px;font-size:19px;text-align:center}
     #lbp-slide.portrait .lbp-foot{padding:12px 34px 16px}
     #lbp-slide.portrait .lbp-cover-top{flex-direction:column;align-items:flex-start;gap:24px;padding:40px 36px 34px}
+    #lbp-slide.portrait .lbp-brand img{height:96px}
     #lbp-slide.portrait .lbp-cover h1{font-size:40px}
     #lbp-slide.portrait .lbp-cover-body{padding:30px 36px}
     #lbp-slide.portrait .lbp-cover-sub{font-size:23px}
@@ -124,6 +156,7 @@
                     <button id="lbp-next" type="button" onclick="LSHBlueprint.go(1)" aria-label="Next slide">▶</button>
                 </div>
             </div>
+            <div id="lbp-zoom" role="dialog" aria-label="Screenshot, full size" onclick="LSHBlueprint.zoom()"><img alt=""><span>✕ Close · Esc</span></div>
         </div>`);
         if (window.ResizeObserver) new ResizeObserver(() => fit()).observe($id('lbp-stage'));
         window.addEventListener('resize', fit);
@@ -143,7 +176,8 @@
         if (i === 0) {
             return `<div class="lbp-cover">
                 <div class="lbp-cover-top">
-                    ${c.logo ? `<img src="${esc(c.logo)}" alt="Legal Support Help" class="lbp-cover-logo">` : ''}
+                    ${c.logo && c.brand ? `<div class="lbp-brand" role="img" aria-label="${esc(c.brand)}"><img src="${esc(c.logo)}" alt=""><div class="lbp-brand-name">${esc(c.brand)}</div></div>`
+                      : c.logo ? `<img src="${esc(c.logo)}" alt="Legal Support Help" class="lbp-cover-logo">` : ''}
                     <div><div class="lbp-kicker">${esc(d.name)}</div><h1>${esc(c.product || 'LSH Platform')}</h1></div>
                 </div>
                 <div class="lbp-cover-body">
@@ -154,19 +188,26 @@
             </div>`;
         }
         const s = d.slides[i - 1];
+        const points = `<ul class="lbp-points">${(s.points || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul>`;
+        const where = s.where ? `<div class="lbp-where"><div class="lbp-label">Where to find it</div>${esc(s.where)}</div>` : '';
+        const tip = s.tip ? `<div class="lbp-tip"><div class="lbp-label">Tip</div>${esc(s.tip)}</div>` : '';
+        // with a screenshot: the points and the tip on the left; the screenshot and where to find it on the right
+        const main = s.shot
+            ? `<div class="lbp-main lbp-has-shot">
+                <div class="lbp-col">${points}${tip ? `<div class="lbp-side">${tip}</div>` : ''}</div>
+                <div class="lbp-col lbp-col-shot">
+                    <figure class="lbp-shot" title="Click to see it full size" onclick="LSHBlueprint.zoom(this.querySelector('img').getAttribute('src'))"><img src="${esc(s.shot)}" alt="${esc(s.shotAlt || 'A screenshot: ' + s.title)}"><span class="lbp-shot-hint">🔍 Click to enlarge</span><span class="lbp-shot-btn">🖼 See the screen</span></figure>
+                    ${where ? `<div class="lbp-side">${where}</div>` : ''}
+                </div>
+            </div>`
+            : `<div class="lbp-main">${points}<div class="lbp-side">${where}${tip}</div></div>`;
         return `<div class="lbp-card">
             <div class="lbp-head">
                 <div class="lbp-icon">${esc(s.icon || '•')}</div>
                 <div><div class="lbp-kicker">${esc(d.name)} · ${i} of ${total - 1}</div><h1>${esc(s.title)}</h1></div>
             </div>
-            <div class="lbp-main">
-                <ul class="lbp-points">${(s.points || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-                <div class="lbp-side">
-                    ${s.where ? `<div class="lbp-where"><div class="lbp-label">Where to find it</div>${esc(s.where)}</div>` : ''}
-                    ${s.tip ? `<div class="lbp-tip"><div class="lbp-label">Tip</div>${esc(s.tip)}</div>` : ''}
-                </div>
-            </div>
-            <div class="lbp-foot"><span>${esc(c.site || '')}</span><span>${i + 1} / ${total}</span></div>
+            ${main}
+            <div class="lbp-foot"><span>${esc(c.site || '')}</span><span>${i} / ${total - 1}</span></div>
         </div>`;
     }
 
@@ -180,10 +221,13 @@
         slide.classList.toggle('portrait', portrait);
         slide.style.width = BW + 'px'; slide.style.height = BH + 'px';
         slide.style.transform = `translate(-50%, -50%) scale(${Math.max(0.1, Math.min(W / BW, H / BH))})`;
-        // a slide with a lot to say: its text gets a little smaller until it all fits (down to 70%)
+        // a slide with a lot to say: its text gets a little smaller until it all fits (down to 70%; a long
+        // deck's cover, which is only its contents, down to 50%)
         const main = slide.querySelector('.lbp-main, .lbp-cover-body');
+        const floor = main && main.classList.contains('lbp-cover-body') ? 0.5 : 0.7;
         let k = 1; slide.style.setProperty('--lbp-k', '1');
-        while (main && k > 0.7 && (main.scrollHeight > main.clientHeight + 1 || [...main.children].some(e => e.scrollHeight > e.clientHeight + 1))) {
+        const parts = main ? [...main.children, ...main.querySelectorAll('.lbp-points, .lbp-side')] : [];
+        while (main && k > floor && (main.scrollHeight > main.clientHeight + 1 || parts.some(e => e.scrollHeight > e.clientHeight + 1))) {
             k = Math.round((k - 0.05) * 100) / 100; slide.style.setProperty('--lbp-k', String(k));
         }
     }
@@ -191,6 +235,7 @@
     // which decks this person may see
     function allowed() {
         const r = role(), out = [];
+        if (r === 'trainer' && deckOf('admin') && canAdmin()) out.push('admin');
         if (r === 'trainer' && deckOf('trainer')) out.push('trainer');
         if (r && (deckOf('trainee') || (r === 'trainer' && cfg().traineeTab))) out.push('trainee');
         return out;
@@ -202,7 +247,10 @@
         at = Math.max(0, Math.min(total - 1, at));
         const slide = $id('lbp-slide');
         slide.innerHTML = slideHtml(d, at); slide.dataset.deck = d.key;
-        $id('lbp-count').textContent = `${at + 1} / ${total}`;
+        // the cover is ★ Cover; the slides are 1 to n, as on the buttons and the slides themselves
+        $id('lbp-count').textContent = at === 0 ? `Cover · ${total - 1} slides` : `${at} / ${total - 1}`;
+        $id('lbp-count').title = at === 0 ? 'The cover and contents' : `Slide ${at} of ${total - 1}`;
+        API.zoom();
         $id('lbp-prev').disabled = at === 0; $id('lbp-next').disabled = at === total - 1;
         $id('lbp-toc').innerHTML = ['Cover'].concat(d.slides.map(s => s.title)).map((t, k) =>
             `<button type="button" class="${k === at ? 'on' : ''}" title="${esc(t)}" onclick="LSHBlueprint.go(${k}, true)">${k === 0 ? '★' : k}</button>`).join('');
@@ -241,10 +289,16 @@
             cur = which; at = 0; paint();
         },
         go(n, absolute) { at = absolute ? n : at + n; paint(); },
+        // a slide's screenshot, full size over the slide (no src, or a click on it: closes it)
+        zoom(src) {
+            const z = $id('lbp-zoom'); if (!z) return;
+            if (src) { z.querySelector('img').src = src; z.classList.add('open'); } else z.classList.remove('open');
+        },
+        zoomed() { const z = $id('lbp-zoom'); return !!(z && z.classList.contains('open')); },
         isOpen() { const p = $id('lbp-page'); return !!(p && p.classList.contains('open')); },
         current() { return { deck: cur, slide: at }; },
         pdf: (which) => makePdf(which),
-        decks: () => ({ trainee: deckOf('trainee'), trainer: deckOf('trainer') }),
+        decks: () => ({ trainee: deckOf('trainee'), trainer: deckOf('trainer'), admin: deckOf('admin') }),
         refresh: mount
     };
     window.LSHBlueprint = API;
@@ -255,7 +309,7 @@
         if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); API.go(1); }
         else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); API.go(-1); }
-        else if (e.key === 'Escape') API.close();
+        else if (e.key === 'Escape') { if (API.zoomed()) API.zoom(); else API.close(); }
     });
 
     /* ---------- the PDF (jsPDF, real text) ---------- */
@@ -291,7 +345,17 @@
     }
     const today = () => new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    function buildPdf(d, logo) {
+    // an image's size in the PDF: w x h fitted inside a box, keeping its shape
+    function fitImage(doc, data, boxW, boxH) {
+        let r = boxW / boxH;
+        try { const p = doc.getImageProperties(data); if (p.width && p.height) r = p.width / p.height; } catch (e) { /* the box's shape */ }
+        return r > boxW / boxH ? { w: boxW, h: boxW / r } : { w: boxH * r, h: boxH };
+    }
+    // by the file's first bytes, whatever type the server gave it (JPEG starts /9j/ in base64)
+    const imgType = (data) => /^data:[^,]*,\/9j\//.test(data) || /^data:image\/jpe?g/i.test(data) ? 'JPEG' : 'PNG';
+
+    function buildPdf(d, logo, shots) {
+        shots = shots || [];
         const c = cfg();
         const doc = new JsPDF({ unit: 'pt', format: 'letter', orientation: 'landscape', compress: true });
         const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 46;
@@ -302,13 +366,21 @@
             doc.setDrawColor(...LINE); doc.setLineWidth(0.6); doc.line(M, H - 34, W - M, H - 34);
             font(8, 'normal', MUTED);
             doc.text(clean(`${c.site || ''} · ${d.name} · ${stamp}`), M, H - 20);
-            doc.text(`${i + 1} / ${total}`, W - M, H - 20, { align: 'right' });
+            doc.text(i === 0 ? 'Cover' : `${i} / ${total - 1}`, W - M, H - 20, { align: 'right' });
         };
         // the cover
         doc.setFillColor(...NAVY); doc.rect(0, 0, W, 150, 'F');
         doc.setFillColor(...ORANGE); doc.rect(0, 150, W, 5, 'F');
         let tx = M;
-        if (logo) { try { doc.addImage(logo, 'PNG', M, 32, 136, 85); tx = M + 156; } catch (e) { /* the cover works without it */ } }
+        if (logo && c.brand) {
+            // the mark, and the name as text under it (as on the page)
+            try {
+                const f = fitImage(doc, logo, 120, 74), bw = Math.max(f.w, 130);
+                doc.addImage(logo, imgType(logo), M + (bw - f.w) / 2, 26, f.w, f.h);
+                font(9.5, 'bold', [255, 255, 255]); doc.text(clean(c.brand).toUpperCase(), M + bw / 2, 26 + f.h + 20, { align: 'center', charSpace: 0.9 });
+                tx = M + bw + 30;
+            } catch (e) { /* the cover works without it */ }
+        } else if (logo) { try { const f = fitImage(doc, logo, 136, 85); doc.addImage(logo, imgType(logo), M, 32 + (85 - f.h) / 2, f.w, f.h); tx = M + f.w + 20; } catch (e) { /* the cover works without it */ } }
         font(11, 'bold', ORANGE); doc.text(clean(d.name).toUpperCase(), tx, 70, { charSpace: 1.2 });
         font(26, 'bold', [255, 255, 255]); doc.text(clean(c.product || 'LSH Platform'), tx, 102);
         font(13, 'normal', INK); doc.text(doc.splitTextToSize(clean(d.sub || ''), W - 2 * M), M, 190);
@@ -329,28 +401,56 @@
             doc.setFillColor(...ORANGE); doc.rect(0, 92, W, 4, 'F');
             font(9.5, 'bold', ORANGE); doc.text(clean(`${d.name} · ${k + 1} of ${d.slides.length}`).toUpperCase(), M, 38, { charSpace: 1 });
             font(23, 'bold', [255, 255, 255]); doc.text(clean(s.title), M, 70);
-            const sideX = W - M - 230, textW = sideX - M - 40;
-            let y = 142;
-            (s.points || []).forEach(p => {
-                font(15.5, 'normal', INK);
-                const lines = doc.splitTextToSize(clean(p), textW - 22);
-                doc.setFillColor(...ORANGE); doc.rect(M, y - 9.5, 7.5, 7.5, 'F');
-                doc.text(lines, M + 22, y, { lineHeightFactor: 1.3 });
-                y += lines.length * 20 + 16;
-            });
-            const box = (label, text, top, fill, stripe) => {
+            // a box: Where to find it, or the Tip (draw false: only measure it)
+            const box = (label, text, x, top, bw, fill, stripe, draw) => {
                 font(12, 'normal', INK);
-                const lines = doc.splitTextToSize(clean(text), 230 - 28);
+                const lines = doc.splitTextToSize(clean(text), bw - 28);
                 const h = 42 + lines.length * 16;
-                doc.setFillColor(...fill); doc.roundedRect(sideX, top, 230, h, 6, 6, 'F');
-                if (stripe) { doc.setFillColor(...stripe); doc.rect(sideX, top, 4, h, 'F'); }
-                font(8.5, 'bold', stripe ? ORANGE : NAVY); doc.text(label.toUpperCase(), sideX + 14, top + 20, { charSpace: 1 });
-                font(12, 'normal', INK); doc.text(lines, sideX + 14, top + 39, { lineHeightFactor: 1.3 });
+                if (draw === false) return top + h;
+                doc.setFillColor(...fill); doc.roundedRect(x, top, bw, h, 6, 6, 'F');
+                if (stripe) { doc.setFillColor(...stripe); doc.rect(x, top, 4, h, 'F'); }
+                font(8.5, 'bold', stripe ? ORANGE : NAVY); doc.text(label.toUpperCase(), x + 14, top + 20, { charSpace: 1 });
+                font(12, 'normal', INK); doc.text(lines, x + 14, top + 39, { lineHeightFactor: 1.3 });
                 return top + h;
             };
-            let top = 128;
-            if (s.where) top = box('Where to find it', s.where, top, SOFT, null) + 16;
-            if (s.tip) box('Tip', s.tip, top, [255, 247, 237], ORANGE);
+            // the points (draw false: only measure them), smaller where they would run into the footer
+            const points = (x, w, size, draw) => {
+                let y = 142;
+                (s.points || []).forEach(p => {
+                    font(size, 'normal', INK);
+                    const lines = doc.splitTextToSize(clean(p), w - 22);
+                    if (draw !== false) {
+                        doc.setFillColor(...ORANGE); doc.rect(x, y - size * 0.61, 7.5, 7.5, 'F');
+                        doc.text(lines, x + 22, y, { lineHeightFactor: 1.3 });
+                    }
+                    y += lines.length * size * 1.3 + size;
+                });
+                return y;
+            };
+            const shot = shots[k];
+            if (shot) {
+                // the screenshot and Where to find it on the right; the points and the Tip on the left
+                const colW = 318, rx = W - M - colW, lw = rx - M - 30, bottom = H - 46;
+                const f = fitImage(doc, shot, colW, 200);
+                let top = 122;
+                try {
+                    doc.addImage(shot, imgType(shot), rx, top, f.w, f.h);
+                    doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.8); doc.rect(rx, top, f.w, f.h, 'S');
+                    top += f.h + 14;
+                } catch (e) { /* the page works without it */ }
+                if (s.where) box('Where to find it', s.where, rx, top, colW, SOFT, null);
+                let size = 15.5;
+                const tipH = s.tip ? box('Tip', s.tip, M, 0, lw, null, null, false) + 14 : 0;
+                while (size > 10 && points(M, lw, size, false) - size + tipH > bottom) size -= 0.5;
+                const y = points(M, lw, size);
+                if (s.tip) box('Tip', s.tip, M, Math.min(y - size + 4, bottom - tipH + 14), lw, [255, 247, 237], ORANGE);
+            } else {
+                const sideX = W - M - 230, textW = sideX - M - 40;
+                points(M, textW, 15.5);
+                let top = 128;
+                if (s.where) top = box('Where to find it', s.where, sideX, top, 230, SOFT, null) + 16;
+                if (s.tip) box('Tip', s.tip, sideX, top, 230, [255, 247, 237], ORANGE);
+            }
             footer(k + 1);
         });
         doc.setProperties({ title: clean(`${c.site || 'LSH'} ${d.name}`), subject: clean(`How ${c.product || 'the platform'} works · ${stamp}`), creator: clean(c.site || 'LSH') });
@@ -367,8 +467,9 @@
             if (btn) { btn.disabled = true; btn.textContent = '⏳ Making the PDF…'; }
             await loadJsPdf();
             if (!version) await loadVersion();
-            const doc = buildPdf(d, await imageData(cfg().logo));
-            const name = `${cfg().file || 'LSH'}_Blueprint_${key === 'trainer' ? 'Trainer' : 'Trainee'}.pdf`;
+            const [logo, shots] = await Promise.all([imageData(cfg().logo), Promise.all(d.slides.map(s => s.shot ? imageData(s.shot) : null))]);
+            const doc = buildPdf(d, logo, shots);
+            const name = `${cfg().file || 'LSH'}_Blueprint_${FILES[key] || 'Trainee'}.pdf`;
             doc.save(name);
             return { name, pages: doc.getNumberOfPages(), version };
         } catch (e) {
