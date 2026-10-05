@@ -719,9 +719,9 @@
                 ${r.legacy.total ? `<button class="btn primary" id="import">Import posts</button> <span class="muted" id="import-status"></span>` : ''}</section>
             <section class="section card"><h2>Import Tettra pages</h2>
                 <p>Publishes the pages exported from Tettra (each Tettra category becomes a collection, each subcategory a section). Step 1 imports the pages, step 2 copies their images into the library so they stay if Tettra is closed. Both are safe to run again.</p>
-                <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <span class="muted" id="tettra-status"></span></section>
+                <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <button class="btn" id="refresh-search">3. Refresh the search</button> <span class="muted" id="tettra-status"></span></section>
             <section class="section card"><h2>Import documents</h2>
-                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) into the library, with their text searchable. Safe to run again: a document already imported is skipped.</p>
+                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
                 <button class="btn primary" id="import-docs">Import documents</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
@@ -750,6 +750,21 @@
                 toast('Collection saved.'); S.lib = null; admin();
             } catch (e) { toast(e.message, true); }
         });
+        const refreshSearch = async (st) => {
+            let after = 0, n = 0;
+            for (;;) {
+                const x = await post('/api/admin', { action: 'reindex', after });
+                n += x.indexed; after = x.next;
+                st.textContent = `Search refreshed for ${plural(n, 'entry', 'entries')}${x.remaining ? '…' : '. Done.'}`;
+                if (!x.remaining || !x.indexed) break;
+            }
+        };
+        const rs = document.getElementById('refresh-search');
+        if (rs) rs.onclick = async () => {
+            rs.disabled = true;
+            try { await refreshSearch(document.getElementById('tettra-status')); } catch (e) { document.getElementById('tettra-status').textContent = e.message; }
+            rs.disabled = false;
+        };
         const loop = (btnId, action, text) => {
             const b = document.getElementById(btnId);
             if (b) b.onclick = async () => {
@@ -764,6 +779,7 @@
                         if (!x.remaining || x.remaining >= last) break;   // done, or no progress
                         last = x.remaining;
                     }
+                    if (action === 'import-tettra') await refreshSearch(st);
                     S.lib = null;
                 } catch (e) { st.textContent = e.message; }
                 b.disabled = false;
@@ -777,7 +793,8 @@
             const st = document.getElementById('import-docs-status');
             try {
                 const x = await post('/api/admin', { action: 'import-bundled' });
-                st.textContent = x.imported ? `Imported ${plural(x.imported, 'document')}.` : (x.note || 'Everything is already imported.');
+                st.textContent = (x.imported || x.updated) ? `${x.imported ? 'Imported ' + plural(x.imported, 'document') + '. ' : ''}${x.updated ? 'Changed ' + plural(x.updated, 'document') + ' from a PDF to a page.' : ''}` : (x.note || 'Everything is already imported.');
+                await refreshSearch(document.getElementById('tettra-status') || st);
                 S.lib = null;
             } catch (e) { st.textContent = e.message; }
             impDocs.disabled = false;

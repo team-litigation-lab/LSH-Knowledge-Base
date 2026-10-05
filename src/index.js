@@ -577,6 +577,14 @@ async function adminAction({ request, env, db, reader }) {
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
     if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
+    if (body.action === 'reindex') {   // rebuilds the search for every published entry, 40 per call; the collection's name is searchable too
+        const after = Number(body.after) || 0;
+        const { results } = await db.prepare(`SELECT id FROM lib_entries WHERE status = 'published' AND id > ? ORDER BY id LIMIT 40`).bind(after).all();
+        for (const r of results || []) await reindex(db, r.id);
+        const next = results && results.length ? results[results.length - 1].id : after;
+        const left = await db.prepare(`SELECT COUNT(*) AS n FROM lib_entries WHERE status = 'published' AND id > ?`).bind(next).first();
+        return json({ success: true, indexed: (results || []).length, next, remaining: left.n });
+    }
     if (body.action === 'archive-empty') {   // every collection with no entries in it (archived, not deleted)
         const r = await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE archived = 0 AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).run();
         return json({ success: true, archived: (r.meta && r.meta.changes) || 0 });
@@ -586,29 +594,29 @@ async function adminAction({ request, env, db, reader }) {
     return fail('Unknown action.');
 }
 
-// Publishes the documents bundled in public/seed/ (docs.json + files/): each PDF is copied into R2 and becomes
-// a published entry with its text searchable. Safe to run again: a document already imported is skipped.
+// Publishes the handouts bundled in public/seed/docs.json as pages of the library (their text, headings, lists and tables), not as
+// files in a PDF viewer. Safe to run again: a handout already imported is skipped, and one that was imported earlier as a PDF
+// attachment is rewritten as a text page.
 async function importBundled(request, env, db, reader) {
-    if (!env.FILES) return fail('File storage isn’t connected: the R2 bucket (FILES) is not bound to this Worker.', 500);
     const origin = new URL(request.url).origin;
-    const get = (p) => env.ASSETS.fetch(new Request(origin + p));
-    const m = await get('/seed/docs.json');
-    if (!m.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no bundled documents to import.' });
+    const m = await env.ASSETS.fetch(new Request(origin + '/seed/docs.json'));
+    if (!m.ok) return json({ success: true, imported: 0, updated: 0, remaining: 0, note: 'There are no bundled documents to import.' });
     const docs = await m.json();
-    let imported = 0, remaining = 0;
+    let imported = 0, updated = 0;
     for (const d of docs) {
-        const ref = 'seed:' + d.file;
-        if (await db.prepare(`SELECT 1 AS x FROM lib_entries WHERE legacy_ref = ?`).bind(ref).first()) continue;
-        const res = await get('/seed/files/' + encodeURIComponent(d.file));
-        if (!res.ok) { remaining++; continue; }
-        const now = nowIso(), fid = crypto.randomUUID(), key = `kb/files/seed/${fid}/${d.file}`;
-        const bytes = await res.arrayBuffer();
-        await env.FILES.put(key, bytes, { httpMetadata: { contentType: 'application/pdf' }, customMetadata: { uploader: reader.who.name, fileId: fid } });
-        await db.prepare(`INSERT INTO lib_files (id, r2_key, name, size, mime, kind, status, text, uploader_name, uploader_key, created_at, completed_at)
-            VALUES (?, ?, ?, ?, 'application/pdf', 'pdf', 'ready', ?, ?, ?, ?, ?)`).bind(fid, key, d.file, bytes.byteLength, d.text || '', reader.who.name, reader.who.key, now, now).run();
+        const ref = 'seed:' + d.file, now = nowIso();
         const data = { collection: d.collection, section: '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
-            body: (d.summary || '') + '\n\nRead or download the attached PDF.', tags: d.tags || [], credits: [],
-            files: [{ id: fid, name: d.file, size: bytes.byteLength, mime: 'application/pdf', kind: 'pdf' }], official: false };
+            body: d.body, tags: d.tags || [], credits: [], files: [], official: false };
+        const old = await db.prepare(`SELECT e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref = ?`).bind(ref).first();
+        if (old) {
+            const cur = old.data ? JSON.parse(old.data) : {};
+            if (!(cur.files || []).length && cur.body === d.body) continue;
+            const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+                VALUES (?, ?, 'pending', 'Shown as a page of the library instead of a PDF', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...cur, ...data, official: !!cur.official }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+            await makeLive(db, old.id, rev.meta.last_row_id, { reviewer: reader.adminUser });
+            updated++;
+            continue;
+        }
         const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
             VALUES ('pending', ?, '', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.type, data.title, data.summary, data.tags.join(','),
                 reader.who.name, reader.who.batch || '', reader.who.key, ref, now, now).run();
@@ -620,7 +628,7 @@ async function importBundled(request, env, db, reader) {
     }
     const targets = [...new Set(docs.map(d => d.collection))];   // the handouts' collections show again, even if the starters were tidied away
     if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
-    return json({ success: true, imported, remaining });
+    return json({ success: true, imported, updated, remaining: 0 });
 }
 
 // ---- Tettra import (public/seed/tettra.json, made by scripts/tettra_convert.py) ----

@@ -198,7 +198,7 @@ export async function makeLive(db, entryId, revId, { publish = true, reviewer = 
 // Search holds only published entries' live versions.
 export async function reindex(db, entryId) {
     await db.prepare(`DELETE FROM lib_fts WHERE rowid = ?`).bind(entryId).run();
-    const e = await db.prepare(`SELECT e.status, r.data FROM lib_entries e JOIN lib_revisions r ON r.id = e.live_rev WHERE e.id = ?`).bind(entryId).first();
+    const e = await db.prepare(`SELECT e.status, r.data, (SELECT name FROM lib_collections WHERE slug = e.collection) AS cname FROM lib_entries e JOIN lib_revisions r ON r.id = e.live_rev WHERE e.id = ?`).bind(entryId).first();
     if (!e || e.status !== 'published') return;
     const d = JSON.parse(e.data);
     const ids = (d.files || []).map(f => f.id);
@@ -208,7 +208,7 @@ export async function reindex(db, entryId) {
         fileText += ' ' + (results || []).map(r => r.text || '').join(' ');
     }
     await db.prepare(`INSERT INTO lib_fts (rowid, title, summary, body, tags, files) VALUES (?, ?, ?, ?, ?, ?)`)
-        .bind(entryId, d.title, d.summary || '', d.body || '', (d.tags || []).join(' ') + ' ' + (d.section || ''), fileText.slice(0, 400000)).run();
+        .bind(entryId, d.title, d.summary || '', d.body || '', (d.tags || []).join(' ') + ' ' + (d.section || '') + ' ' + (e.cname || ''), fileText.slice(0, 400000)).run();
 }
 
 // A search box's words → an FTS5 query: every word must match, the last one as a prefix.
