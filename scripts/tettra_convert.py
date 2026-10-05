@@ -8,6 +8,7 @@ first 16 hex characters of the SHA-1 of the image's original address; the origin
 the Worker can copy them into R2. Owner e-mail addresses are not carried over. Pages deleted in Tettra, pages with no\ncontent (the empty "asd" test page) and the cracked-Nitro-Pro install page are skipped; everything else is kept, including\nTettra's starter templates (pages with no category, shelved under "Tettra starter templates").
 """
 import hashlib, json, os, re, sys, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -337,6 +338,13 @@ def main(src):
                       'url': x['url'], 'summary': s, 'body': md})
     used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
+    import glossary_extra   # general US legal-industry terms, written from general knowledge
+    have = {t['term'].lower() for t in terms}
+    for term, category, definition, *rest in glossary_extra.TERMS:
+        if term.lower() in have:
+            continue
+        terms.append({'term': term, 'definition': definition, 'example': rest[0] if rest else '', 'category': category,
+                      'ref': 'us:' + re.sub(r'[^a-z0-9]+', '-', term.lower()).strip('-'), 'source': 'General US legal knowledge (rules differ by state)'})
     json.dump({'terms': sorted(terms, key=lambda t: t['term'].lower())}, open(os.path.join(ROOT, 'public', 'seed', 'glossary.json'), 'w'), ensure_ascii=False, indent=1)
     print(f'{len(terms)} glossary terms')
     dest = os.path.join(ROOT, 'public', 'seed', 'tettra.json')

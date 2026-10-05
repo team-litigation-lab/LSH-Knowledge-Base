@@ -344,7 +344,7 @@
             <textarea class="i" name="definition" rows="3" required placeholder="What it means">${t ? esc(t.definition) : ''}</textarea>
             <input class="i" name="example" maxlength="1000" placeholder="Example (optional)" value="${t ? esc(t.example || '') : ''}">
             <div class="row"><button class="btn primary" type="submit">${t ? 'Save' : 'Add the term'}</button>${t ? '<button class="btn" type="button" data-cancel>Cancel</button>' : ''}</div></form>`;
-        view(`<h1>Glossary</h1><p class="lead" style="margin-top:0">Plain-English meanings of the legal, medical and office terms you meet at work. ${plural(terms.length, 'term')}.</p>
+        view(`<h1>Glossary</h1><p class="lead" style="margin-top:0">Plain-English meanings of the legal and medical terms you meet at work. ${plural(terms.length, 'term')}. Many are general US meanings; rules differ by state and court, so confirm with the attorney.</p>
             <datalist id="gl-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
             <div class="gl-tools"><label class="sr" for="gl-q">Search the glossary</label><input class="i" id="gl-q" type="search" placeholder="Look up a term or a word in its meaning…" value="${esc(state.q)}" autocomplete="off">
                 <div class="gl-cats" id="gl-cat-chips"><button class="chip" data-cat="" aria-pressed="${!state.cat}">All</button>${cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('')}</div>
