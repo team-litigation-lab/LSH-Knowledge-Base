@@ -641,10 +641,12 @@ async function importTettra(request, env, db, reader) {
     const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/tettra.json'));
     if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no Tettra pages to import.' });
     const { pages, images } = await res.json();
-    const done = new Set(((await db.prepare(`SELECT legacy_ref FROM lib_entries WHERE legacy_ref LIKE 'tettra:%'`).all()).results || []).map(r => r.legacy_ref));
-    const todo = pages.filter(p => !done.has('tettra:' + p.id));
+    // Pages not imported yet, and pages imported earlier whose text has since been corrected, are both still to do.
+    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'tettra:%'`).all()).results || [])
+        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
+    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !h || h.data.body !== p.body || (h.data.title !== p.title); });
     const now = nowIso();
-    if (todo.length === pages.length) {   // first call: the shelves and the image list
+    if (!have.size || todo.some(p => !have.has('tettra:' + p.id))) {   // the shelves and the image list, for any page not yet imported
         const cats = [...new Set(pages.map(p => p.category))].sort();
         await db.batch(cats.map((c, i) => db.prepare(`INSERT INTO lib_collections (slug, name, blurb, sort, archived, created_at) VALUES (?, ?, '', ?, 0, ?)
             ON CONFLICT(slug) DO NOTHING`).bind(collectionOf(c), c === 'Test. Test' ? 'General' : c, 1000 + i, now)));
@@ -653,6 +655,16 @@ async function importTettra(request, env, db, reader) {
     }
     let imported = 0;
     for (const p of todo.slice(0, 12)) {
+        const old = have.get('tettra:' + p.id);
+        if (old) {   // already imported: a new version with the corrected text
+            const d = { ...old.data, collection: collectionOf(p.category), section: p.subcategory || '', title: p.title, summary: p.summary || '', body: p.body };
+            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+                VALUES (?, ?, 'pending', 'Imported from Tettra again with the text corrected', ?, 'Tettra', ?, 1, ?)`).bind(old.id, JSON.stringify(d), p.owner || 'LSH Team', 'tettra|' + p.id, nowIso()).run();
+            await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
+            await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(tettraTime(p.created), tettraTime(p.updated), tettraTime(p.updated), old.id).run();
+            imported++;
+            continue;
+        }
         const data = { collection: collectionOf(p.category), section: p.subcategory || '', type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
             tags: [], credits: p.owner ? [p.owner] : [], files: [], official: false };
         const key = 'tettra|' + p.id, created = tettraTime(p.created), updated = tettraTime(p.updated);
