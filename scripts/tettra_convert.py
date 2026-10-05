@@ -13,11 +13,16 @@ from html.parser import HTMLParser
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Company-related policy and management sections of the old Tettra (company information, client management, VA management).
 # They are not part of the Knowledge Base; an import also archives any of these pages imported earlier.
-EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA Management'}
+EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA Management',
+                      'III. Tools & Applications', 'III. Service: Document Generation', 'III. Service: Automation',
+                      'III. Service: Marketing', 'III Service: Accounting/Bookkeeping'}
 # Pages that become the Glossary (a dictionary of terms) instead of library entries.
 # Company-internal pages that are not knowledge: the company's own product list, the VA task assessment manual, and
 # Tettra's ten starter templates (About the company, Social media policy, Quarterly OKRs ...). Archived if imported earlier.
 EXCLUDE_TITLES = {'LSH Marketing Products', 'LSH Task Assessment Manual (TAM)'}
+# The Knowledge Base is limited to the law practice itself (intake, claims and case work, demands, medical summaries and liens,
+# litigation, practice areas). Software tutorials, automation, accounting, marketing tools and general VA-skills pages are left out.
+EXCLUDE_TITLES |= {'Upskill on your FREE TIME', 'Email Management', 'Ways to Manage Your Email Inbox'}
 EXCLUDE_UNCATEGORIZED = True
 GLOSSARY_PAGES = {'LSH Legal Jargon', 'Medical Terminologies and Abbreviations'}
 DEAD = set(json.load(open(os.path.join(ROOT, 'scripts', 'dead_links.json')))['dead'])
