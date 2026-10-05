@@ -15,11 +15,11 @@
         where: 'Top bar → Library.',
         tip: 'Look for ✓ Official: those entries are the firm\'s approved way of doing it.' },
       { icon: '🔑', title: 'Signing in', points: [
-          'Enter your name, your batch and the team access code your trainer gives you.',
-          'Your browser stays signed in for 30 days.',
-          'If the code changes, everyone signs in again with the new one.'],
-        where: 'The sign-in screen.',
-        tip: 'Use the same name and batch as on your training platform, so your contributions are credited to you.' },
+          'Sign in once, on the LSH Training Portal. Open the Knowledge Base from the Portal and you come straight in.',
+          'There is no second sign-in here, and no access code to remember.',
+          'Your name and batch come from your Portal account, so your contributions are credited to you.'],
+        where: 'LSH Training Portal → Knowledge Base.',
+        tip: 'If this page says you are signed out, go back to the Portal and open the Knowledge Base again.' },
       { icon: '🔍', title: 'Finding what you need', points: [
           'Search covers titles, summaries, content, tags and sections, and the text inside uploaded PDFs, Word, Excel and PowerPoint files.',
           'Filter by type, Official only, or videos.',
@@ -68,12 +68,12 @@
           'The portal\'s site lock (Master Control) closes this site too.'],
         where: 'The sign-in screen → Admin · Top bar → Admin.',
         tip: 'Your admin sign-in is the same as the Training Portal\'s: no separate account to keep.' },
-      { icon: '🗝', title: 'The team access code', points: [
-          'VAs sign in with their name, batch and the team access code.',
-          'It\'s the same code as the portal\'s Knowledge Base page, stored in the same place.',
-          'Changing the code signs every VA out; they sign in again with the new one.'],
-        where: 'Admin → the access code.',
-        tip: 'Change the code when a batch ends, so former trainees no longer get in.' },
+      { icon: '🗝', title: 'How people get in', points: [
+          'Everyone signs in once, on the LSH Training Portal, and opens the Knowledge Base from there.',
+          'Trainees never see an admin page, the Admin tab or the admin password.',
+          'Admins type their Portal admin username and password on this site every time.'],
+        where: 'The sign-in screen → Admin Portal.',
+        tip: 'Remove a trainee\'s access in the Portal (Master Control) and they can no longer open the Knowledge Base from it.' },
       { icon: '✅', title: 'The review queue', points: [
           'New entries, suggested edits and replies from VAs wait in Review.',
           'Approve to make a version live, or send it back.',
