@@ -30,26 +30,36 @@ def list_formats(d):
 
 
 def runs_md(p):
-    out = []
+    """Paragraph text with **bold**, *italic* and [links](url). Neighbouring runs with the same formatting are joined first,
+    so a sentence that Word split into many runs does not come out as many separate marks."""
+    parts = []                                     # (text, bold, italic) or ('link', text)
     for item in p.iter_inner_content():
-        if hasattr(item, 'url'):                    # a hyperlink
+        if hasattr(item, 'url'):
             text = ''.join(r.text for r in item.runs) or item.text
-            out.append(f'[{text.strip()}]({item.url})' if item.url and text.strip() else text)
+            parts.append((f'[{text.strip()}]({item.url})' if item.url and text.strip() else text, None, None, True))
             continue
-        t = item.text
-        if not t:
-            continue
-        b, i = bool(item.bold), bool(item.italic)
+        if item.text:
+            parts.append((re.sub(r'\*+', '', item.text) if (item.text.strip('* ') or not item.text.strip()) else '', bool(item.bold), bool(item.italic), False))
+    # whitespace-only runs take the formatting of the run before them
+    for k, (t, b, i, link) in enumerate(parts):
+        if not t.strip() and not link and k > 0:
+            parts[k] = (t, parts[k - 1][1], parts[k - 1][2], False)
+    merged = []
+    for t, b, i, link in parts:
+        if merged and not link and not merged[-1][3] and merged[-1][1] == b and merged[-1][2] == i:
+            merged[-1] = (merged[-1][0] + t, b, i, False)
+        else:
+            merged.append((t, b, i, link))
+    out = []
+    for t, b, i, link in merged:
+        if link:
+            out.append(t); continue
         lead, core, trail = re.match(r'(\s*)(.*?)(\s*)$', t, re.S).groups()
-        core = re.sub(r'^\*+|\*+$', '', core)       # asterisks typed into the text itself (they would clash with the bold marks)
         if core:
             core = f'***{core}***' if b and i else f'**{core}**' if b else f'*{core}*' if i else core
         out.append(lead + core + trail)
     s = ''.join(out)
-    s = re.sub(r'\*\*(\s*)\*\*', r'\1', s)            # empty bold between runs
-    s = re.sub(r'(?<=\*\*)\*\*(?=\S)', '', s) if False else s
-    s = re.sub(r'\*\*\s*\*\*', ' ', s)
-    s = s.replace('****', '')
+    s = re.sub(r'\*\*\s*\*\*', ' ', s).replace('****', '')
     return re.sub(r'[ \t]+', ' ', s).strip()
 
 
@@ -92,6 +102,11 @@ def convert(path):
         if m or style == 'title':
             lvl = 1 if style == 'title' else int(m.group(1))
             blocks.append('#' * min(lvl, 3) + ' ' + re.sub(r'\*', '', text))
+            prev_list = False
+            continue
+        runs0 = [r for r in p.runs if r.text.strip()]
+        if not blocks and runs0 and all(r.bold for r in runs0) and len(plain) < 120:   # a bold first line is the title, even if Word numbered it
+            blocks.append('### ' + re.sub(r'\*', '', text))
             prev_list = False
             continue
         if num is not None and 'heading' not in style:
