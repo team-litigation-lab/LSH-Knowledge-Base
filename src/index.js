@@ -12,6 +12,7 @@ const READER_DAYS = 30, ADMIN_HOURS = 12, PAGE = 24, PORTAL_READER_HOURS = 12;
 const PORTAL_URL = 'https://cm-training-activity.pages.dev';
 const portalBase = (env) => String(env.PORTAL_URL || PORTAL_URL).replace(/\/+$/, '');
 // The team access code only works when KB_CODE_LOGIN is set to "on" (it is off: nobody signs in a second time here).
+const MASTER_USERNAME = 'LSHADMIN123';   // the Portal's Master Account (functions/_utils.js there)
 const codeLoginOn = (env) => String(env.KB_CODE_LOGIN || '').toLowerCase() === 'on';
 
 export default {
@@ -107,6 +108,16 @@ async function session(request, env) {
         if (!env.DB) return fail('Admin sign-in isn’t connected: the portal accounts database (DB) is not bound to this Worker.', 500);
         const username = oneLine(body.username, 80), password = String(body.password || '');
         if (!username || !password) return fail('Enter your portal username and password.');
+        // The Master Account has no row in `users`: its password is the Portal's MASTER_ADMIN_PASSWORD secret, so the Portal checks it.
+        if (username === MASTER_USERNAME) {
+            let r;
+            try {
+                r = await fetch(portalBase(env) + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ portalMode: 'Admin', username, password }) });
+            } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check the admin password. Try again in a moment.', 502); }
+            if (!r.ok) return fail(r.status === 429 ? 'Too many wrong passwords. Wait 10 minutes and try again.' : 'Incorrect username or password.', r.status === 429 ? 429 : 401);
+            const token = await signToken({ adm: 1, username: MASTER_USERNAME, name: 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
+            return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        }
         const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(username).first();
         if (!user || !(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
         if ((user.user_type || user.userType) !== 'Admin') return fail('This account isn’t an admin account. Open the Knowledge Base from the LSH Training Portal.', 403);
