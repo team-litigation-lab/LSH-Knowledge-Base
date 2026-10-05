@@ -724,7 +724,8 @@
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
-        document.getElementById('code-form').onsubmit = async (ev) => {
+        const codeForm = document.getElementById('code-form');   // not drawn when the team access code sign-in is off
+        if (codeForm) codeForm.onsubmit = async (ev) => {
             ev.preventDefault();
             try { await post('/api/admin', { action: 'set-code', code: val('code') }); toast('Team access code saved.'); admin(); } catch (e) { toast(e.message, true); }
         };
