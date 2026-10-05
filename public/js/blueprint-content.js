@@ -5,10 +5,10 @@
 (function () {
   'use strict';
   const TRAINEE = {
-    sub: 'How to find, use and add to the LSH VA community library',
+    sub: 'How to find, use and add to the LSH Community Library',
     slides: [
       { icon: '📚', title: 'What the Knowledge Base is', points: [
-          'The LSH VA community library: official SOPs, training videos, guides and know-how from the whole community.',
+          'LSH Community Library: official SOPs, training videos, guides and know-how from the whole community.',
           'Entries sit in collections, one per program or role: Foundational Training, Reception, Intake, Case Management, EA / PA and more.',
           'Inside a collection, entries are grouped by section.',
           'Everyone signed in can read it (Info Access). Tenured team members can add to it, and an admin approves each entry; reviewers keep it accurate.'],
