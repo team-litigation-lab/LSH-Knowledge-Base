@@ -210,6 +210,21 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .md-img{display:block;max-width:100%;height:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;}
 .md-code{background:#f3f5f9;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto;font-family:var(--mono);font-size:13px;}
 
+/* glossary */
+.gl-tools{display:grid;gap:10px;margin:14px 0;}
+.gl-cats{display:flex;gap:6px;flex-wrap:wrap;}
+.gl-letters{display:flex;gap:2px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;}
+.gl-letters a,.gl-letters span{width:26px;text-align:center;padding:3px 0;border-radius:6px;text-decoration:none;}
+.gl-letters a{background:var(--card);border:1px solid var(--line);color:var(--navy);font-weight:600;}
+.gl-letters span{color:#b6bccb;}
+.gl-group{margin:18px 0;}
+.gl-group>h2{font-family:var(--serif);border-bottom:2px solid var(--orange);padding-bottom:4px;margin:0 0 8px;}
+.gl-term{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+.gl-term p{margin:4px 0 0;}
+.gl-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.gl-head b{font-size:16px;color:var(--navy);}
+.gl-act{margin-left:auto;display:flex;gap:6px;}
+.gl-form{display:grid;gap:8px;margin-top:10px;}
 .on-page{display:grid;gap:2px;font-size:13.5px;}
 .on-page b{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
 .on-page a{color:var(--ink);text-decoration:none;padding:3px 8px;border-radius:6px;}
