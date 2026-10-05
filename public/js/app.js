@@ -220,6 +220,8 @@
         const L = await ensureLib(true);
         chrome(true); setTitle('');
         const t = L.totals;
+        // Every published entry, A to Z by title. It's read from the library each time the home page opens, so new uploads slot into place on their own.
+        const all = t.entries ? await api('/api/entries?all=1&sort=az') : { entries: [], total: 0 };
         view(`
         <section class="hero">
             <h1>The LSH VA community library</h1>
@@ -232,9 +234,7 @@
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${L.queue && (L.queue.revisions || L.queue.comments) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')} and ${plural(L.queue.comments, 'reply', 'replies')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
-        <section class="section"><div class="spread"><h2>Collections</h2></div>
-            <div class="cols">${L.collections.map(c => `<a class="col" href="#/c/${c.slug}"><h3>${esc(c.name)}</h3><p>${esc(c.blurb)}</p>
-                <span class="meta">${plural(c.count, 'entry', 'entries')}${c.videos ? ' · ' + plural(c.videos, 'video') : ''}</span></a>`).join('')}</div></section>
+        ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2><span class="muted">${plural(all.total, 'entry', 'entries')}</span></div>${listHTML(all.entries)}</section>` : ''}
         ${L.featured.length ? `<section class="section"><h2>Featured</h2>${listHTML(L.featured)}</section>` : ''}
         ${L.videos.length ? `<section class="section"><div class="spread"><h2>Latest training videos</h2><a href="#/videos">All videos</a></div>${listHTML(L.videos)}</section>` : ''}
         ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);

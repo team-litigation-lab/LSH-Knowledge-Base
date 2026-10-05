@@ -82,7 +82,7 @@ textarea.i{resize:vertical;line-height:1.55;}
 .hero h1{color:#fff;margin:0;}
 .hero p{margin:0;color:#c9d3e8;max-width:60ch;}
 .hero form{position:relative;z-index:1;max-width:680px;}
-.hero input{width:100%;border:0;border-radius:12px;padding:14px 16px;font-size:16.5px;box-shadow:0 10px 24px -14px rgba(0,0,0,.6);}
+.hero input{width:100%;border:0;background:#fff;color:var(--ink);border-radius:12px;padding:14px 16px;font-size:16.5px;box-shadow:0 10px 24px -14px rgba(0,0,0,.6);}
 .stats{display:flex;flex-wrap:wrap;gap:8px 22px;position:relative;z-index:1;}
 .stats span{font-size:13px;color:#c9d3e8;}
 .stats b{font-family:var(--mono);font-size:18px;color:#fdba74;margin-right:4px;}
