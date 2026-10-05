@@ -90,7 +90,7 @@
         const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/programs.html';
         nav.innerHTML = [
             `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">🏠 Main Portal</a>`,
-            link('#/', 'Library'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
+            link('#/', 'Library'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
             s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
@@ -195,6 +195,7 @@
                     const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
                     return location.replace('#/e/' + r.id);
                 }
+                case 'glossary': return await glossaryView(q);
                 case 'v': return await version(id);
                 case 'new': return await editor(null, q);
                 case 'mine': return await mine();
@@ -296,6 +297,13 @@
     /* ---------- search & videos ---------- */
     async function search(q, videos) {
         const base = videos ? '#/videos' : '#/search';
+        let gloss = [];
+        if (!videos && q.get('q')) {   // dictionary terms that match, shown above the entries
+            try {
+                const g = (await api('/api/glossary')).terms, words = q.get('q').toLowerCase().split(/\s+/).filter(Boolean);
+                gloss = g.filter(t => words.every(w => (t.term + ' ' + t.definition).toLowerCase().includes(w))).slice(0, 5);
+            } catch (e) { gloss = []; }
+        }
         const params = new URLSearchParams();
         ['q', 'collection', 'type', 'official', 'video', 'tag', 'sort', 'page'].forEach(k => { if (q.get(k)) params.set(k, q.get(k)); });
         const r = await api('/api/entries?' + params);
@@ -305,6 +313,7 @@
         const pages = Math.ceil(r.total / r.pageSize);
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><span>${videos ? 'Videos' : 'Search'}</span></div>
             <h1>${esc(title)}</h1>
+            ${gloss.length ? `<section class="card" style="margin-bottom:14px"><b>In the glossary</b>${gloss.map(t => `<p style="margin:6px 0 0"><a href="#/glossary?q=${encodeURIComponent(t.term)}"><b>${esc(t.term)}</b></a> · ${esc(t.definition.length > 160 ? t.definition.slice(0, 157) + '…' : t.definition)}</p>`).join('')}</section>` : ''}
             <div class="filters">
                 ${videos ? '' : `<a class="chip" aria-pressed="${q.get('video') === '1'}" href="${link('video', '1')}">Videos</a>`}
                 <a class="chip" aria-pressed="${q.get('official') === '1'}" href="${link('official', '1')}">Official only</a>
@@ -320,6 +329,55 @@
             ${pages > 1 ? `<div class="pager">${r.page > 1 ? `<a class="btn small" href="${link('page', String(r.page - 1))}">← Previous</a>` : ''}<span class="muted">Page ${r.page} of ${pages}</span>${r.page < pages ? `<a class="btn small" href="${link('page', String(r.page + 1))}">Next →</a>` : ''}</div>` : ''}`);
         const sel = (id, k) => { const el = document.getElementById(id); if (el) el.onchange = () => { location.hash = link(k, el.value || null); }; };
         sel('s-col', 'collection'); sel('s-type', 'type'); sel('s-sort', 'sort');
+    }
+
+    /* ---------- glossary (a dictionary of terms) ---------- */
+    async function glossaryView(q) {
+        const staff = !!(S.session.admin || S.session.reviewer);
+        const { terms } = await api('/api/glossary');
+        setTitle('Glossary');
+        const cats = [...new Set(terms.map(t => t.category))].sort();
+        const state = { q: q.get('q') || '', cat: q.get('category') || '' };
+        const letterOf = (t) => /^[a-z]/i.test(t.term) ? t.term[0].toUpperCase() : '#';
+        const form = (t) => `<form class="editor gl-form" data-id="${t ? t.id : ''}"><div class="row"><input class="i" name="term" required maxlength="120" placeholder="Term" value="${t ? esc(t.term) : ''}" style="max-width:260px">
+            <input class="i" name="category" maxlength="40" placeholder="Category (Legal, Medical…)" list="gl-cats" value="${t ? esc(t.category) : ''}" style="max-width:220px"></div>
+            <textarea class="i" name="definition" rows="3" required placeholder="What it means">${t ? esc(t.definition) : ''}</textarea>
+            <input class="i" name="example" maxlength="1000" placeholder="Example (optional)" value="${t ? esc(t.example || '') : ''}">
+            <div class="row"><button class="btn primary" type="submit">${t ? 'Save' : 'Add the term'}</button>${t ? '<button class="btn" type="button" data-cancel>Cancel</button>' : ''}</div></form>`;
+        view(`<h1>Glossary</h1><p class="lead" style="margin-top:0">Plain-English meanings of the legal, medical and office terms you meet at work. ${plural(terms.length, 'term')}.</p>
+            <datalist id="gl-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
+            <div class="gl-tools"><label class="sr" for="gl-q">Search the glossary</label><input class="i" id="gl-q" type="search" placeholder="Look up a term or a word in its meaning…" value="${esc(state.q)}" autocomplete="off">
+                <div class="gl-cats" id="gl-cat-chips"><button class="chip" data-cat="" aria-pressed="${!state.cat}">All</button>${cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('')}</div>
+                <div class="gl-letters" id="gl-letters"></div></div>
+            ${staff ? `<details class="card" style="margin:12px 0"><summary><b>+ Add a term</b></summary>${form(null)}</details>` : ''}
+            <div id="gl-list"></div>`);
+        const list = document.getElementById('gl-list'), letters = document.getElementById('gl-letters');
+        const paint = () => {
+            const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+            const rows = terms.filter(t => (!state.cat || t.category === state.cat) && words.every(w => (t.term + ' ' + t.definition + ' ' + (t.example || '')).toLowerCase().includes(w)));
+            const by = new Map();
+            rows.forEach(t => { const l = letterOf(t); if (!by.has(l)) by.set(l, []); by.get(l).push(t); });
+            const keys = [...by.keys()].sort((a, b) => (a === '#') - (b === '#') || a.localeCompare(b));
+            letters.innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').map(l => by.has(l) ? `<a href="#/glossary" data-l="${l}">${l}</a>` : `<span>${l}</span>`).join('');
+            list.innerHTML = rows.length ? keys.map(l => `<section class="gl-group" id="gl-${l === '#' ? 'num' : l}"><h2>${l}</h2>${by.get(l).map(t => `<div class="gl-term" id="t${t.id}">
+                <div class="gl-head"><b>${esc(t.term)}</b><span class="badge">${esc(t.category)}</span>${staff ? `<span class="gl-act"><button class="btn small" data-edit="${t.id}">Edit</button> <button class="btn small danger" data-del="${t.id}">Delete</button></span>` : ''}</div>
+                <p>${esc(t.definition)}</p>${t.example ? `<p class="muted"><i>${esc(t.example)}</i></p>` : ''}</div>`).join('')}</section>`).join('')
+                : `<div class="card"><p>No term matches${state.q ? ` “${esc(state.q)}”` : ''}.</p>${S.session.contributor ? '<p class="muted" style="margin:0">Know it? Ask a reviewer to add it, or leave a note on a page that uses it.</p>' : ''}</div>`;
+        };
+        paint();
+        document.getElementById('gl-q').oninput = (ev) => { state.q = ev.target.value; paint(); };
+        document.getElementById('gl-cat-chips').onclick = (ev) => { const b = ev.target.closest('[data-cat]'); if (!b) return; state.cat = b.dataset.cat; app.querySelectorAll('#gl-cat-chips .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); };
+        letters.onclick = (ev) => { const a = ev.target.closest('[data-l]'); if (!a) return; ev.preventDefault(); const el = document.getElementById('gl-' + (a.dataset.l === '#' ? 'num' : a.dataset.l)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+        const save = async (f) => {
+            const d = Object.fromEntries(new FormData(f));
+            try { await post('/api/glossary', { action: 'save', id: f.dataset.id || undefined, term: d.term, category: d.category, definition: d.definition, example: d.example }); toast('Saved.'); glossaryView(q); } catch (e) { toast(e.message, true); }
+        };
+        app.querySelectorAll('.gl-form').forEach(f => f.onsubmit = (ev) => { ev.preventDefault(); save(f); });
+        list.onclick = async (ev) => {
+            const ed = ev.target.closest('[data-edit]'), del = ev.target.closest('[data-del]');
+            if (ed) { const t = terms.find(x => x.id === Number(ed.dataset.edit)), box = document.getElementById('t' + t.id); box.innerHTML = form(t); box.querySelector('form').onsubmit = (e2) => { e2.preventDefault(); save(box.querySelector('form')); }; box.querySelector('[data-cancel]').onclick = () => paint(); }
+            if (del && confirm('Delete this term?')) { try { await post('/api/glossary', { action: 'delete', id: Number(del.dataset.del) }); toast('Deleted.'); glossaryView(q); } catch (e) { toast(e.message, true); } }
+        };
     }
 
     /* ---------- entry ---------- */
@@ -803,6 +861,7 @@
             const st = document.getElementById('import-docs-status');
             try {
                 const x = await post('/api/admin', { action: 'import-bundled' });
+                await post('/api/admin', { action: 'import-glossary' });
                 let topics = 0;
                 for (let last = Infinity;;) {   // the training topics, 12 per call
                     const t = await post('/api/admin', { action: 'import-training' });

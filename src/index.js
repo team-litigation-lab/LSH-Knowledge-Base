@@ -39,6 +39,9 @@ export default {
             const seg = path.slice(5).split('/').filter(Boolean);   // after "/api/"
             switch (seg[0]) {
                 case 'library': return await library(ctx);
+                case 'glossary':
+                    if (write && !reader.staff) return fail('Reviewer access required.', 403);
+                    return write ? await glossaryAction(ctx) : await glossary(ctx);
                 case 'resolve': {   // an old Tettra page's id -> the library entry that replaced it (links inside imported pages use this)
                     const ref = String(url.searchParams.get('ref') || '');
                     const row = /^tettra:\d+$/.test(ref) ? await db.prepare(`SELECT id FROM lib_entries WHERE legacy_ref = ? AND status = 'published'`).bind(ref).first() : null;
@@ -597,6 +600,7 @@ async function adminAction({ request, env, db, reader }) {
         const r = await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE archived = 0 AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).run();
         return json({ success: true, archived: (r.meta && r.meta.changes) || 0 });
     }
+    if (body.action === 'import-glossary') return importGlossary(request, env, db);
     if (body.action === 'import-training') return importTraining(request, env, db, reader);
     if (body.action === 'import-tettra') return importTettra(request, env, db, reader);
     if (body.action === 'copy-images') return copyImages(env, db);
@@ -638,6 +642,45 @@ async function importBundled(request, env, db, reader) {
     const targets = [...new Set(docs.map(d => d.collection))];   // the handouts' collections show again, even if the starters were tidied away
     if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
     return json({ success: true, imported, updated, remaining: 0 });
+}
+
+// ---- Glossary: a dictionary of terms (public/seed/glossary.json, made by scripts/tettra_convert.py), kept apart from the entries ----
+async function glossary({ db }) {
+    const { results } = await db.prepare(`SELECT id, term, definition, example, category, source FROM lib_terms ORDER BY term COLLATE NOCASE`).all();
+    return json({ success: true, terms: results || [] });
+}
+async function glossaryAction({ request, db, reader }) {
+    const body = await readJson(request) || {};
+    const now = nowIso();
+    if (body.action === 'delete') {
+        await db.prepare(`DELETE FROM lib_terms WHERE id = ?`).bind(Number(body.id)).run();
+        return json({ success: true });
+    }
+    if (body.action === 'save') {
+        const term = oneLine(body.term, 120), definition = clean(body.definition, 4000), example = clean(body.example, 1000), category = oneLine(body.category, 40) || 'General';
+        if (!term || definition.length < 3) return fail('Give the term and its meaning.');
+        if (body.id) {
+            await db.prepare(`UPDATE lib_terms SET term = ?, definition = ?, example = ?, category = ?, edited = 1, updated_at = ? WHERE id = ?`).bind(term, definition, example, category, now, Number(body.id)).run();
+        } else {
+            await db.prepare(`INSERT INTO lib_terms (term, definition, example, category, source, edited, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)`)
+                .bind(term, definition, example, category, 'Added by ' + reader.who.name, now, now).run();
+        }
+        return json({ success: true });
+    }
+    return fail('Unknown action.');
+}
+// Adds the bundled terms; a term already there is left alone if someone edited it, otherwise brought up to date.
+async function importGlossary(request, env, db) {
+    const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/glossary.json'));
+    if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no glossary terms to import.' });
+    const { terms } = await res.json();
+    const now = nowIso();
+    for (let i = 0; i < terms.length; i += 40) {
+        await db.batch(terms.slice(i, i + 40).map(t => db.prepare(`INSERT INTO lib_terms (term, definition, example, category, source, ref, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(ref) DO UPDATE SET term = excluded.term, definition = excluded.definition, example = excluded.example, category = excluded.category, source = excluded.source, updated_at = excluded.updated_at
+            WHERE lib_terms.edited = 0`).bind(t.term, t.definition, t.example || '', t.category, t.source || '', t.ref, now, now)));
+    }
+    return json({ success: true, imported: terms.length, remaining: 0 });
 }
 
 // ---- Training topics (public/seed/training.json, made by scripts/training_topics.mjs) ----

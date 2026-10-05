@@ -84,6 +84,10 @@ const SCHEMA = [
     `CREATE TABLE IF NOT EXISTS lib_entry_files (entry_id INTEGER NOT NULL, file_id TEXT NOT NULL, PRIMARY KEY (entry_id, file_id))`,
     `CREATE INDEX IF NOT EXISTS lib_entry_files_file ON lib_entry_files (file_id)`,
     `CREATE TABLE IF NOT EXISTS lib_images (hash TEXT PRIMARY KEY, src TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending')`,
+    `CREATE TABLE IF NOT EXISTS lib_terms (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, term TEXT NOT NULL, definition TEXT NOT NULL, example TEXT, category TEXT NOT NULL DEFAULT 'General',
+        source TEXT, ref TEXT UNIQUE, edited INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+    `CREATE INDEX IF NOT EXISTS lib_terms_term ON lib_terms (term COLLATE NOCASE)`,
     `CREATE TABLE IF NOT EXISTS lib_roles (person_key TEXT PRIMARY KEY, name TEXT NOT NULL, batch TEXT, role TEXT NOT NULL, granted_by TEXT, granted_at TEXT)`,
     `CREATE VIRTUAL TABLE IF NOT EXISTS lib_fts USING fts5(title, summary, body, tags, files, tokenize = 'porter unicode61')`
 ];

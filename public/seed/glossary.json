@@ -1,0 +1,500 @@
+{
+ "terms": [
+  {
+   "term": "ADD",
+   "definition": "Attention Deficit Disorder",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:2",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ADHD",
+   "definition": "Attention deficit hyperactivity disorder",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:1",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "AROM",
+   "definition": "Active range of motion",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:3",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "bid",
+   "definition": "Twice per day",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:4",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "c/o",
+   "definition": "Complaint of",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:6",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "CC",
+   "definition": "Chief complaint",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:5",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "D/C or DC",
+   "definition": "Discharge or discontinue",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:7",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Defendant",
+   "definition": "The party sued in a lawsuit or the party charged with a crime in a criminal prosecution.",
+   "example": "",
+   "category": "Legal",
+   "ref": "tettra:919607:4",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "DVT",
+   "definition": "Deep Venous Thrombosis",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:9",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "DX",
+   "definition": "Diagnosis",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:8",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "E-stim",
+   "definition": "Electrical Muscle Stimulation",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:14",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ED",
+   "definition": "Emergency Department",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:10",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "EDX",
+   "definition": "Electrodiagnostic studies",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:11",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "EEG",
+   "definition": "Electroencephalogram",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:12",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ESI",
+   "definition": "Epidural steroid injection",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:13",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "F/U",
+   "definition": "Follow up",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:16",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "File",
+   "definition": "A legal process where the written complaint or petition which is the opening step in a lawsuit and subsequent documents, including an answer, demurrer, motions, petitions and orders are submitted to the clerk of Court.",
+   "example": "",
+   "category": "Legal",
+   "ref": "tettra:919607:1",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "FX/Fx",
+   "definition": "Fracture; Family",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:15",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "H&P",
+   "definition": "History and Physical Examination",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:17",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "H/O",
+   "definition": "History of",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:18",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "HA",
+   "definition": "Headache",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:19",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "HEP",
+   "definition": "Home Exercise Program",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:20",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "HPI",
+   "definition": "History of Present Illness",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:21",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "HTN",
+   "definition": "Hypertension",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:22",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Hx",
+   "definition": "History",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:23",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ICP",
+   "definition": "Intracranial pressure",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:24",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "JT",
+   "definition": "Joint",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:25",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Jurisdiction",
+   "definition": "Power/authority of the court. It is the limit of a judicial authority or the extent to which a court of law can exercise its authority over suits, cases, appeals, etc.; Hierarchy of Courts.",
+   "example": "Eg. Nevada: Justice Court, District Court, Supreme Court; Florida: Trial Court (Circuit or County), District Courts of Appeal, Supreme Court",
+   "category": "Legal",
+   "ref": "tettra:919607:7",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "LBP",
+   "definition": "Low back pain",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:26",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "LE",
+   "definition": "Lower extremity",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:27",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "LESI",
+   "definition": "Lumbar epidural steroid injection",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:28",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "LOC",
+   "definition": "Loss of consciousness",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:29",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "MVA",
+   "definition": "Motor vehicular accident",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:30",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "NP",
+   "definition": "Nurse Practitioner",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:31",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ORIF",
+   "definition": "Open reduction and internal fixation, such as with the orthopedic repair of a hip fracture",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:32",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "p.o.",
+   "definition": "By mouth",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:35",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "p.r.n.",
+   "definition": "As needed",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:36",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "PCP",
+   "definition": "Primary care physician",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:33",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "PE",
+   "definition": "Pulmonary Embolism; Physical Exam",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:34",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Person",
+   "definition": "Can either be a natural person (individual) or artificial person (legal entity such as corporations or a government instrumentality).",
+   "example": "",
+   "category": "Legal",
+   "ref": "tettra:919607:5",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Plaintiff",
+   "definition": "The party who initiates a lawsuit or action in a civil case and complainant in a criminal prosecution.",
+   "example": "",
+   "category": "Legal",
+   "ref": "tettra:919607:3",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "PT",
+   "definition": "Physical Therapy",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:37",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "PTSD",
+   "definition": "Post traumatic stress syndrome",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:38",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "R/O",
+   "definition": "Rule out",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:39",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ROM",
+   "definition": "Range of motion",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:40",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "ROS",
+   "definition": "Review of Systems",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:41",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Rx",
+   "definition": "Prescription",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:42",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "s/p",
+   "definition": "Status post; condition after",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:43",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Serve",
+   "definition": "The delivery of legal document such as copy of written complaint and summons to the defendant to informed of a lawsuit against him.",
+   "example": "",
+   "category": "Legal",
+   "ref": "tettra:919607:2",
+   "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "SOB",
+   "definition": "Shortness of breath",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:46",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "stsg",
+   "definition": "Split-thickness skin graft",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:44",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "sxs",
+   "definition": "Symptoms; surgery",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:45",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "THR",
+   "definition": "Total hip replacement",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:47",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "tid",
+   "definition": "3x a day",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:48",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "TKR",
+   "definition": "Total knee replacement",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:49",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "TMJ",
+   "definition": "Temporomandibular joint",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:50",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Tx",
+   "definition": "Treatment",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:51",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "UA",
+   "definition": "Urinalysis",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:52",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "UE",
+   "definition": "Upper extremity",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:53",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "URI",
+   "definition": "Upper respiratory infection",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:54",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "UTI",
+   "definition": "Urinary Tract Infection",
+   "example": "",
+   "category": "Medical",
+   "ref": "tettra:848165:55",
+   "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Venue",
+   "definition": "The Court where a lawsuit may or should be tried. In U.S, every state has rules in determining the proper venue for different types of lawsuit. Criminal cases will be prosecuted in the state or district where the alleged crime was committed.",
+   "example": "Eg. Nevada: Clark County, District Court; Florida: County Court of the 9th Judicial Circuit, Orange County, Florida",
+   "category": "Legal",
+   "ref": "tettra:919607:6",
+   "source": "Tettra: LSH Legal Jargon"
+  }
+ ]
+}

@@ -14,6 +14,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Company-related policy and management sections of the old Tettra (company information, client management, VA management).
 # They are not part of the Knowledge Base; an import also archives any of these pages imported earlier.
 EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA Management'}
+# Pages that become the Glossary (a dictionary of terms) instead of library entries.
+# Company-internal pages that are not knowledge: the company's own product list, the VA task assessment manual, and
+# Tettra's ten starter templates (About the company, Social media policy, Quarterly OKRs ...). Archived if imported earlier.
+EXCLUDE_TITLES = {'LSH Marketing Products', 'LSH Task Assessment Manual (TAM)'}
+EXCLUDE_UNCATEGORIZED = True
+GLOSSARY_PAGES = {'LSH Legal Jargon', 'Medical Terminologies and Abbreviations'}
 DEAD = set(json.load(open(os.path.join(ROOT, 'scripts', 'dead_links.json')))['dead'])
 IMAGES = {}
 
@@ -257,16 +263,59 @@ def years(md):
     return sorted(set(re.findall(r'\b(20[12]\d)\b', md)))
 
 
+def glossary(title, pid, md):
+    """Terms and definitions from the two Tettra pages that are really dictionaries."""
+    terms = []
+
+    def add(term, definition, example=''):
+        term = re.sub(r'\s+', ' ', term).strip(' *:-')
+        definition = re.sub(r'\s+', ' ', definition).strip(' -–:*')
+        definition = re.sub(r'^(is|are|refers to)\s+', '', definition)
+        if term and definition:
+            terms.append({'term': term, 'definition': definition[0].upper() + definition[1:], 'example': example,
+                          'category': 'Legal' if title == 'LSH Legal Jargon' else 'Medical', 'ref': f'tettra:{pid}:{len(terms) + 1}',
+                          'source': 'Tettra: ' + title})
+    if title == 'LSH Legal Jargon':
+        heading = ''
+        for blk in [b.strip() for b in re.split(r'\n\s*\n', md) if b.strip()]:
+            if blk.startswith('#'):
+                heading = blk.lstrip('# ').strip()
+                continue
+            if blk.startswith('*') and not blk.startswith('**') and terms:
+                terms[-1]['example'] = re.sub(r'^\*|\*$', '', blk).strip()
+                continue
+            m = re.match(r'\*\*([^*]+?)\s*\*\*\s*(.*)', blk, re.S)
+            if m:
+                rest = m.group(2)
+                two = re.split(r'\s*While \*\*([^*]+?)\*\*\s*', rest)
+                add(m.group(1), two[0])
+                if len(two) == 3:
+                    add(two[1], two[2])
+            elif heading and not heading.isupper() and not heading.startswith('Case Details'):
+                add(heading, blk)
+    else:
+        for line in md.split('\n'):
+            m = re.match(r'\|\s*\*\*(.+?)\*\*\s*\|\s*(.+?)\s*\|\s*$', line)
+            if m:
+                add(m.group(1), m.group(2))
+    return terms
+
+
 def main(src):
     data = json.load(open(src))
     by_slug = {x['url'].rsplit('/', 1)[-1]: x['id'] for x in data if x.get('url')}
-    pages = []
+    pages, terms = [], []
     for x in data:
         cat = x.get('category_name') or 'Tettra starter templates'
         if x.get('deleted_at'):
             continue                      # deleted in Tettra
         if 'crack version' in (x.get('html') or '').lower():
             continue                      # instructions for installing a cracked copy of Nitro Pro; left out on purpose
+        if x['page_title'].strip() in GLOSSARY_PAGES:
+            terms += glossary(x['page_title'].strip(), x['id'], mark_dead(tidy(convert(x.get('html') or ''), by_slug)))
+            continue                      # it is the Glossary now, not a library entry
+        if x['page_title'].strip() in EXCLUDE_TITLES or (EXCLUDE_UNCATEGORIZED and not x.get('category_name')):
+            continue                      # company-internal, not knowledge
         if cat in EXCLUDE_CATEGORIES:
             continue                      # company-related policies and management: not part of the Knowledge Base
         md = mark_dead(tidy(convert(x.get('html') or ''), by_slug))
@@ -283,6 +332,8 @@ def main(src):
                       'url': x['url'], 'summary': s, 'body': md})
     used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
+    json.dump({'terms': sorted(terms, key=lambda t: t['term'].lower())}, open(os.path.join(ROOT, 'public', 'seed', 'glossary.json'), 'w'), ensure_ascii=False, indent=1)
+    print(f'{len(terms)} glossary terms')
     dest = os.path.join(ROOT, 'public', 'seed', 'tettra.json')
     json.dump(out, open(dest, 'w'), ensure_ascii=False, separators=(',', ':'))
     print(f'{len(pages)} pages, {len(out["images"])} images, {os.path.getsize(dest) // 1024} KB -> {dest}')
