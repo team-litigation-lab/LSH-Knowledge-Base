@@ -114,7 +114,8 @@ async function session(request, env) {
         // 1. A Portal admin account typed with its own username and password.
         if (typed && typed !== MASTER_USERNAME && env.DB) {
             const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(typed).first();
-            if (user && (user.user_type || user.userType) === 'Admin' && await verifyPassword(password, user.password)) {
+            if (user && (user.user_type || user.userType) === 'Admin') {   // a real Portal admin account is checked on its own password only
+                if (!(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
                 if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
                 return give(user.username, [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username);
             }
