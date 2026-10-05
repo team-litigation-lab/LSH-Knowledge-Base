@@ -618,12 +618,12 @@ async function importBundled(request, env, db, reader) {
     let imported = 0, updated = 0;
     for (const d of docs) {
         const ref = 'seed:' + d.file, now = nowIso();
-        const data = { collection: d.collection, section: '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
+        const data = { collection: d.collection, section: d.section || '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
             body: d.body, tags: d.tags || [], credits: [], files: [], official: false };
         const old = await db.prepare(`SELECT e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref = ?`).bind(ref).first();
         if (old) {
             const cur = old.data ? JSON.parse(old.data) : {};
-            if (!(cur.files || []).length && cur.body === d.body) continue;
+            if (!(cur.files || []).length && cur.body === d.body && (cur.section || '') === (d.section || '')) continue;
             const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
                 VALUES (?, ?, 'pending', 'Shown as a page of the library instead of a PDF', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...cur, ...data, official: !!cur.official }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
             await makeLive(db, old.id, rev.meta.last_row_id, { reviewer: reader.adminUser });
