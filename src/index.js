@@ -22,7 +22,7 @@ export default {
         const path = url.pathname;
         // public/seed/ holds documents the admin imports into the library; the Worker reads them itself, so they are never served to visitors.
         if (path.startsWith('/seed/')) return new Response('Not found', { status: 404 });
-        if (!path.startsWith('/api/') && !path.startsWith('/files/') && !path.startsWith('/img/')) return env.ASSETS.fetch(request);
+        if (!path.startsWith('/api/') && !path.startsWith('/files/') && !path.startsWith('/img/') && !path.startsWith('/att/')) return env.ASSETS.fetch(request);
         try {
             if (await siteLocked(env)) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             const db = env.TRAINING_DB;
@@ -36,6 +36,7 @@ export default {
 
             if (path.startsWith('/files/')) return await serveFile(ctx, path.split('/')[2]);
             if (path.startsWith('/img/')) return await serveImage(ctx, path.split('/')[2]);
+            if (path.startsWith('/att/')) return await serveImage(ctx, path.split('/')[2], true);
             const seg = path.slice(5).split('/').filter(Boolean);   // after "/api/"
             switch (seg[0]) {
                 case 'library': return await library(ctx);
@@ -615,33 +616,35 @@ async function importBundled(request, env, db, reader) {
     const m = await env.ASSETS.fetch(new Request(origin + '/seed/docs.json'));
     if (!m.ok) return json({ success: true, imported: 0, updated: 0, remaining: 0, note: 'There are no bundled documents to import.' });
     const docs = await m.json();
+    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'seed:%'`).all()).results || [])
+        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
+    // what still needs doing: a document not imported yet, or one whose text, section or attachments changed
+    const todo = docs.filter(d => { const h = have.get('seed:' + d.file); return !h || (h.data.files || []).length || h.data.body !== d.body || (h.data.section || '') !== (d.section || ''); });
     let imported = 0, updated = 0;
-    for (const d of docs) {
+    for (const d of todo.slice(0, 10)) {   // 10 per call; the page calls again until none remain
         const ref = 'seed:' + d.file, now = nowIso();
         const data = { collection: d.collection, section: d.section || '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
             body: d.body, tags: d.tags || [], credits: [], files: [], official: false };
-        const old = await db.prepare(`SELECT e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref = ?`).bind(ref).first();
+        const old = have.get(ref);
         if (old) {
-            const cur = old.data ? JSON.parse(old.data) : {};
-            if (!(cur.files || []).length && cur.body === d.body && (cur.section || '') === (d.section || '')) continue;
             const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Shown as a page of the library instead of a PDF', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...cur, ...data, official: !!cur.official }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+                VALUES (?, ?, 'pending', 'Updated from the bundled document', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...old.data, ...data, official: !!old.data.official }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
             await makeLive(db, old.id, rev.meta.last_row_id, { reviewer: reader.adminUser });
             updated++;
             continue;
         }
         const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-            VALUES ('pending', ?, '', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.type, data.title, data.summary, data.tags.join(','),
+            VALUES ('pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.type, data.title, data.summary, data.tags.join(','),
                 reader.who.name, reader.who.batch || '', reader.who.key, ref, now, now).run();
         const id = r.meta.last_row_id;
         const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-            VALUES (?, ?, 'pending', 'Added from the Foundational Training handouts', ?, ?, ?, 1, ?)`).bind(id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+            VALUES (?, ?, 'pending', 'Added from the bundled documents', ?, ?, ?, 1, ?)`).bind(id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
         await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
         imported++;
     }
-    const targets = [...new Set(docs.map(d => d.collection))];   // the handouts' collections show again, even if the starters were tidied away
+    const targets = [...new Set(docs.map(d => d.collection))];   // the documents' collections show again, even if the starters were tidied away
     if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
-    return json({ success: true, imported, updated, remaining: 0 });
+    return json({ success: true, imported, updated, remaining: todo.length - imported - updated });
 }
 
 // ---- Glossary: a dictionary of terms (public/seed/glossary.json, made by scripts/tettra_convert.py), kept apart from the entries ----
@@ -755,9 +758,9 @@ async function importTettra(request, env, db, reader) {
         if (old) {   // already imported: a new version with the corrected text
             const d = { ...old.data, collection: collectionOf(p.category), section: p.subcategory || '', title: p.title, summary: p.summary || '', body: p.body, tags: p.tags || [] };
             const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Imported from Tettra again with the text corrected', ?, 'Tettra', ?, 1, ?)`).bind(old.id, JSON.stringify(d), p.owner || 'LSH Team', 'tettra|' + p.id, nowIso()).run();
+                VALUES (?, ?, 'pending', 'Updated', ?, '', ?, 1, ?)`).bind(old.id, JSON.stringify(d), p.owner || 'LSH Team', 'tettra|' + p.id, nowIso()).run();
             await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
-            await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(tettraTime(p.created), tettraTime(p.updated), tettraTime(p.updated), old.id).run();
+            await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ?, author_batch = '', tags = ? WHERE id = ?`).bind(tettraTime(p.created), tettraTime(p.updated), tettraTime(p.updated), (p.tags || []).join(','), old.id).run();
             imported++;
             continue;
         }
@@ -765,10 +768,10 @@ async function importTettra(request, env, db, reader) {
             tags: p.tags || [], credits: p.owner ? [p.owner] : [], files: [], official: false };
         const key = 'tettra|' + p.id, created = tettraTime(p.created), updated = tettraTime(p.updated);
         const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-            VALUES ('pending', ?, ?, 'Guide', ?, ?, ?, ?, 'Tettra', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, data.tags.join(','), p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
+            VALUES ('pending', ?, ?, 'Guide', ?, ?, ?, ?, '', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, data.tags.join(','), p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
         const id = r.meta.last_row_id;
         const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-            VALUES (?, ?, 'pending', 'Imported from Tettra', ?, 'Tettra', ?, 1, ?)`).bind(id, JSON.stringify(data), p.owner || 'LSH Team', key, created).run();
+            VALUES (?, ?, 'pending', 'Imported', ?, '', ?, 1, ?)`).bind(id, JSON.stringify(data), p.owner || 'LSH Team', key, created).run();
         await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
         await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(created, updated, updated, id).run();
         imported++;
@@ -797,7 +800,7 @@ async function storeImage(env, db, hash) {
     let res;
     try { res = await fetch(row.src); } catch (e) { return null; }
     const type = (res.headers.get('content-type') || '').split(';')[0];
-    if (!res.ok || !/^image\/(png|jpeg|gif|webp)$/.test(type)) {
+    if (!res.ok || !/^(image\/(png|jpeg|gif|webp)|application\/pdf|video\/mp4)$/.test(type)) {
         if (res.status === 404 || res.status === 403 || res.ok) await db.prepare(`UPDATE lib_images SET status = 'gone' WHERE hash = ?`).bind(hash).run();
         return null;
     }
@@ -806,11 +809,13 @@ async function storeImage(env, db, hash) {
     return await env.FILES.get(key);
 }
 
-async function serveImage({ env, db }, hash) {
+async function serveImage({ env, db }, hash, attachment) {
     if (!/^[0-9a-f]{16}$/.test(String(hash || '')) || !env.FILES) return fail('Not found.', 404);
     const obj = await storeImage(env, db, hash);
     if (!obj) return new Response('', { status: 404 });
-    return new Response(obj.body, { headers: { 'Content-Type': obj.httpMetadata.contentType || 'image/png', 'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff' } });
+    const headers = { 'Content-Type': obj.httpMetadata.contentType || 'image/png', 'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff' };
+    if (attachment) headers['Content-Disposition'] = 'inline';   // a PDF or a video attached to an imported page, opened in its own tab
+    return new Response(obj.body, { headers });
 }
 
 // Copies the imported images into R2 ahead of time, 15 per call, so they survive Tettra being closed.

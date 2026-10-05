@@ -242,7 +242,7 @@ def tidy(md, by_slug):
 
     def bare(m):
         t = target(m.group(0))
-        return f'[this page](/#/go/{t})' if t else '(an old Tettra page that is not in the library)'
+        return f'[this page](/#/go/{t})' if t else '(an old page that is not in the library)'
     md = re.sub(r'https?://app\.tettra\.co/teams/[^\s)\]]+', bare, md)
 
     def attach(m):
@@ -251,6 +251,11 @@ def tidy(md, by_slug):
     md = re.sub(r'(?<!!)\[\s*\]\((https?://[^)\s]+)\)', attach, md)
     md = re.sub(r'the Van Law Firm Website', "the firm's website", md)         # the firm's name is not used
     md = re.sub(r'[A-Za-z0-9._-]+@vanlawfirm\.com', 'jane@example-firm.com', md)
+    # file attachments (PDFs, a video) were stored by Tettra: they are copied into the library and linked as /att/<hash>
+    def attachment(m):
+        name = re.sub(r'-\d{8,}(?=\.[a-z0-9]{2,4}$)', '', m.group(1))   # drop the number Tettra added to a file name
+        return '[' + name + '](/att/' + img_id(m.group(2)) + ')'
+    md = re.sub(r'(?<!!)\[([^\]\n]*)\]\((https://tettra-[a-z0-9.-]+\.amazonaws\.com/[^)\s]+)\)', attachment, md)
     md = re.sub(r'\bTettra [Aa]rticles\b', 'Knowledge Base articles', md)
     md = re.sub(r'\bTettra [Aa]rticle\b', 'Knowledge Base article', md)
     return md
@@ -331,14 +336,14 @@ def main(src):
             continue
         s = summary_of(md)
         yrs = years(md)
-        tags = []
+        tags = ['from-tettra']             # the one visible sign that a page came from the firm's Tettra
         if yrs and yrs[-1] <= '2023':      # only cites dates up to 2023: a reviewer should confirm it is still current
-            tags = ['needs-review']
+            tags.append('needs-review')
             md = f'> **Needs review:** this page was last updated in {x["updated_at"][:4]} and its dates stop at {yrs[-1]}. A reviewer should confirm it is still current.\n\n' + md
         pages.append({'id': x['id'], 'tags': tags, 'title': x['page_title'].strip(), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
                       'owner': x.get('owner_name') or '', 'created': x['created_at'], 'updated': x['updated_at'],
                       'url': x['url'], 'summary': s, 'body': md})
-    used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
+    used = {h for p in pages for h in re.findall(r'/(?:img|att)/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
     import glossary_extra, glossary_us   # general US legal-industry terms, written from general knowledge
     norm = lambda x: x.lower().replace('’', "'")
