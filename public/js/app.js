@@ -706,8 +706,10 @@
                 <form class="row" id="rev-form" style="margin-top:10px"><input class="i" id="rev-name" placeholder="Full name, as in the Portal" style="max-width:260px"><input class="i" id="rev-batch" placeholder="Batch, as in the Portal" style="max-width:180px"><select class="i" id="rev-role" style="max-width:150px"><option value="tenured">Tenured</option><option value="reviewer">Reviewer</option></select><button class="btn" type="submit">Give access</button></form></section>
             <section class="section card"><h2>Collections</h2>
                 <p class="muted" style="margin-top:0">The library’s shelves. Lower numbers show first. Archiving a collection hides it from the home page; its entries stay.</p>
+                <div class="row" style="margin-bottom:10px"><button class="btn" id="hide-empty">Remove the empty collections</button>
+                    ${r.collections.filter(c => c.archived).length ? `<label class="muted"><input type="checkbox" id="show-arch"> Show ${r.collections.filter(c => c.archived).length} removed (archived)</label>` : ''}<span class="muted" id="hide-empty-status"></span></div>
                 <div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Description</th><th>Order</th><th>Entries</th><th>Archived</th><th></th></tr></thead><tbody>
-                ${r.collections.map(c => `<tr data-col="${c.slug}"><td><input class="i" data-k="name" value="${esc(c.name)}"></td><td><input class="i" data-k="blurb" value="${esc(c.blurb)}"></td>
+                ${r.collections.map(c => `<tr data-col="${c.slug}"${c.archived ? ' class="arch" hidden' : ''}><td><input class="i" data-k="name" value="${esc(c.name)}"></td><td><input class="i" data-k="blurb" value="${esc(c.blurb)}"></td>
                     <td><input class="i" data-k="sort" type="number" value="${c.sort}" style="width:80px"></td><td>${c.count}</td><td><input type="checkbox" data-k="archived"${c.archived ? ' checked' : ''} aria-label="Archived"></td>
                     <td><button class="btn small" data-save="${c.slug}">Save</button></td></tr>`).join('')}
                 <tr data-col=""><td><input class="i" data-k="name" placeholder="New collection"></td><td><input class="i" data-k="blurb" placeholder="What goes in it"></td><td><input class="i" data-k="sort" type="number" value="${(r.collections.length + 1) * 10}" style="width:80px"></td><td></td><td></td><td><button class="btn small primary" data-save="">Add</button></td></tr>
@@ -736,6 +738,11 @@
         app.querySelectorAll('[data-revoke]').forEach(b => b.onclick = async () => {
             try { await post('/api/admin', { action: 'revoke-reviewer', key: b.dataset.revoke }); admin(); } catch (e) { toast(e.message, true); }
         });
+        const sa = document.getElementById('show-arch');
+        if (sa) sa.onchange = () => app.querySelectorAll('tr.arch').forEach(tr => { tr.hidden = !sa.checked; });
+        document.getElementById('hide-empty').onclick = async () => {
+            try { const x = await post('/api/admin', { action: 'archive-empty' }); toast(x.archived ? `Removed ${plural(x.archived, 'empty collection')}.` : 'There are no empty collections.'); S.lib = null; admin(); } catch (e) { toast(e.message, true); }
+        };
         app.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
             const tr = b.closest('tr'), get = (k) => tr.querySelector(`[data-k="${k}"]`);
             try {
