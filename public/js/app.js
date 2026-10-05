@@ -77,43 +77,8 @@
     /* ---------- session / chrome ---------- */
     async function loadSession() { S.session = await api('/api/session'); }
 
-    /* ---------- side navigation (collections > sections > pages) ---------- */
-    const openCols = new Set();
-    let treeLoading = null;
-    function renderTree(on) {
-        const el = document.getElementById('tree');
-        if (!on) { el.hidden = true; return; }
-        el.hidden = false;
-        if (!S.tree) {
-            if (!treeLoading) treeLoading = api('/api/tree').then(r => { S.tree = r.entries; treeLoading = null; renderTree(true); }).catch(() => { treeLoading = null; });
-            if (!el.innerHTML) el.innerHTML = '<span class="t-title">Library</span><p class="muted" style="margin:6px">Loading…</p>';
-            return;
-        }
-        const m = location.hash.match(/^#\/e\/(\d+)/), cm = location.hash.match(/^#\/c\/([^/?]+)/);
-        const cur = m ? Number(m[1]) : 0;
-        const curEntry = cur ? S.tree.find(x => x.id === cur) : null;
-        const here = curEntry ? curEntry.c : cm ? cm[1] : '';
-        if (here) openCols.add(here);
-        const by = new Map();
-        S.tree.forEach(x => { if (!by.has(x.c)) by.set(x.c, []); by.get(x.c).push(x); });
-        const cols = ((S.lib && S.lib.collections) || []).filter(c => by.has(c.slug));
-        el.innerHTML = '<span class="t-title">Library</span>' + cols.map(c => {
-            const items = by.get(c.slug), secs = new Map();
-            items.forEach(x => { if (!secs.has(x.s)) secs.set(x.s, []); secs.get(x.s).push(x); });
-            const keys = [...secs.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b, undefined, { numeric: true }));
-            const page = (x) => `<a class="t-page${x.id === cur ? ' on' : ''}" href="#/e/${x.id}">${esc(x.t)}</a>`;
-            return `<details data-col="${c.slug}"${openCols.has(c.slug) ? ' open' : ''}><summary>${esc(c.name)}<span class="n">${items.length}</span></summary>
-                ${keys.map(k => (k ? `<div class="t-sec">${esc(k)}</div>` : '') + secs.get(k).map(page).join('')).join('')}
-                <a class="t-all" href="#/c/${c.slug}">Open the collection →</a></details>`;
-        }).join('');
-        el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => { d.open ? openCols.add(d.dataset.col) : openCols.delete(d.dataset.col); }));
-        const on_ = el.querySelector('a.t-page.on');
-        if (on_ && on_.scrollIntoView) on_.scrollIntoView({ block: 'nearest' });
-    }
-
     function chrome(on) {
         document.getElementById('top-search').hidden = !on;
-        renderTree(on);
         const nav = document.getElementById('top-nav');
         nav.hidden = !on;
         if (!on) return;
@@ -131,7 +96,7 @@
         if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
         document.getElementById('signout').onclick = async () => {
             await post('/api/session', { action: s.admin ? 'admin-logout' : 'signout' }).catch(() => {});
-            S.session = null; S.lib = null; S.tree = null; location.hash = '#/'; route();
+            S.session = null; S.lib = null; location.hash = '#/'; route();
         };
     }
 
@@ -269,10 +234,18 @@
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${L.queue && (L.queue.revisions || L.queue.comments) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')} and ${plural(L.queue.comments, 'reply', 'replies')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
-        ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2><span class="muted">${plural(all.total, 'entry', 'entries')}</span></div>${listHTML(all.entries)}</section>` : ''}
+        ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2>
+            <span class="row"><label class="sr" for="az-cat">Category</label><select class="i" id="az-cat" style="width:auto;max-width:280px"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
+            <span class="muted" id="az-count">${plural(all.total, 'entry', 'entries')}</span></span></div><div id="az-list">${listHTML(all.entries)}</div></section>` : ''}
         ${L.featured.length ? `<section class="section"><h2>Featured</h2>${listHTML(L.featured)}</section>` : ''}
         ${L.videos.length ? `<section class="section"><div class="spread"><h2>Latest training videos</h2><a href="#/videos">All videos</a></div>${listHTML(L.videos)}</section>` : ''}
         ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);
+        const azCat = document.getElementById('az-cat');
+        if (azCat) azCat.onchange = () => {
+            const rows = azCat.value ? all.entries.filter(e => e.collection === azCat.value) : all.entries;
+            document.getElementById('az-list').innerHTML = listHTML(rows);
+            document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
+        };
         document.getElementById('hero-search').onsubmit = (ev) => {
             ev.preventDefault();
             location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('hero-q').value.trim());
@@ -450,7 +423,7 @@
                 await post(`/api/entries/${id}`, body);
                 const msg = { feature: 'Featured on the library home.', unfeature: 'No longer featured.', archive: 'Archived. Every version is kept.', unarchive: 'Back in the library.',
                     official: 'Updated.', withdraw: 'Withdrawn.', purge: 'Deleted permanently.' }[act];
-                toast(msg); S.lib = null; S.tree = null;
+                toast(msg); S.lib = null;
                 if (act === 'purge' || act === 'withdraw') location.hash = '#/mine'; else entry(id);
             } catch (e) { toast(e.message, true); }
         });
@@ -569,7 +542,7 @@
             save.disabled = true;
             try {
                 const r = e ? await post(`/api/entries/${id}`, { action: 'edit', ...body }) : await post('/api/entries', body);
-                leaveGuard = null; S.lib = null; S.tree = null; delete S.sections[body.collection];
+                leaveGuard = null; S.lib = null; delete S.sections[body.collection];
                 toast(r.status === 'pending' ? 'Sent for review. Thanks for adding to the library.' : 'Saved.');
                 location.hash = `#/e/${e ? id : r.id}`;
             } catch (x) { err.textContent = x.message; save.disabled = false; }
@@ -645,7 +618,7 @@
             try {
                 await post(`/api/revisions/${revId}`, { decision: b.dataset.d, note: val('v-note') });
                 toast(b.dataset.d === 'approve' ? 'Approved. It’s live now.' : 'Sent back to the author with your note.');
-                S.lib = null; S.tree = null; location.hash = '#/review';
+                S.lib = null; location.hash = '#/review';
             } catch (e) { toast(e.message, true); }
         });
         const rb = document.getElementById('v-restore');
@@ -708,11 +681,11 @@
                 <div class="row" style="margin-top:8px"><button class="btn small primary" data-cm="${c.id}" data-d="approve">Approve</button><button class="btn small" data-cm="${c.id}" data-d="reject">Don’t publish</button></div></div>`).join('')}</div></section>` : ''}`);
         app.querySelectorAll('[data-rev]').forEach(b => b.onclick = async () => {
             const note = (app.querySelector(`[data-note="${b.dataset.rev}"]`) || {}).value || '';
-            try { await post(`/api/revisions/${b.dataset.rev}`, { decision: b.dataset.d, note }); toast(b.dataset.d === 'approve' ? 'Approved.' : 'Sent back with your note.'); S.lib = null; S.tree = null; review(); }
+            try { await post(`/api/revisions/${b.dataset.rev}`, { decision: b.dataset.d, note }); toast(b.dataset.d === 'approve' ? 'Approved.' : 'Sent back with your note.'); S.lib = null; review(); }
             catch (e) { toast(e.message, true); }
         });
         app.querySelectorAll('[data-cm]').forEach(b => b.onclick = async () => {
-            try { await post('/api/comments', { action: 'review', id: Number(b.dataset.cm), decision: b.dataset.d }); S.lib = null; S.tree = null; review(); } catch (e) { toast(e.message, true); }
+            try { await post('/api/comments', { action: 'review', id: Number(b.dataset.cm), decision: b.dataset.d }); S.lib = null; review(); } catch (e) { toast(e.message, true); }
         });
     }
 
@@ -766,7 +739,7 @@
             const tr = b.closest('tr'), get = (k) => tr.querySelector(`[data-k="${k}"]`);
             try {
                 await post('/api/admin', { action: 'save-collection', slug: tr.dataset.col, name: get('name').value, blurb: get('blurb').value, sort: get('sort').value, archived: get('archived') ? get('archived').checked : false });
-                toast('Collection saved.'); S.lib = null; S.tree = null; admin();
+                toast('Collection saved.'); S.lib = null; admin();
             } catch (e) { toast(e.message, true); }
         });
         const loop = (btnId, action, text) => {
@@ -783,7 +756,7 @@
                         if (!x.remaining || x.remaining >= last) break;   // done, or no progress
                         last = x.remaining;
                     }
-                    S.lib = null; S.tree = null;
+                    S.lib = null;
                 } catch (e) { st.textContent = e.message; }
                 b.disabled = false;
             };
@@ -797,7 +770,7 @@
             try {
                 const x = await post('/api/admin', { action: 'import-bundled' });
                 st.textContent = x.imported ? `Imported ${plural(x.imported, 'document')}.` : (x.note || 'Everything is already imported.');
-                S.lib = null; S.tree = null;
+                S.lib = null;
             } catch (e) { st.textContent = e.message; }
             impDocs.disabled = false;
         };
@@ -812,7 +785,7 @@
                     total += x.imported; st.textContent = `Imported ${total}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`;
                     if (!x.remaining || !x.imported) break;
                 }
-                S.lib = null; S.tree = null;
+                S.lib = null;
             } catch (e) { st.textContent = e.message; }
             imp.disabled = false;
         };

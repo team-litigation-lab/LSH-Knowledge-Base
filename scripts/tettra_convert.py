@@ -190,6 +190,11 @@ def summary_of(md):
         t = plain(b)
         if len(t) >= 40:
             return (t[:217] + '…') if len(t) > 220 else t
+    heads = [re.sub(r'[*`\[\]]|\([^)]*\)', '', h).strip() for h in re.findall(r'^#{1,2} (.+)$', md, flags=re.M)]
+    heads = [h for h in heads if h]
+    if heads:
+        t = 'Covers ' + ', '.join(heads[:6]) + ('…' if len(heads) > 6 else '.')
+        return (t[:217] + '…') if len(t) > 220 else t
     t = plain(md)
     return (t[:217] + '…') if len(t) > 220 else t
 
