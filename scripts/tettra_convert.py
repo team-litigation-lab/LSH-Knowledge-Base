@@ -5,8 +5,7 @@
 
 Each page's HTML becomes the Knowledge Base's safe Markdown. Images become ![alt](/img/<hash>), where <hash> is the
 first 16 hex characters of the SHA-1 of the image's original address; the original addresses are kept in "images" so
-the Worker can copy them into R2. Owner e-mail addresses are not carried over. Tettra's own starter templates
-(pages with no category) and empty test pages are skipped.
+the Worker can copy them into R2. Owner e-mail addresses are not carried over. Pages deleted in Tettra, pages with no\ncontent (the empty "asd" test page) and the cracked-Nitro-Pro install page are skipped; everything else is kept, including\nTettra's starter templates (pages with no category, shelved under "Tettra starter templates").
 """
 import hashlib, json, os, re, sys
 from html.parser import HTMLParser
@@ -160,7 +159,7 @@ class MD(HTMLParser):
             is_li = re.match(r'\s*(- |\d+\. )', b) is not None and '\n' not in b
             md += ('\n' if (prev_li and is_li) else '\n\n') + b if md else b
             prev_li = is_li
-        md = re.sub(r'\*\*\s*\*\*', '', md)                    # empty bold
+        md = re.sub(r'\*\*[ \t]*\*\*', '', md)                # empty bold (within a line only, so neighbouring bold paragraphs stay apart)
         md = re.sub(r'\*\*(\s+)', r'\1**', md) if False else md
         md = re.sub(r'\n{3,}', '\n\n', md)
         return md.strip()
@@ -203,13 +202,11 @@ def main(src):
     data = json.load(open(src))
     pages = []
     for x in data:
-        cat = x.get('category_name')
-        if x.get('deleted_at') or not cat:
-            continue                      # deleted, or one of Tettra's starter templates
-        if 'nitro pro' in x['page_title'].lower():
+        cat = x.get('category_name') or 'Tettra starter templates'
+        if x.get('deleted_at'):
+            continue                      # deleted in Tettra
+        if 'crack version' in (x.get('html') or '').lower():
             continue                      # instructions for installing a cracked copy of Nitro Pro; left out on purpose
-        if cat == 'Test. Test' and len(x.get('html') or '') < 200:
-            continue
         md = convert(x.get('html') or '')
         if len(md) < 20:
             continue
