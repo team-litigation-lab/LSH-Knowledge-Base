@@ -100,27 +100,33 @@
         };
     }
 
-    function gate() {
+    function gate(msg) {
         chrome(false); setTitle('Sign in');
-        const open = S.session && S.session.configured;
+        const portal = (S.session && S.session.portalUrl) || 'https://cm-training-activity.pages.dev';
+        const wantAdmin = new URLSearchParams(location.search).get('admin') === '1';
+        const codeLogin = !!(S.session && S.session.codeLogin), open = !!(S.session && S.session.configured);
         view(`<div class="gate">
             <h1>LSH Knowledge Base</h1>
             <p class="lead">SOPs, training videos and know-how from the whole LSH VA community.</p>
             <div class="card">
                 <div class="tabs" role="tablist">
-                    <button type="button" role="tab" aria-selected="true" data-tab="va">VA community</button>
-                    <button type="button" role="tab" aria-selected="false" data-tab="admin">Admin</button>
+                    <button type="button" role="tab" aria-selected="${!wantAdmin}" data-tab="va">Trainee Portal</button>
+                    <button type="button" role="tab" aria-selected="${wantAdmin}" data-tab="admin">Admin Portal</button>
                 </div>
-                <form id="f-va" autocomplete="on">
+                ${codeLogin ? `<form id="f-va" autocomplete="on"${wantAdmin ? ' hidden' : ''}>
                     ${open ? '' : '<p class="note">The Knowledge Base isn’t open yet. An admin needs to sign in and set the team access code.</p>'}
                     <label class="f">Full name<input class="i" id="g-name" name="name" required autocomplete="name"></label>
                     <label class="f">Batch <small>(optional)</small><input class="i" id="g-batch" name="batch" placeholder="e.g. Batch 12"></label>
                     <label class="f">Team access code<input class="i" id="g-code" name="code" type="password" required autocomplete="off"><small>Your trainer or team lead gives you this code.</small></label>
                     <button class="btn primary" type="submit"${open ? '' : ' disabled'}>Open the library</button>
                     <p class="muted" id="g-err" role="alert"></p>
-                </form>
-                <form id="f-admin" hidden>
-                    <p class="muted" style="margin:0">Use your LSH Training Portal admin login.</p>
+                </form>` : `<div id="f-va"${wantAdmin ? ' hidden' : ''} style="display:grid;gap:12px">
+                    <p style="margin:0">Sign in once, on the LSH Training Portal. Open the Knowledge Base from there and you come straight in: there is no second sign-in here.</p>
+                    ${msg ? `<p class="note" role="alert">${esc(msg)}</p>` : ''}
+                    <a class="btn primary" href="${esc(portal)}/programs.html">Go to the LSH Training Portal</a>
+                </div>`}
+                <form id="f-admin"${wantAdmin ? '' : ' hidden'}>
+                    <p class="muted" style="margin:0">Administrators type their LSH Training Portal admin username and password here.</p>
                     <label class="f">Username<input class="i" id="g-user" required autocomplete="username"></label>
                     <label class="f">Password<input class="i" id="g-pass" type="password" required autocomplete="current-password"></label>
                     <button class="btn primary" type="submit">Sign in as admin</button>
@@ -132,7 +138,7 @@
             document.getElementById('f-va').hidden = b.dataset.tab !== 'va';
             document.getElementById('f-admin').hidden = b.dataset.tab !== 'admin';
         });
-        document.getElementById('f-va').onsubmit = async (ev) => {
+        if (codeLogin) document.getElementById('f-va').onsubmit = async (ev) => {
             ev.preventDefault();
             try {
                 await post('/api/session', { action: 'unlock', name: val('g-name'), batch: val('g-batch'), code: val('g-code') });
@@ -156,10 +162,17 @@
         return { parts: path.split('/').filter(Boolean), q: new URLSearchParams(qs || '') };
     }
     async function route() {
+        let gateMsg = '';
         try {
+            // Opened from the LSH Training Portal: it hands over a short-lived signed ticket, which signs the trainee in.
+            const tk = new URLSearchParams(location.search).get('ticket');
+            if (tk) {
+                history.replaceState(null, '', location.pathname + location.hash);
+                try { await post('/api/session', { action: 'portal-ticket', ticket: tk }); S.session = null; } catch (e) { gateMsg = e.message; }
+            }
             if (!S.session) await loadSession();
         } catch (e) { return errorView(e); }
-        if (!S.session.unlocked) return gate();
+        if (!S.session.unlocked) return gate(gateMsg);
         const { parts, q } = parseHash();
         try {
             await ensureLib();
@@ -662,11 +675,11 @@
         setTitle('Admin');
         const r = await api('/api/admin');
         view(`<h1>Admin</h1>
-            <section class="section card"><h2>Team access code</h2>
+            ${S.session && S.session.codeLogin ? `            <section class="section card"><h2>Team access code</h2>
                 <p>${r.codeSet ? `VAs open the library with the team access code. Last changed ${fmtWhen(r.codeChangedAt) || 'earlier'}. Changing it signs every VA out until they enter the new code.` : '<b>No code is set, so VAs can’t get in yet.</b> Set one and share it with the community.'}</p>
                 <form class="row" id="code-form"><label class="sr" for="code">New code</label><input class="i" id="code" type="text" minlength="6" maxlength="64" placeholder="At least 6 characters" style="max-width:280px" autocomplete="off">
                     <button class="btn primary" type="submit">${r.codeSet ? 'Change the code' : 'Set the code'}</button></form>
-                <p class="muted" style="font-size:13px">This is the same code as the Knowledge Base in the LSH Training Portal.</p></section>
+                <p class="muted" style="font-size:13px">This is the same code as the Knowledge Base in the LSH Training Portal.</p></section>` : ''}
             <section class="section card"><h2>Reviewers</h2>
                 <p class="muted" style="margin-top:0">Trusted VAs who can approve entries, edits and replies, archive and restore. Only admins can mark entries official, delete permanently or change settings.</p>
                 ${r.roles.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Batch</th><th>Added</th><th></th></tr></thead><tbody>${r.roles.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.batch)}</td><td>${fmtDate(x.grantedAt)} by ${esc(x.grantedBy || '')}</td><td><button class="btn small danger" data-revoke="${esc(x.key)}">Remove</button></td></tr>`).join('')}</tbody></table></div>` : '<p>No reviewers yet.</p>'}

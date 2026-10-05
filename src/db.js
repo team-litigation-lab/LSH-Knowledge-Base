@@ -134,8 +134,11 @@ export async function getReader(request, env) {
     }
     const p = await readToken(getCookie(request, READER_COOKIE), env.SESSION_SECRET);
     if (!p || !p.kb) return null;
-    const version = await getSetting(db, 'code_version');
-    if (!version || p.v !== version) return null;   // the code changed since they signed in
+    if (!p.sso) {   // an old team-access-code session: only while the code sign-in is switched on, and until the code changes
+        if (String(env.KB_CODE_LOGIN || '').toLowerCase() !== 'on') return null;
+        const version = await getSetting(db, 'code_version');
+        if (!version || p.v !== version) return null;   // the code changed since they signed in
+    }
     const key = personKey(p.name, p.batch);
     const role = await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();
     const reviewer = !!(role && role.role === 'reviewer');
