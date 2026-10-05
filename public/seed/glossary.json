@@ -17,12 +17,108 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Adjuster",
+   "definition": "The insurance company employee or contractor who investigates a claim and decides or recommends what to pay.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:adjuster",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Admissible",
+   "definition": "Evidence that the judge allows the jury to consider.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:admissible",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Affidavit",
+   "definition": "A written statement of facts that the person swears is true, signed before a notary or other authorized officer.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:affidavit",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Aggravation of a Pre-existing Condition",
+   "definition": "Making an earlier injury or condition worse. The defendant may be responsible for the worsening, not the original condition.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:aggravation-of-a-pre-existing-condition",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Answer",
+   "definition": "The defendant’s written response to the complaint, admitting or denying each claim and raising defenses.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:answer",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Appeal",
+   "definition": "Asking a higher court to review a lower court’s decision for legal error. The party who appeals is the appellant; the other side is the appellee.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:appeal",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Arbitration",
+   "definition": "A private process where a neutral arbitrator hears both sides and decides the case. It can be binding or non-binding.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:arbitration",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "AROM",
    "definition": "Active range of motion",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:3",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Assumption of Risk",
+   "definition": "A defense that the injured person knew about a danger and accepted the risk anyway.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:assumption-of-risk",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Attorney-Client Privilege",
+   "definition": "The legal protection that keeps confidential communications between a lawyer and a client from being disclosed to others.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:attorney-client-privilege",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Attorney’s Lien",
+   "definition": "A lawyer’s legal claim on a recovery for unpaid fees and costs.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:attorney-s-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Bates Number",
+   "definition": "A unique number stamped on each page of documents in a case so each page can be identified.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:bates-number",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Beyond a Reasonable Doubt",
+   "definition": "The criminal standard: the proof must leave no reasonable doubt that the defendant is guilty.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:beyond-a-reasonable-doubt",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "bid",
@@ -33,12 +129,60 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Bodily Injury (BI)",
+   "definition": "Coverage for injuries a policyholder causes to other people.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:bodily-injury-bi",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Breach of Duty",
+   "definition": "Failing to meet the duty of care, for example by speeding or ignoring a hazard.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:breach-of-duty",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Burden of Proof",
+   "definition": "The duty to prove a claim. In most civil cases the plaintiff has it.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:burden-of-proof",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "c/o",
    "definition": "Complaint of",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:6",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Caption",
+   "definition": "The heading of a court document that gives the court, the parties’ names and the case number.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:caption",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Case Number",
+   "definition": "The number the court assigns to a case, used to find and file anything in it.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:case-number",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Causation",
+   "definition": "The link between what the defendant did and the plaintiff’s injury. The plaintiff must show the injury was caused by the accident.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:causation",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "CC",
@@ -49,6 +193,142 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Claimant",
+   "definition": "The person making an insurance claim.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:claimant",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Class Action",
+   "definition": "A lawsuit brought by one or a few people on behalf of a large group with similar claims.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:class-action",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Clear and Convincing Evidence",
+   "definition": "A standard higher than a preponderance of the evidence and lower than beyond a reasonable doubt, used in some civil matters.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:clear-and-convincing-evidence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "CMS-1500 (HCFA)",
+   "definition": "The standard billing form used by doctors and most outpatient providers to bill insurers.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:cms-1500-hcfa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Common Fund Doctrine",
+   "definition": "The rule that a lienholder who benefits from a lawyer’s work should help pay the attorney fees and costs, which reduces the lien.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:common-fund-doctrine",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Common Law",
+   "definition": "Law that comes from court decisions rather than statutes.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:common-law",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Comparative Negligence",
+   "definition": "The rule that reduces a plaintiff’s recovery by their own percentage of fault. In “pure” systems they can recover even if mostly at fault; in “modified” systems they are barred above 50% or 51%.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:comparative-negligence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Compensatory Damages",
+   "definition": "Money that pays for the actual loss: medical bills, lost income, pain and suffering.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:compensatory-damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Complaint",
+   "definition": "The document that starts a lawsuit. It names the parties, states the facts and says what the plaintiff wants. In some states it is called a petition.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:complaint",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Conflict of Interest",
+   "definition": "A situation where a lawyer’s duty to one client, or their own interests, could harm another client. Firms run a conflict check before taking a new matter.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:conflict-of-interest",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Contingency Fee",
+   "definition": "A fee the lawyer is paid only if the case is won or settled, usually a percentage of the money recovered. Common in personal injury cases.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:contingency-fee",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Continuance",
+   "definition": "A postponement of a hearing or trial to a later date.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:continuance",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Contributory Negligence",
+   "definition": "A rule in a few states that bars recovery entirely if the injured person was even slightly at fault.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:contributory-negligence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Counterclaim",
+   "definition": "A claim the defendant makes against the plaintiff in the same lawsuit.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:counterclaim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Court Reporter",
+   "definition": "The person who records and transcribes testimony at depositions and court proceedings.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:court-reporter",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "CPT Code",
+   "definition": "A five-digit code that identifies each medical service or procedure on a bill.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:cpt-code",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Cross-Claim",
+   "definition": "A claim one defendant makes against another defendant in the same lawsuit.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:cross-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "D/C or DC",
    "definition": "Discharge or discontinue",
    "example": "",
@@ -57,12 +337,148 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Damages",
+   "definition": "The money a court or insurer awards to make up for a loss or injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Declarations Page (Dec Page)",
+   "definition": "The first page of an insurance policy, listing who is insured, the vehicles, the coverages and the limits.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:declarations-page-dec-page",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Deductible",
+   "definition": "The amount you pay yourself before the insurance pays the rest.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:deductible",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Default Judgment",
+   "definition": "A judgment for the plaintiff because the defendant did not respond to the lawsuit in time.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:default-judgment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Defendant",
    "definition": "The party sued in a lawsuit or the party charged with a crime in a criminal prosecution.",
    "example": "",
    "category": "Legal",
    "ref": "tettra:919607:4",
    "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Demand Letter",
+   "definition": "A letter to the insurance company that sets out the facts, the injuries, the bills and a dollar amount requested to settle.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:demand-letter",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Demand Package",
+   "definition": "The demand letter plus its supporting records: medical records, bills, wage loss proof and photos.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:demand-package",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Demurrer",
+   "definition": "In some states, such as California, a challenge to the complaint saying that even if the facts are true there is no valid claim.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:demurrer",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Deposition",
+   "definition": "Out-of-court testimony given under oath, answering a lawyer’s questions, and recorded by a court reporter.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:deposition",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Diminished Value",
+   "definition": "The loss in a vehicle’s market value after an accident, even when repaired.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:diminished-value",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Directed Verdict",
+   "definition": "A ruling by the judge during trial that one side wins because no reasonable jury could decide otherwise. Now often called judgment as a matter of law.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:directed-verdict",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Disbursement",
+   "definition": "Paying out money from a settlement: fees, costs, liens and bills first, then the net to the client.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:disbursement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Discovery",
+   "definition": "The stage where each side gets information from the other through written questions, document requests and depositions.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:discovery",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dismissal With Prejudice",
+   "definition": "The case is ended for good and cannot be filed again.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:dismissal-with-prejudice",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dismissal Without Prejudice",
+   "definition": "The case is ended but can be filed again, if the deadline allows.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:dismissal-without-prejudice",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Diversity Jurisdiction",
+   "definition": "A federal court’s power to hear a state-law case when the parties are from different states and a minimum amount (over $75,000) is at stake.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:diversity-jurisdiction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Docket",
+   "definition": "The court’s official list of everything filed and every event in a case. To “docket” something is also to enter a deadline on the firm’s calendar.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:docket",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Duty of Care",
+   "definition": "The legal obligation to act with reasonable care to avoid harming others.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:duty-of-care",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "DVT",
@@ -81,12 +497,28 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "E-Filing",
+   "definition": "Filing court documents online through the court’s electronic system.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:e-filing",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "E-stim",
    "definition": "Electrical Muscle Stimulation",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:14",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Economic Damages (Special Damages)",
+   "definition": "Losses that can be added up in dollars, such as medical bills, lost wages and property damage.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:economic-damages-special-damages",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "ED",
@@ -113,12 +545,76 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Eggshell Plaintiff (Thin Skull Rule)",
+   "definition": "The defendant takes the injured person as they find them, so is responsible for the full harm even if the person was unusually fragile.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:eggshell-plaintiff-thin-skull-rule",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "ERISA Plan",
+   "definition": "A health plan from a private employer governed by a federal law. A self-funded ERISA plan can claim strong repayment rights from a settlement, subject to its plan terms.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:erisa-plan",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "ESI",
    "definition": "Epidural steroid injection",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:13",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Esquire (Esq.)",
+   "definition": "A courtesy title written after a lawyer’s name.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:esquire-esq",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Ex Parte",
+   "definition": "Done by or for one side only, without the other side being present or notified, as in an emergency request to the court.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:ex-parte",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Excess / Umbrella Policy",
+   "definition": "Extra liability coverage that applies after the main policy limits are used up.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:excess-umbrella-policy",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Exhibit",
+   "definition": "A document, photo or object offered as evidence, or attached to a court filing, and labelled by number or letter.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:exhibit",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Expert Witness",
+   "definition": "A person with special training, such as a doctor or an engineer, who gives an opinion to help the judge or jury understand the evidence.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:expert-witness",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Explanation of Benefits (EOB)",
+   "definition": "A statement from a health insurer showing what was billed, what it paid and what the patient owes.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:explanation-of-benefits-eob",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "F/U",
@@ -129,6 +625,22 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Federal Question",
+   "definition": "A case that arises under the US Constitution or a federal law, so a federal court can hear it.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:federal-question",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Fiduciary Duty",
+   "definition": "The legal duty to act in another person’s best interest and with loyalty. A lawyer owes it to the client.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:fiduciary-duty",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "File",
    "definition": "A legal process where the written complaint or petition which is the opening step in a lawsuit and subsequent documents, including an answer, demurrer, motions, petitions and orders are submitted to the clerk of Court.",
    "example": "",
@@ -137,12 +649,36 @@
    "source": "Tettra: LSH Legal Jargon"
   },
   {
+   "term": "First-Party Claim",
+   "definition": "A claim made against your own insurance company.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:first-party-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Future Medical Care",
+   "definition": "Treatment a doctor expects a person will need later, such as surgery, which can be claimed as damages if supported.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:future-medical-care",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "FX/Fx",
    "definition": "Fracture; Family",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:15",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Garnishment",
+   "definition": "A court-ordered way to collect a debt by taking money from wages or a bank account.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:garnishment",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "H&P",
@@ -169,12 +705,52 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Hearsay",
+   "definition": "An out-of-court statement offered to prove that what it says is true. It is usually not allowed as evidence unless an exception applies.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:hearsay",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "HEP",
    "definition": "Home Exercise Program",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:20",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "HIPAA",
+   "definition": "The federal privacy law that protects patients’ medical information. Providers need a signed authorization before releasing records to a law firm.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:hipaa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "HIPAA Authorization",
+   "definition": "A form signed by the patient allowing a provider to release their medical records to a named person or firm.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:hipaa-authorization",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Hospital Lien",
+   "definition": "A claim by a hospital on an injury settlement, created by a state statute or by contract, for the cost of emergency or hospital care.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:hospital-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Hourly Rate",
+   "definition": "A fee charged for each hour of the lawyer’s or staff’s time, rather than a percentage of a recovery.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:hourly-rate",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "HPI",
@@ -201,12 +777,92 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "ICD-10 Code",
+   "definition": "A code that identifies the diagnosis (the condition or injury) on medical records and bills.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:icd-10-code",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "ICP",
    "definition": "Intracranial pressure",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:24",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Impairment Rating",
+   "definition": "A doctor’s estimate, as a percentage, of the permanent loss of function from an injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:impairment-rating",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "In Camera",
+   "definition": "Reviewed by the judge privately, in chambers, rather than in open court.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:in-camera",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Independent Medical Examination (IME)",
+   "definition": "An exam by a doctor chosen by the insurance company or defense, to give an opinion on the injury and treatment.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:independent-medical-examination-ime",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Injunction",
+   "definition": "A court order that requires someone to do, or stop doing, something. A temporary restraining order (TRO) is a short-term emergency version.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:injunction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Insured",
+   "definition": "The person or business covered by an insurance policy.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:insured",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Interrogatories",
+   "definition": "Written questions one side sends the other that must be answered in writing under oath.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:interrogatories",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "IOLTA / Trust Account",
+   "definition": "A bank account where a law firm holds client money, such as settlement funds, separate from the firm’s own money. Money is paid out only as the rules allow.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:iolta-trust-account",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Itemized Bill",
+   "definition": "A provider’s bill that lists each service, date and charge, rather than only a total.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:itemized-bill",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Joinder",
+   "definition": "Adding another party or claim to a lawsuit.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:joinder",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "JT",
@@ -217,12 +873,28 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Judgment",
+   "definition": "The court’s final decision in a case, including any amount owed.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:judgment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Jurisdiction",
    "definition": "Power/authority of the court. It is the limit of a judicial authority or the extent to which a court of law can exercise its authority over suits, cases, appeals, etc.; Hierarchy of Courts.",
    "example": "Eg. Nevada: Justice Court, District Court, Supreme Court; Florida: Trial Court (Circuit or County), District Courts of Appeal, Supreme Court",
    "category": "Legal",
    "ref": "tettra:919607:7",
    "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Jury Instructions",
+   "definition": "The judge’s explanation to the jury of the law it must apply to the facts.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:jury-instructions",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "LBP",
@@ -241,12 +913,60 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Legal Malpractice",
+   "definition": "When a lawyer’s failure to meet professional standards, such as missing a deadline, harms a client.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:legal-malpractice",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "LESI",
    "definition": "Lumbar epidural steroid injection",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:28",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Letter of Protection (LOP)",
+   "definition": "A written promise from a law firm or client to pay a provider’s bill from the settlement, so the client can treat now and pay later.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:letter-of-protection-lop",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Letter of Representation (LOR)",
+   "definition": "A letter telling an insurance company that a law firm represents the claimant, so they should contact the firm and not the claimant.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:letter-of-representation-lor",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Lien",
+   "definition": "A legal claim on money or property as security for a debt. In injury cases, a lien lets a provider or insurer be repaid from the settlement.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Lien Reduction",
+   "definition": "Negotiating a lienholder down to a smaller repayment from a settlement.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:lien-reduction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Litigation Hold (Preservation Letter)",
+   "definition": "A notice telling a person or company to keep all records and evidence related to a claim.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:litigation-hold-preservation-letter",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "LOC",
@@ -257,6 +977,198 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Loss of Consortium",
+   "definition": "A spouse’s claim for the loss of companionship, support and intimacy caused by the other spouse’s injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:loss-of-consortium",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Loss of Use",
+   "definition": "Compensation for the time a vehicle is out of service, such as the cost of a rental car.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:loss-of-use",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Made-Whole Doctrine",
+   "definition": "The rule that an injured person must be fully compensated before an insurer can take repayment from the settlement. Plan terms and state law can change it.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:made-whole-doctrine",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Mass Tort",
+   "definition": "A group of many people injured by the same product, drug or event, each with their own claim.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:mass-tort",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Maximum Medical Improvement (MMI)",
+   "definition": "The point when a person’s condition has stabilized and is not expected to improve much more with treatment.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:maximum-medical-improvement-mmi",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Mediation",
+   "definition": "A meeting where a neutral person, the mediator, helps the parties negotiate a settlement. The mediator cannot force a result.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:mediation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Mediation Binder",
+   "definition": "A package of key documents, such as the facts, injuries, bills and demand, prepared for a mediation.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:mediation-binder",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medicaid Lien",
+   "definition": "The state Medicaid program’s claim to be repaid from a settlement for accident-related care it paid for.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:medicaid-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Chronology",
+   "definition": "A date-by-date summary of a person’s treatment, built from their medical records.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:medical-chronology",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Lien",
+   "definition": "A claim by a medical provider on a settlement for unpaid treatment.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:medical-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Malpractice",
+   "definition": "Injury caused when a health care provider’s care falls below the accepted standard.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:medical-malpractice",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Records Custodian",
+   "definition": "The person or department at a provider who handles records requests and can certify the records.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:medical-records-custodian",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Summary",
+   "definition": "A written summary of the injuries, treatment, findings and costs, used in a demand.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:medical-summary",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medicare Conditional Payment",
+   "definition": "Money Medicare paid for accident-related care while a claim was pending. Medicare must be repaid from the settlement.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:medicare-conditional-payment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "MedPay (Medical Payments Coverage)",
+   "definition": "Optional coverage that pays medical bills after a crash regardless of fault, up to a set limit.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:medpay-medical-payments-coverage",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Meet and Confer",
+   "definition": "A required step where the lawyers must try to resolve a dispute, often about discovery, with each other before asking the court.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:meet-and-confer",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "MIST (Minor Impact Soft Tissue)",
+   "definition": "The label insurers put on low-damage collisions with soft-tissue injuries, used to argue the crash could not have caused the injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:mist-minor-impact-soft-tissue",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Mitigation of Damages",
+   "definition": "The injured person’s duty to take reasonable steps to limit their losses, such as following medical advice.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:mitigation-of-damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motion",
+   "definition": "A written request asking the court to make a ruling or order.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:motion",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motion for Summary Judgment",
+   "definition": "A request for a decision without a trial because there is no real dispute about the important facts.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:motion-for-summary-judgment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motion in Limine",
+   "definition": "A request, usually before trial, to allow or keep out certain evidence.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:motion-in-limine",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motion to Compel",
+   "definition": "A request that the court order the other side to answer discovery or produce documents.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:motion-to-compel",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motion to Dismiss",
+   "definition": "A request to end the case early, arguing the complaint fails to state a valid claim or the court lacks authority.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:motion-to-dismiss",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Multidistrict Litigation (MDL)",
+   "definition": "A federal procedure that combines many similar cases from different districts before one judge for pretrial work.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:multidistrict-litigation-mdl",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "MVA",
    "definition": "Motor vehicular accident",
    "example": "",
@@ -265,12 +1177,92 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Negligence",
+   "definition": "Failing to use the care a reasonably careful person would use, which causes harm. It has four parts: duty, breach, causation and damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:negligence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Net to Client",
+   "definition": "The money the client receives after fees, costs, liens and bills are paid.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:net-to-client",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "No-Fault",
+   "definition": "A system where your own insurance pays certain crash losses, such as medical bills, whoever caused the crash. Lawsuits are limited to more serious injuries.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:no-fault",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Nominal Damages",
+   "definition": "A very small amount awarded when a right was violated but there is little or no financial loss.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:nominal-damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Non-Economic Damages (General Damages)",
+   "definition": "Losses with no bill attached, such as pain and suffering, emotional distress and loss of enjoyment of life.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:non-economic-damages-general-damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Notary Public",
+   "definition": "A person authorized by the state to witness signatures, confirm identity and administer oaths.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:notary-public",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "NP",
    "definition": "Nurse Practitioner",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:31",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Objection",
+   "definition": "A lawyer’s formal protest that a question or evidence is improper. The judge rules “sustained” (agrees) or “overruled” (disagrees).",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:objection",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Of Counsel",
+   "definition": "A lawyer who is affiliated with a firm but is not a partner or regular associate.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:of-counsel",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Offer of Judgment",
+   "definition": "A formal settlement offer under a court rule that can shift costs to a party who rejects it and then does worse at trial.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:offer-of-judgment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Opposing Counsel",
+   "definition": "The lawyer who represents the other side in a case.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:opposing-counsel",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "ORIF",
@@ -297,6 +1289,30 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "PACER",
+   "definition": "The federal courts’ online service for searching and downloading case documents and dockets.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:pacer",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pain and Suffering",
+   "definition": "Compensation for physical pain and emotional distress caused by an injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:pain-and-suffering",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Paralegal",
+   "definition": "A trained professional who helps lawyers with legal work (drafting, research, case organization) but is not a lawyer and cannot give legal advice.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:paralegal",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "PCP",
    "definition": "Primary care physician",
    "example": "",
@@ -321,12 +1337,172 @@
    "source": "Tettra: LSH Legal Jargon"
   },
   {
+   "term": "Personal Jurisdiction",
+   "definition": "A court’s authority over the people or companies being sued, usually because they live, work or did business in that state.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:personal-jurisdiction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "PIP (Personal Injury Protection)",
+   "definition": "No-fault coverage that pays your medical bills and some lost income after a crash, whoever was at fault, in states that require it.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:pip-personal-injury-protection",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Plaintiff",
    "definition": "The party who initiates a lawsuit or action in a civil case and complainant in a criminal prosecution.",
    "example": "",
    "category": "Legal",
    "ref": "tettra:919607:3",
    "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Pleading",
+   "definition": "A formal document that states a party’s claims or defenses, such as a complaint or an answer.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:pleading",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Policy Limits",
+   "definition": "The most an insurance policy will pay for a covered claim, such as $25,000 per person and $50,000 per accident.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:policy-limits",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Power of Attorney (POA)",
+   "definition": "A document that lets one person act for another in legal or financial matters.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:power-of-attorney-poa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pre-Suit",
+   "definition": "The stage before a lawsuit is filed, when the claim is handled directly with the insurance company.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:pre-suit",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Precedent",
+   "definition": "An earlier court decision that courts follow when deciding similar cases. Also called stare decisis, “to stand by things decided”.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:precedent",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Premises Liability",
+   "definition": "A property owner’s or occupier’s responsibility for injuries caused by unsafe conditions on the property.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:premises-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Premium",
+   "definition": "The amount paid to keep an insurance policy in force.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:premium",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Preponderance of the Evidence",
+   "definition": "The usual civil standard: it is more likely than not (more than 50%) that the claim is true.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:preponderance-of-the-evidence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Privilege Log",
+   "definition": "A list of documents withheld from discovery as privileged, with enough detail to explain why.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:privilege-log",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pro Bono",
+   "definition": "Legal work done for free, for the public good.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:pro-bono",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pro Hac Vice",
+   "definition": "Latin for “for this occasion”. A court’s permission for a lawyer licensed in another state to handle one case.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:pro-hac-vice",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pro Se",
+   "definition": "Representing yourself in court without a lawyer.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:pro-se",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Process Server",
+   "definition": "A person whose job is to deliver legal papers to the people being sued.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:process-server",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Product Liability",
+   "definition": "A manufacturer’s or seller’s responsibility for injuries caused by a defective or dangerous product.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:product-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Proof of Service",
+   "definition": "A signed statement filed with the court that shows when, where and how the papers were served.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:proof-of-service",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Property Damage (PD)",
+   "definition": "Coverage for damage a policyholder causes to someone else’s property, such as their car.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:property-damage-pd",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Protective Order",
+   "definition": "A court order that limits how information from discovery can be shared or used.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:protective-order",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Proximate Cause",
+   "definition": "A cause that is close enough to the harm that the law holds the person responsible for it. The harm must have been a foreseeable result.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:proximate-cause",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "PT",
@@ -345,12 +1521,76 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Punitive Damages",
+   "definition": "Money awarded to punish especially reckless or malicious conduct and to discourage it, over and above the loss itself. Allowed only in some cases.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:punitive-damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "R/O",
    "definition": "Rule out",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:39",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Release",
+   "definition": "A document signed in a settlement in which the claimant gives up the right to sue over the claim in return for payment.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:release",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Remand",
+   "definition": "When a higher court sends a case back to a lower court for further action. Also used when a case moved to federal court is sent back to state court.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:remand",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Remittitur",
+   "definition": "A judge’s reduction of a jury’s award that the judge finds too high.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:remittitur",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Removal",
+   "definition": "Moving a case from state court to federal court, which is allowed only in certain cases.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:removal",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Request for Admission (RFA)",
+   "definition": "A written request that the other side admit or deny that a fact is true. An admitted fact is settled for the case.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:request-for-admission-rfa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Request for Production (RFP)",
+   "definition": "A written request that the other side hand over documents or things.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:request-for-production-rfp",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Retainer Agreement",
+   "definition": "The written contract between a client and a law firm that sets out the work to be done, the fee and each side’s responsibilities.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:retainer-agreement",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "ROM",
@@ -385,12 +1625,68 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Sanctions",
+   "definition": "Penalties a court gives for breaking its rules, such as ignoring discovery requests.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:sanctions",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Scheduling Order",
+   "definition": "The court’s order setting the deadlines for a case, such as discovery cut-off, motions and trial date.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:scheduling-order",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Serve",
    "definition": "The delivery of legal document such as copy of written complaint and summons to the defendant to informed of a lawsuit against him.",
    "example": "",
    "category": "Legal",
    "ref": "tettra:919607:2",
    "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Service of Process",
+   "definition": "Formally delivering the summons and complaint to the defendant so they have legal notice of the lawsuit.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:service-of-process",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Settlement",
+   "definition": "An agreement that resolves a dispute, usually for a payment, without a trial.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:settlement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Settlement Conference",
+   "definition": "A meeting, often led by a judge or another neutral, to try to settle a case before trial.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:settlement-conference",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Settlement Statement (Closing Statement)",
+   "definition": "The final accounting of a settlement showing the total, attorney fees, costs, liens and bills paid, and the amount the client receives.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:settlement-statement-closing-statement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Slip and Fall",
+   "definition": "A premises liability injury caused by a fall on a wet floor, uneven surface or other hazard.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:slip-and-fall",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "SOB",
@@ -401,6 +1697,78 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Soft Tissue Injury",
+   "definition": "An injury to muscles, ligaments or tendons, such as whiplash, that often does not show on X-rays.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:soft-tissue-injury",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Spoliation",
+   "definition": "Destroying, losing or altering evidence that should have been kept for a case.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:spoliation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "State Bar",
+   "definition": "The organization that licenses and disciplines lawyers in a state. A lawyer is “admitted to the bar” of each state where they may practice.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:state-bar",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Statute",
+   "definition": "A written law passed by a legislature.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:statute",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Statute of Limitations (SOL)",
+   "definition": "The deadline set by law for filing a lawsuit. If it is missed, the claim is usually barred, however strong it is. The length depends on the state and the type of claim.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:statute-of-limitations-sol",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Statute of Repose",
+   "definition": "A fixed outer deadline for bringing certain claims, such as defective products or construction, counted from an event rather than from the injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:statute-of-repose",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Stay",
+   "definition": "A court order that pauses a case or part of it.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:stay",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Stipulation",
+   "definition": "A written agreement between the parties about a fact or a procedure, often filed with the court.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:stipulation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Strict Liability",
+   "definition": "Responsibility for harm even without negligence or intent, as with some defective products or dangerous activities.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:strict-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "stsg",
    "definition": "Split-thickness skin graft",
    "example": "",
@@ -409,12 +1777,68 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Subject-Matter Jurisdiction",
+   "definition": "A court’s authority to hear a certain type of case (for example, a bankruptcy court hears bankruptcy cases).",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:subject-matter-jurisdiction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Subpoena",
+   "definition": "A court order requiring a person to testify or to hand over documents.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:subpoena",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Subpoena Duces Tecum",
+   "definition": "A subpoena that orders someone to bring documents or things, such as medical or billing records.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:subpoena-duces-tecum",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Subrogation",
+   "definition": "The right of an insurer or plan that paid a claim to be repaid from the person who caused the loss, or from the injured person’s settlement.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:subrogation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Summons",
+   "definition": "A court document that tells a defendant they are being sued and how long they have to respond.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:summons",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "sxs",
    "definition": "Symptoms; surgery",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:45",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Third-Party Claim",
+   "definition": "A claim made against the at-fault person’s insurance company.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:third-party-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Third-Party Complaint",
+   "definition": "A claim a defendant makes against a new party who may be responsible for some or all of the harm.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:third-party-complaint",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "THR",
@@ -449,6 +1873,54 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Tolling",
+   "definition": "Pausing or extending a deadline, such as the statute of limitations, for a reason the law recognizes (for example, the claimant is a minor).",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:tolling",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Tort",
+   "definition": "A civil wrong, other than breach of contract, that harms someone and for which the law allows a lawsuit for damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:tort",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Tortfeasor",
+   "definition": "The person or company that caused the harm. In a car accident, the at-fault driver.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:tortfeasor",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Total Loss",
+   "definition": "When the cost to repair a vehicle is more than a set share of its value, so the insurer pays its value instead.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:total-loss",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Transcript",
+   "definition": "A word-for-word written record of testimony or a court proceeding.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:transcript",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Treatment Gap",
+   "definition": "A period with no medical treatment between visits. Adjusters may argue the injury was not serious, so gaps should be explained.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:treatment-gap",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Tx",
    "definition": "Treatment",
    "example": "",
@@ -465,6 +1937,14 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "UB-04",
+   "definition": "The standard billing form hospitals and facilities use to bill insurers.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:ub-04",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "UE",
    "definition": "Upper extremity",
    "example": "",
@@ -473,12 +1953,28 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "UM / UIM (Uninsured / Underinsured Motorist)",
+   "definition": "Coverage on your own policy that pays when the at-fault driver has no insurance, or not enough.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:um-uim-uninsured-underinsured-motorist",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "URI",
    "definition": "Upper respiratory infection",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:54",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Usual and Customary Charges",
+   "definition": "The typical amount providers in an area charge for a service, used to judge whether a bill is reasonable.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:usual-and-customary-charges",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "UTI",
@@ -495,6 +1991,70 @@
    "category": "Legal",
    "ref": "tettra:919607:6",
    "source": "Tettra: LSH Legal Jargon"
+  },
+  {
+   "term": "Verdict",
+   "definition": "The jury’s (or the judge’s) decision on the facts of the case.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:verdict",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Vicarious Liability",
+   "definition": "Responsibility for another person’s wrongdoing because of a relationship, such as an employer for an employee. Also called respondeat superior.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:vicarious-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Voir Dire",
+   "definition": "The questioning of possible jurors to choose a fair jury.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:voir-dire",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Whiplash",
+   "definition": "A neck injury caused by a sudden back-and-forth movement of the head, common in rear-end collisions.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:whiplash",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Work Product",
+   "definition": "Notes, research, strategy and other materials a lawyer prepares for a case. They are generally protected from disclosure to the other side.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:work-product",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Writ",
+   "definition": "A written court order commanding someone to do or not do something.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:writ",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Write-Off (Adjustment)",
+   "definition": "The part of a bill a provider does not collect because of an insurance contract or a negotiated reduction.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:write-off-adjustment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Wrongful Death",
+   "definition": "A claim brought by certain family members or the estate when someone dies because of another’s negligence or wrongdoing.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:wrongful-death",
+   "source": "General US legal knowledge (rules differ by state)"
   }
  ]
 }
