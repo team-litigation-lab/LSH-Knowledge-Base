@@ -11,6 +11,10 @@ import hashlib, json, os, re, sys, urllib.parse
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Company-related policy and management sections of the old Tettra (company information, client management, VA management).
+# They are not part of the Knowledge Base; an import also archives any of these pages imported earlier.
+EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA Management'}
+DEAD = set(json.load(open(os.path.join(ROOT, 'scripts', 'dead_links.json')))['dead'])
 IMAGES = {}
 
 
@@ -238,6 +242,21 @@ def tidy(md, by_slug):
     return md
 
 
+def mark_dead(md):
+    """Adds "(link no longer works)" after every link that is known to be dead (scripts/dead_links.json)."""
+    def sub(m):
+        return m.group(0) if m.group(0).endswith('(link no longer works)') else m.group(0) + ' *(link no longer works)*'
+    for u in sorted(DEAD, key=len, reverse=True):
+        esc = re.escape(u)
+        md = re.sub(r'(?<!\()\[[^\]\n]*\]\(' + esc + r'\)(?! \*\(link no longer works)', sub, md)
+        md = re.sub(r'(?<![(\[/\w])' + esc + r'(?![\w/)\]-])(?! \*\(link no longer works)', sub, md)
+    return md
+
+
+def years(md):
+    return sorted(set(re.findall(r'\b(20[12]\d)\b', md)))
+
+
 def main(src):
     data = json.load(open(src))
     by_slug = {x['url'].rsplit('/', 1)[-1]: x['id'] for x in data if x.get('url')}
@@ -248,11 +267,18 @@ def main(src):
             continue                      # deleted in Tettra
         if 'crack version' in (x.get('html') or '').lower():
             continue                      # instructions for installing a cracked copy of Nitro Pro; left out on purpose
-        md = tidy(convert(x.get('html') or ''), by_slug)
+        if cat in EXCLUDE_CATEGORIES:
+            continue                      # company-related policies and management: not part of the Knowledge Base
+        md = mark_dead(tidy(convert(x.get('html') or ''), by_slug))
         if len(md) < 20:
             continue
         s = summary_of(md)
-        pages.append({'id': x['id'], 'title': x['page_title'].strip(), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
+        yrs = years(md)
+        tags = []
+        if yrs and yrs[-1] <= '2023':      # only cites dates up to 2023: a reviewer should confirm it is still current
+            tags = ['needs-review']
+            md = f'> **Needs review:** this page was last updated in {x["updated_at"][:4]} and its dates stop at {yrs[-1]}. A reviewer should confirm it is still current.\n\n' + md
+        pages.append({'id': x['id'], 'tags': tags, 'title': x['page_title'].strip(), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
                       'owner': x.get('owner_name') or '', 'created': x['created_at'], 'updated': x['updated_at'],
                       'url': x['url'], 'summary': s, 'body': md})
     used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
