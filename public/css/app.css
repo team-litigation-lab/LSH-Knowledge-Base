@@ -230,3 +230,13 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .on-page a{color:var(--ink);text-decoration:none;padding:3px 8px;border-radius:6px;}
 .on-page a:hover{background:var(--line-soft);}
 .on-page a.l3{padding-left:20px;font-size:13px;color:var(--muted);}
+
+/* The contributor (VA profile) under an entry */
+.va-profile{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;}
+.va-avatar{flex:none;width:48px;height:48px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px;}
+.va-body{min-width:0;}
+.va-name{font-size:16px;}
+.va-name a{color:inherit;text-decoration:none;}
+.va-name a:hover{text-decoration:underline;}
+.va-meta{margin:2px 0 6px;font-size:13.5px;}
+.va-more,.va-links{margin:4px 0 0;font-size:14px;}

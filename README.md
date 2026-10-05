@@ -143,3 +143,7 @@ The tests cover:
 - the 🧭 Blueprint (`tests/blueprint.cjs`): a VA gets the VA deck only and an admin both; every slide fits on a laptop and on a phone; both PDFs have a page per slide; the numbers match everywhere (Cover, then 1 to n, never n + 1)
 
 **Checks on GitHub** (`.github/workflows/checks.yml`): every pull request and every push to the default branch builds the Worker without deploying (`wrangler deploy --dry-run`) and runs all of the tests above against a local `wrangler dev` with fresh, seeded data. A red **Checks** status means something broke; the log says which step.
+
+## Contributor (VA profile) under each entry
+
+Below each entry, above the comments, a **Contributor** card shows the VA who added it: initials, name (links to their profile), batch, role (Contributor, Tenured VA, Reviewer or LSH Team · Admin), how many entries they have in the library, the helpful votes on them, when they started contributing and links to up to three more of their entries (`contributorOf` in `src/index.js`, `vaCard` in `public/js/app.js`). The top bar no longer has **Contributors** or **My contributions** tabs; the pages still exist at `#/people` and `#/mine` and are reached from the card (your own entries show a My contributions link) and from the notes on the Library home page.

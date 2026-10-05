@@ -256,7 +256,8 @@ async function getEntry({ db, reader }, id) {
         .bind(...(reader.staff ? [ref] : [ref, reader.who.key])).all();
     const counts = await db.prepare(`SELECT COUNT(*) AS versions, SUM(status = 'pending') AS pending FROM lib_revisions WHERE entry_id = ?`).bind(id).first();
     const myPending = await db.prepare(`SELECT id FROM lib_revisions WHERE entry_id = ? AND author_key = ? AND status = 'pending' ORDER BY id DESC LIMIT 1`).bind(id, reader.who.key).first();
-    return json({ success: true,
+    const contributor = await contributorOf(db, e);
+    return json({ success: true, contributor,
         entry: { ...shapeRow(e), body: d.body || '', credits: d.credits || [], files: d.files || [],
             collection: d.collection, section: d.section || '', type: d.type, title: d.title, summary: d.summary || '', tags: d.tags || [],
             version: { id: rev.id, by: rev.author_name, at: rev.created_at, note: rev.note || '', status: rev.status },
@@ -264,6 +265,17 @@ async function getEntry({ db, reader }, id) {
         stats: { views: st ? st.views : 0, helpful: st ? st.helpful : 0 }, voted,
         comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at, kind: c.kind || 'comment', done: c.review_note === 'done' })),
         can: { edit: e.status !== 'archived' && reader.contributor, staff: reader.staff, admin: reader.admin } });
+}
+
+// The VA behind an entry, shown under it: role, how much they have added, and a few of their other entries.
+async function contributorOf(db, e) {
+    const tot = await db.prepare(`SELECT COUNT(*) AS entries, MIN(e.published_at) AS since, COALESCE(SUM(s.helpful), 0) AS helpful
+        FROM lib_entries e LEFT JOIN kb_stats s ON s.article_ref = 'e:' || e.id WHERE e.status = 'published' AND e.author_key = ?`).bind(e.author_key).first();
+    const role = await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(e.author_key).first();
+    const { results: more } = await db.prepare(`SELECT id, title, type FROM lib_entries WHERE status = 'published' AND author_key = ? AND id != ? ORDER BY updated_at DESC LIMIT 3`)
+        .bind(e.author_key, e.id).all();
+    return { key: e.author_key, name: e.author_name, batch: e.author_batch || '', admin: e.author_key.startsWith('admin|'), role: role ? role.role : '',
+        entries: tot.entries || 0, helpful: tot.helpful || 0, since: tot.since || '', more: more || [] };
 }
 
 const shapeRev = (r, withData) => ({ id: r.id, entryId: r.entry_id, status: r.status, note: r.note || '', author: r.author_name, batch: r.author_batch || '',

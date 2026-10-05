@@ -90,7 +90,7 @@
         const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/programs.html';
         nav.innerHTML = [
             `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">🏠 Main Portal</a>`,
-            link('#/', 'Library'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
+            link('#/', 'Library'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'),
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
             s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
@@ -381,6 +381,18 @@
     }
 
     /* ---------- entry ---------- */
+    // The VA who added the entry, under the article: who they are, what they have added, and more of their work.
+    function vaCard(c, own) {
+        const initials = c.name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+        const role = c.admin ? 'LSH Team · Admin' : c.role === 'reviewer' ? 'Reviewer' : c.role === 'tenured' ? 'Tenured VA' : 'Contributor';
+        return `<section class="section va-card" aria-label="About the contributor"><h2>Contributor</h2>
+            <div class="card va-profile"><div class="va-avatar" aria-hidden="true">${esc(initials)}</div>
+                <div class="va-body"><div class="va-name"><a href="#/people/${encodeURIComponent(c.key)}"><b>${esc(c.name)}</b></a> <span class="badge">${esc(role)}</span></div>
+                    <p class="muted va-meta">${c.batch ? esc(c.batch) + ' · ' : ''}${plural(c.entries, 'entry', 'entries')} in the library · 👍 ${c.helpful} helpful${c.since ? ' · contributing since ' + fmtDate(c.since) : ''}</p>
+                    ${c.more.length ? `<p class="va-more"><span class="muted">More from ${esc(c.name.split(' ')[0])}:</span> ${c.more.map(m => `<a href="#/e/${m.id}">${esc(m.title)}</a>`).join(' · ')}</p>` : ''}
+                    <p class="va-links"><a href="#/people/${encodeURIComponent(c.key)}">View ${esc(c.name.split(' ')[0])}’s profile and all entries →</a>${own ? ' · <a href="#/mine">My contributions</a>' : ''}</p></div></div></section>`;
+    }
+
     function mediaHTML(files) {
         if (!files.length) return '';
         const videos = files.filter(f => f.kind === 'video'), pdfs = files.filter(f => f.kind === 'pdf'), images = files.filter(f => f.kind === 'image');
@@ -422,6 +434,7 @@
                     ${e.tags.filter(t => t !== 'from-tettra').length ? `<div class="tags" style="margin-top:18px">${e.tags.filter(t => t !== 'from-tettra').map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
                     ${e.status === 'published' ? `<div class="row" style="margin-top:18px"><button class="btn" id="helpful" aria-pressed="${r.voted}">👍 ${r.voted ? 'You found this helpful' : 'Helpful'} · <span id="helpful-n">${r.stats.helpful}</span></button><span class="muted">${plural(r.stats.views, 'view')}</span></div>` : ''}
+                    ${r.contributor ? vaCard(r.contributor, own) : ''}
                     <section class="section" id="replies"><h2>Comments · update current info</h2>
                         <p class="muted" style="margin-top:0">Is something on this page out of date, or have you used it? Tell us what’s current. A reviewer reads every note and updates the page.</p>
                         <div class="replies">${r.comments.length ? r.comments.map(c => `<div class="reply"><div class="who"><b>${esc(c.author)}</b>${c.batch ? ' · ' + esc(c.batch) : ''} · ${fmtDate(c.createdAt)} ${c.kind === 'update' ? '<span class="badge">Update to current info</span> ' : ''}${c.done ? '<span class="badge official">✓ Page updated</span> ' : ''}${c.status === 'pending' ? '<span class="badge pending">Waiting for review</span>' : c.status === 'rejected' ? '<span class="badge rejected">Not approved</span>' : ''}</div>
@@ -520,7 +533,7 @@
             <h1>${e ? (suggesting ? 'Suggest an edit' : 'Edit this entry') : 'Add to the library'}</h1>
             <p class="muted" style="margin-top:0">${staff ? 'Your changes go live as soon as you save. The previous version stays in the history.'
                 : suggesting ? 'Your changes are saved as a suggestion. A reviewer checks it, and the current version stays up until they approve it.'
-                : 'A reviewer checks new entries before they appear in the library. You’ll see the status under My contributions.'}</p>
+                : 'A reviewer checks new entries before they appear in the library. You’ll see the status on the Library home page.'}</p>
             <form class="editor card" id="ed" novalidate>
                 <div class="grid2">
                     <label class="f">Collection<select class="i" id="ed-col" required><option value="">Choose…</option>${S.lib.collections.map(c => `<option value="${c.slug}"${d.collection === c.slug ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
@@ -722,7 +735,7 @@
         const r = await api('/api/entries?author=' + encodeURIComponent(key) + '&all=1');
         const name = r.entries[0] ? r.entries[0].author : key.split('|')[0];
         setTitle(name);
-        view(`<div class="crumbs"><a href="#/people">Contributors</a><span>›</span><span>${esc(name)}</span></div><h1>${esc(name)}</h1>
+        view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><span>${esc(name)}</span></div><h1>${esc(name)}</h1>
             <p class="muted" style="margin-top:0">${plural(r.total, 'entry', 'entries')} in the library</p>${listHTML(r.entries) || '<div class="card"><p>Nothing published yet.</p></div>'}`);
     }
 

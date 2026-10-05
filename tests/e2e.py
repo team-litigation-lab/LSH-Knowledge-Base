@@ -163,6 +163,12 @@ with sync_playwright() as p:
     ent = jget(v, B + f'/api/entries/{new_id}')['entry']
     files = {f['kind']: f for f in ent['files']}
     check(ent['status'] == 'published' and len(ent['files']) == 3, 'new entry published with its 3 files')
+    cv = jget(v, B + f'/api/entries/{new_id}')
+    check(cv.get('contributor', {}).get('name') == ent['author'] and cv['contributor']['entries'] >= 1, 'an entry carries its contributor (VA profile)')
+    v.goto(B + f'/#/e/{new_id}'); v.wait_for_function("t => (document.querySelector('.entry-head h1') || {}).textContent === t", arg=ent['title']); v.wait_for_selector('.va-card')
+    check(v.locator('.va-card').count() == 1 and ent['author'] in v.inner_text('.va-card'), 'the VA profile shows under the article')
+    nav = v.inner_text('nav')
+    check('Contributors' not in nav and 'My contributions' not in nav, 'Contributors and My contributions are gone from the top bar')
 
     # file integrity and range requests (as a third person, Kim)
     z = files['archive']
