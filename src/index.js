@@ -20,6 +20,8 @@ export default {
     async fetch(request, env) {
         const url = new URL(request.url);
         const path = url.pathname;
+        // public/seed/ holds documents the admin imports into the library; the Worker reads them itself, so they are never served to visitors.
+        if (path.startsWith('/seed/')) return new Response('Not found', { status: 404 });
         if (!path.startsWith('/api/') && !path.startsWith('/files/')) return env.ASSETS.fetch(request);
         try {
             if (await siteLocked(env)) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
@@ -536,7 +538,7 @@ async function adminInfo({ db }) {
         legacy: { total: legacy, imported }, storage: { files: storage.n, bytes: storage.bytes } });
 }
 
-async function adminAction({ request, db, reader }) {
+async function adminAction({ request, env, db, reader }) {
     const body = await readJson(request) || {};
     const now = nowIso();
     if (body.action === 'set-code') {
@@ -573,7 +575,43 @@ async function adminAction({ request, db, reader }) {
         return json({ success: true, slug });
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
+    if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
     return fail('Unknown action.');
+}
+
+// Publishes the documents bundled in public/seed/ (docs.json + files/): each PDF is copied into R2 and becomes
+// a published entry with its text searchable. Safe to run again: a document already imported is skipped.
+async function importBundled(request, env, db, reader) {
+    if (!env.FILES) return fail('File storage isn’t connected: the R2 bucket (FILES) is not bound to this Worker.', 500);
+    const origin = new URL(request.url).origin;
+    const get = (p) => env.ASSETS.fetch(new Request(origin + p));
+    const m = await get('/seed/docs.json');
+    if (!m.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no bundled documents to import.' });
+    const docs = await m.json();
+    let imported = 0, remaining = 0;
+    for (const d of docs) {
+        const ref = 'seed:' + d.file;
+        if (await db.prepare(`SELECT 1 AS x FROM lib_entries WHERE legacy_ref = ?`).bind(ref).first()) continue;
+        const res = await get('/seed/files/' + encodeURIComponent(d.file));
+        if (!res.ok) { remaining++; continue; }
+        const now = nowIso(), fid = crypto.randomUUID(), key = `kb/files/seed/${fid}/${d.file}`;
+        const bytes = await res.arrayBuffer();
+        await env.FILES.put(key, bytes, { httpMetadata: { contentType: 'application/pdf' }, customMetadata: { uploader: reader.who.name, fileId: fid } });
+        await db.prepare(`INSERT INTO lib_files (id, r2_key, name, size, mime, kind, status, text, uploader_name, uploader_key, created_at, completed_at)
+            VALUES (?, ?, ?, ?, 'application/pdf', 'pdf', 'ready', ?, ?, ?, ?, ?)`).bind(fid, key, d.file, bytes.byteLength, d.text || '', reader.who.name, reader.who.key, now, now).run();
+        const data = { collection: d.collection, section: '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
+            body: (d.summary || '') + '\n\nRead or download the attached PDF.', tags: d.tags || [], credits: [],
+            files: [{ id: fid, name: d.file, size: bytes.byteLength, mime: 'application/pdf', kind: 'pdf' }], official: false };
+        const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
+            VALUES ('pending', ?, '', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.type, data.title, data.summary, data.tags.join(','),
+                reader.who.name, reader.who.batch || '', reader.who.key, ref, now, now).run();
+        const id = r.meta.last_row_id;
+        const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+            VALUES (?, ?, 'pending', 'Added from the Foundational Training handouts', ?, ?, ?, 1, ?)`).bind(id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+        await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
+        imported++;
+    }
+    return json({ success: true, imported, remaining });
 }
 
 // Copies the old Knowledge Base's posts (with their replies, votes and views)
