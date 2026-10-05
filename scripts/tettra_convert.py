@@ -249,6 +249,8 @@ def tidy(md, by_slug):
         name = urllib.parse.unquote(m.group(1).split('?')[0].rsplit('/', 1)[-1]) or 'attachment'
         return f'[{name}]({m.group(1)})'
     md = re.sub(r'(?<!!)\[\s*\]\((https?://[^)\s]+)\)', attach, md)
+    md = re.sub(r'the Van Law Firm Website', "the firm's website", md)         # the firm's name is not used
+    md = re.sub(r'[A-Za-z0-9._-]+@vanlawfirm\.com', 'jane@example-firm.com', md)
     md = re.sub(r'\bTettra [Aa]rticles\b', 'Knowledge Base articles', md)
     md = re.sub(r'\bTettra [Aa]rticle\b', 'Knowledge Base article', md)
     return md
