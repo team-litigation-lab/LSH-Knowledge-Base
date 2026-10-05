@@ -577,6 +577,10 @@ async function adminAction({ request, env, db, reader }) {
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
     if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
+    if (body.action === 'archive-empty') {   // every collection with no entries in it (archived, not deleted)
+        const r = await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE archived = 0 AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).run();
+        return json({ success: true, archived: (r.meta && r.meta.changes) || 0 });
+    }
     if (body.action === 'import-tettra') return importTettra(request, env, db, reader);
     if (body.action === 'copy-images') return copyImages(env, db);
     return fail('Unknown action.');
