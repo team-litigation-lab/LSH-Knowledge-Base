@@ -1,6 +1,6 @@
 import { json, fail, nowIso, clean, oneLine, personKey, signToken, hashPassword, verifyPassword, setCookie, sameOrigin, readJson } from './util.js';
 import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf,
-    READER_COOKIE, ADMIN_COOKIE, TYPES, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
+    READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
 
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
@@ -614,6 +614,8 @@ async function importBundled(request, env, db, reader) {
         await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
         imported++;
     }
+    const targets = [...new Set(docs.map(d => d.collection))];   // the handouts' collections show again, even if the starters were tidied away
+    if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
     return json({ success: true, imported, remaining });
 }
 
@@ -651,7 +653,14 @@ async function importTettra(request, env, db, reader) {
         await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(created, updated, updated, id).run();
         imported++;
     }
+    if (todo.length - imported === 0) await archiveEmptyStarters(db);
     return json({ success: true, imported, remaining: todo.length - imported });
+}
+// Once the knowledge is saved, the starter collections that have nothing in them are archived (hidden, not deleted; Admin can bring one back).
+async function archiveEmptyStarters(db) {
+    const slugs = DEFAULT_COLLECTIONS.map(c => c[0]);
+    await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE slug IN (${slugs.map(() => '?').join(',')})
+        AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).bind(...slugs).run();
 }
 const collectionOf = (cat) => cat === 'Test. Test' ? 'general' : slugOf(cat);
 
