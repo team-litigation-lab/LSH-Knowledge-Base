@@ -65,6 +65,10 @@ A dictionary kept apart from the entries: `lib_terms` (term, meaning, example, c
 
 `public/seed/docs.json` holds the Demand Phase and Case Management handouts as Markdown (headings, lists, tables), made from the PDFs with `scripts/pdf_to_md.py`. **Admin → Import documents** publishes each one as a page of the library, not as a PDF in a viewer, and refreshes the search. It is safe to run again: a handout already imported is skipped, and one imported earlier as a PDF attachment is rewritten as a page (`legacy_ref` = `seed:<file name>`). The Worker answers 404 for `/seed/*` and handles every request first (`run_worker_first`), so the bundled data is only reachable through the library.
 
+## Word documents (scripts/docx_to_md.py)
+
+A Word file becomes a page with `python3 scripts/docx_to_md.py file.docx` (headings, bold and italic, links, nested bullet and numbered lists, tables; needs `pip install python-docx`). The Markdown goes into `public/seed/docs.json` like any other document. The three Demand training files (Demand Framework, the Demand Upskill Training Guide SOP and the Demand Training job description and SOPs) were added this way, in the Medsum & Demands collection. The page text supports nested lists (two spaces per level).
+
 ## Written lessons (scripts/add_lesson.py)
 
 A lesson written for the Knowledge Base, not taken from a PDF or Tettra, lives as Markdown in `scripts/lessons/` and is added to `public/seed/docs.json` with `python3 scripts/add_lesson.py scripts/lessons/<file>.md --title … --summary … --collection … --tags …`; **Admin → Import documents** publishes it (and updates it if the text changes). The first is **Insurance Coverage in Personal Injury Claims: What Applies, Who Pays and How to Find It** (about 3,000 words, in Insurance Communication): the coverages in an injury claim, 1P and 3P claims, who pays first with a worked example, the coverage hunt, reading a declarations page, common coverage problems and a quick-reference table. It is written from general knowledge of US insurance practice, so a reviewer should check state-specific points.

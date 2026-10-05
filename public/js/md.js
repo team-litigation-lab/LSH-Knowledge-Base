@@ -52,14 +52,28 @@
                 out.push(`<blockquote>${render(block.join('\n'))}</blockquote>`); continue;
             }
             if (/^\s*([-*]|\d+[.)])\s+/.test(line)) {
-                const ordered = /^\s*\d+[.)]\s+/.test(line), items = [];
-                while (i < lines.length && /^\s*([-*]|\d+[.)])\s+/.test(lines[i]) && (/^\s*\d+[.)]\s+/.test(lines[i]) === ordered)) {
-                    let t = lines[i].replace(/^\s*([-*]|\d+[.)])\s+/, ''); i++;
+                // a list, with sub-lists where lines are indented by two spaces per level
+                const items = [];
+                while (i < lines.length && /^\s*([-*]|\d+[.)])\s+/.test(lines[i])) {
+                    const m2 = lines[i].match(/^(\s*)([-*]|\d+[.)])\s+(.*)$/);
+                    let t = m2[3]; i++;
                     while (i < lines.length && /^\s{2,}\S/.test(lines[i]) && !/^\s*([-*]|\d+[.)])\s+/.test(lines[i])) { t += ' ' + lines[i].trim(); i++; }
-                    const cb = t.match(/^\[( |x|X)\]\s+(.*)$/);
-                    items.push(cb ? `<li class="md-check"><span class="md-box${cb[1] === ' ' ? '' : ' on'}" aria-hidden="true">${cb[1] === ' ' ? '' : '✓'}</span>${inline(cb[2])}</li>` : `<li>${inline(t)}</li>`);
+                    items.push({ level: Math.floor(m2[1].replace(/\t/g, '  ').length / 2), ordered: /\d/.test(m2[2]), text: t });
                 }
-                out.push(ordered ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`); continue;
+                const li = (t) => { const cb = t.match(/^\[( |x|X)\]\s+(.*)$/);
+                    return cb ? `<li class="md-check"><span class="md-box${cb[1] === ' ' ? '' : ' on'}" aria-hidden="true">${cb[1] === ' ' ? '' : '✓'}</span>${inline(cb[2])}` : `<li>${inline(t)}`; };
+                let html = '', stack = [];   // stack of open list tags
+                for (const it of items) {
+                    const lvl = Math.min(it.level, stack.length);   // never jump more than one level deeper
+                    while (stack.length > lvl + 1) html += `</li></${stack.pop()}>`;
+                    const want = it.ordered ? 'ol' : 'ul';
+                    if (stack.length === lvl + 1 && stack[lvl] !== want) html += `</li></${stack.pop()}>`;   // a different kind of list starts at this level
+                    if (stack.length === lvl + 1) html += '</li>';
+                    if (stack.length === lvl) { const tag = it.ordered ? 'ol' : 'ul'; html += `<${tag}>`; stack.push(tag); }
+                    html += li(it.text);
+                }
+                while (stack.length) html += `</li></${stack.pop()}>`;
+                out.push(html); continue;
             }
             const para = [];
             while (i < lines.length && lines[i].trim() && !/^```|^(#{1,4})\s|^\s*([-*]|\d+[.)])\s+|^\s*>|^\s*\|.*\|\s*$|^\s*(---|\*\*\*|___)\s*$/.test(lines[i])) { para.push(inline(lines[i])); i++; }
