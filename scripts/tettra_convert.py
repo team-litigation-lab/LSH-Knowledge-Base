@@ -340,11 +340,13 @@ def main(src):
                       'url': x['url'], 'summary': s, 'body': md})
     used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
-    import glossary_extra   # general US legal-industry terms, written from general knowledge
-    have = {t['term'].lower() for t in terms}
-    for term, category, definition, *rest in glossary_extra.TERMS:
-        if term.lower() in have:
+    import glossary_extra, glossary_us   # general US legal-industry terms, written from general knowledge
+    norm = lambda x: x.lower().replace('’', "'")
+    have = {norm(t['term']) for t in terms}
+    for term, category, definition, *rest in glossary_extra.TERMS + glossary_us.TERMS:
+        if norm(term) in have:
             continue
+        have.add(norm(term))
         terms.append({'term': term, 'definition': definition, 'example': rest[0] if rest else '', 'category': category,
                       'ref': 'us:' + re.sub(r'[^a-z0-9]+', '-', term.lower()).strip('-'), 'source': 'General US legal knowledge (rules differ by state)'})
     json.dump({'terms': sorted(terms, key=lambda t: t['term'].lower())}, open(os.path.join(ROOT, 'public', 'seed', 'glossary.json'), 'w'), ensure_ascii=False, indent=1)
