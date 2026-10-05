@@ -68,7 +68,7 @@ with sync_playwright() as p:
     check('isn’t open yet' in a.inner_text('#app'), 'gate says the library is not open before a code is set')
     a.click('[data-tab="admin"]')
     a.fill('#g-user', 'trainer1'); a.fill('#g-pass', 'wrong')
-    a.click('#f-admin button[type=submit]'); a.wait_for_timeout(600)
+    a.click('#f-admin button[type=submit]'); a.wait_for_function("document.getElementById('g-err2').textContent.length > 0", timeout=8000)
     check('Incorrect' in a.inner_text('#g-err2'), 'wrong admin password is refused')
     a.fill('#g-pass', 'admin-pass'); a.click('#f-admin button[type=submit]')
     a.wait_for_selector('.hero')
@@ -76,7 +76,7 @@ with sync_playwright() as p:
 
     a.goto(B + '/#/admin'); a.wait_for_selector('#code-form')
     a.fill('#code', 'lsh-team-2026'); a.click('#code-form button'); a.wait_for_timeout(700)
-    a.fill('#rev-name', 'Kim Lee'); a.fill('#rev-batch', 'Batch 10'); a.click('#rev-form button'); a.wait_for_timeout(700)
+    a.fill('#rev-name', 'Kim Lee'); a.fill('#rev-batch', 'Batch 10'); a.select_option('#rev-role', 'reviewer'); a.click('#rev-form button'); a.wait_for_timeout(700)
     check('Kim Lee' in a.inner_text('#app'), 'reviewer added')
     a.click('#import'); a.wait_for_function("document.getElementById('import-status').textContent.includes('Done')", timeout=20000)
     check('Imported 3' in a.inner_text('#import-status'), 'old Knowledge Base posts imported (3)')
