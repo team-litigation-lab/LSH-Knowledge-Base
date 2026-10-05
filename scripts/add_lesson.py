@@ -5,6 +5,7 @@
 
 The Markdown file is the page's text (headings, lists, tables). Running it again with the same file name updates the page."""
 import argparse, datetime, json, os
+from sentence_case import fix_title, fix_markdown
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANIFEST = os.path.join(ROOT, 'public', 'seed', 'docs.json')
@@ -14,9 +15,9 @@ ap.add_argument('--collection', default='general'); ap.add_argument('--section',
 a = ap.parse_args()
 name = 'lesson-' + os.path.splitext(os.path.basename(a.file))[0]
 docs = json.load(open(MANIFEST))
-entry = {'file': name, 'title': a.title, 'summary': a.summary, 'collection': a.collection, 'section': a.section, 'type': a.type,
+entry = {'file': name, 'title': fix_title(a.title), 'summary': a.summary, 'collection': a.collection, 'section': a.section, 'type': a.type,
          'tags': [t.strip() for t in a.tags.split(',') if t.strip()], 'added': datetime.date.today().isoformat(),
-         'body': open(a.file).read().strip()}
+         'body': fix_markdown(open(a.file).read().strip())}
 docs = [d for d in docs if d['file'] != name] + [entry]
 json.dump(docs, open(MANIFEST, 'w'), indent=1, ensure_ascii=False)
 print(f'{entry["title"]}: {len(entry["body"].split())} words ({len(docs)} documents)')

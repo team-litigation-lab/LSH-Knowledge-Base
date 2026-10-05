@@ -8,6 +8,7 @@ first 16 hex characters of the SHA-1 of the image's original address; the origin
 the Worker can copy them into R2. Owner e-mail addresses are not carried over. Pages deleted in Tettra, pages with no\ncontent (the empty "asd" test page) and the cracked-Nitro-Pro install page are skipped; everything else is kept, including\nTettra's starter templates (pages with no category, shelved under "Tettra starter templates").
 """
 import hashlib, json, os, re, sys, urllib.parse
+from sentence_case import fix_title, fix_markdown   # ALL-CAPS titles and headings become sentence case
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from html.parser import HTMLParser
 
@@ -340,9 +341,9 @@ def main(src):
         if yrs and yrs[-1] <= '2023':      # only cites dates up to 2023: a reviewer should confirm it is still current
             tags.append('needs-review')
             md = f'> **Needs review:** this page was last updated in {x["updated_at"][:4]} and its dates stop at {yrs[-1]}. A reviewer should confirm it is still current.\n\n' + md
-        pages.append({'id': x['id'], 'tags': tags, 'title': x['page_title'].strip(), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
+        pages.append({'id': x['id'], 'tags': tags, 'title': fix_title(x['page_title'].strip()), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
                       'owner': x.get('owner_name') or '', 'created': x['created_at'], 'updated': x['updated_at'],
-                      'url': x['url'], 'summary': s, 'body': md})
+                      'url': x['url'], 'summary': s, 'body': fix_markdown(md)})
     used = {h for p in pages for h in re.findall(r'/(?:img|att)/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
     import glossary_extra, glossary_us   # general US legal-industry terms, written from general knowledge

@@ -11,7 +11,7 @@
           'LSH Community Library: official SOPs, training videos, guides and know-how from the whole community.',
           'Entries sit in collections, one per program or role: Foundational Training, Reception, Intake, Case Management, EA / PA and more.',
           'Inside a collection, entries are grouped by section.',
-          'Everyone signed in can read it (Info Access). Tenured team members can add to it, and an admin approves each entry; reviewers keep it accurate.'],
+          'Everyone signed in can read it (Info Access). Only tenured team members can add or edit, and every change is approved before it goes live.'],
         where: 'Top bar → Library.',
         tip: 'Look for ✓ Official: those entries are the firm\'s approved way of doing it.' },
       { icon: '🔑', title: 'Signing in', points: [
@@ -41,12 +41,12 @@
         tip: 'Never upload real client information: use the training cases only.' },
       { icon: '✏️', title: 'Editing and suggesting', points: [
           'Every save adds a version: nothing is ever overwritten.',
-          'Your edit to someone else\'s entry is a suggestion; the current version stays up until a reviewer approves it.',
+          'Only tenured team members, reviewers and admins can edit. Every edit, including one to your own entry, waits for approval; the current version stays up until then.',
           'The history shows every version and compares any of them with the current one.'],
         where: 'An entry → Edit · History.',
         tip: 'Say what you changed in a short note, so the reviewer can approve it quickly.' },
       { icon: '💬', title: 'Replies, votes and your contributions', points: [
-          'Reply to an entry with your own experience from the team. Replies appear after a reviewer approves them.',
+          'Tenured team members can reply to an entry with their own experience, or tell us what is out of date. Notes appear after a reviewer approves them.',
           'Helpful votes and view counts show which entries the community uses most.',
           'My contributions lists everything you added, suggested or replied; Contributors lists the whole community.'],
         where: 'An entry → Reply · Top bar → My contributions · Contributors.',
@@ -75,14 +75,15 @@
         where: 'The sign-in screen → Admin Portal.',
         tip: 'Remove a trainee\'s access in the Portal (Master Control) and they can no longer open the Knowledge Base from it.' },
       { icon: '✅', title: 'The review queue', points: [
-          'New entries, suggested edits and replies from VAs wait in Review.',
+          'New entries, suggested edits, Glossary changes and notes from VAs wait in Review.',
           'Approve to make a version live, or send it back.',
-          'A suggested edit leaves the current version up until it\'s approved.'],
+          'A suggested edit leaves the current version up until it\'s approved.',
+          'Nobody approves their own change: a reviewer\'s own edits wait for another reviewer or an admin. An admin\'s edits go live at once.'],
         where: 'Top bar → Review.',
         tip: 'Clear the queue daily: a VA who waits a week stops contributing.' },
       { icon: '👥', title: 'Reviewers', points: [
           'Make trusted VAs reviewers, so you aren\'t the only one approving.',
-          'Reviewers approve entries, edits and replies; they can\'t mark Official, change settings or delete for good.',
+          'Reviewers approve other people\'s entries, edits, Glossary changes and replies; their own changes wait for someone else. They can\'t mark Official, change settings or delete for good.',
           'Revoke a reviewer at any time.'],
         where: 'Admin → Reviewers.',
         tip: 'Pick one reviewer per program, who knows that program\'s SOPs.' },

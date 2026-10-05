@@ -7,6 +7,7 @@ Converts with docx_to_md.py, checks that no words were lost, and writes the summ
 import argparse, collections, datetime, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import docx, docx_to_md
+from sentence_case import fix_title, fix_markdown
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANIFEST = os.path.join(ROOT, 'public', 'seed', 'docs.json')
@@ -47,8 +48,8 @@ def add(path, title, collection='general', typ='Guide', tags='', key=None):
     summary = summary[:217] + '…' if len(summary) > 220 else summary
     name = key or re.sub(r'[^a-z0-9]+', '-', os.path.splitext(os.path.basename(path))[0].lower()).strip('-')[:60]
     docs = json.load(open(MANIFEST))
-    docs = [x for x in docs if x['file'] != name] + [{'file': name, 'title': title, 'summary': summary, 'collection': collection, 'type': typ,
-            'tags': [t.strip() for t in tags.split(',') if t.strip()], 'added': datetime.date.today().isoformat(), 'body': md}]
+    docs = [x for x in docs if x['file'] != name] + [{'file': name, 'title': fix_title(title), 'summary': summary, 'collection': collection, 'type': typ,
+            'tags': [t.strip() for t in tags.split(',') if t.strip()], 'added': datetime.date.today().isoformat(), 'body': fix_markdown(md)}]
     json.dump(docs, open(MANIFEST, 'w'), indent=1, ensure_ascii=False)
     print(f'{title}: {len(md.split())} words, {miss} words not found in the page, {len(docs)} documents')
 

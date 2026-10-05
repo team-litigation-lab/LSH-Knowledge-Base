@@ -1161,6 +1161,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Collision Coverage",
+   "definition": "First-party auto coverage that pays to repair or replace the policyholder’s own vehicle after a crash, whoever was at fault, less the deductible.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:collision-coverage",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Colossus",
    "definition": "Software many auto insurers use to value injury claims. It scores injuries, treatment and other inputs, which is why complete, well-organized records matter.",
    "example": "",
@@ -2265,6 +2273,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Emotional Distress",
+   "definition": "Psychological harm such as anxiety, depression or post-traumatic stress after an accident. It can be claimed as part of non-economic damages, and treatment records help prove it.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:emotional-distress",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "En banc",
    "definition": "A hearing by all the judges of a court rather than a panel.",
    "example": "",
@@ -2982,6 +2998,14 @@
    "example": "",
    "category": "Evidence",
    "ref": "us:hearsay-exception",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Hedonic Damages",
+   "definition": "Another name for compensation for loss of enjoyment of life: the things a person can no longer do or enjoy because of the injury. Some states list it as part of pain and suffering; a few treat it separately.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:hedonic-damages",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -3921,6 +3945,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Life Expectancy (Life Table)",
+   "definition": "How many more years a person of a given age and sex is expected to live, taken from published life tables. It is used to value a permanent injury over the rest of the person’s life.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:life-expectancy-life-table",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Limitations Date",
    "definition": "The calendared date by which a lawsuit must be filed. It should be checked and entered at intake.",
    "example": "",
@@ -4326,6 +4358,14 @@
    "example": "",
    "category": "Latin",
    "ref": "us:mens-rea",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Mental Anguish",
+   "definition": "Emotional pain caused by an injury or its aftermath, such as fear, anxiety, grief, humiliation or trouble sleeping. It is part of non-economic damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:mental-anguish",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -5158,6 +5198,14 @@
    "example": "",
    "category": "Latin",
    "ref": "us:per-curiam",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Per Diem (Damages)",
+   "definition": "Latin for “per day”. A way to put a number on pain and suffering by giving each day of pain a dollar amount and multiplying by the number of days. Some courts do not let a lawyer suggest a per diem figure to a jury.",
+   "example": "Pain valued at $120 a day for 150 days of treatment is $18,000.",
+   "category": "Personal Injury",
+   "ref": "us:per-diem-damages",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -6470,6 +6518,14 @@
    "example": "",
    "category": "Litigation",
    "ref": "us:sequestration",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Serious Injury Threshold (Verbal Threshold)",
+   "definition": "In a no-fault state, the level of injury a person must meet (for example a permanent injury, significant scarring or a “serious injury”) before they can claim pain and suffering from the at-fault driver. The test and the wording differ by state.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:serious-injury-threshold-verbal-threshold",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {

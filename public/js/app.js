@@ -39,6 +39,7 @@
         while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
         return (i ? n.toFixed(n < 10 ? 1 : 0) : n) + ' ' + u[i];
     }
+    const mineToo = (x) => !S.session.admin && x.authorKey === S.session.who.key;   // your own change: someone else has to approve it
     const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
     const TYPE_ICON = { 'Training video': '▶', 'SOP': '📘', 'Guide': '🧭', 'Checklist': '☑️', 'Template': '🧩', 'Reference': '📚', 'Tip': '💡', 'Lesson learned': '🎓', 'Question': '❓' };
     const FILE_ICON = { video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️', doc: '📝', sheet: '📊', slides: '📽️', archive: '🗜️', other: '📎' };
@@ -83,7 +84,7 @@
         nav.hidden = !on;
         if (!on) return;
         const s = S.session, q = S.lib && S.lib.queue;
-        const waiting = q ? q.revisions + q.comments : 0;
+        const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
         const here = location.hash.split('?')[0];
         const link = (href, label, extra = '') => `<a href="${href}"${here === href || (href !== '#/' && here.startsWith(href)) ? ' class="on"' : ''}${extra}>${label}</a>`;
         // Back to the LSH Training Portal's Training Directory, where each program is opened from (same address as the other LSH sites).
@@ -238,9 +239,9 @@
                 <input id="hero-q" type="search" placeholder="Try “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off"></form>
             <div class="stats"><span><b>${t.entries}</b>entries</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
         </section>
-        ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Tenured team members can add to the library, and an admin approves it before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
+        ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
-        ${L.queue && (L.queue.revisions || L.queue.comments) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')} and ${plural(L.queue.comments, 'reply', 'replies')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
+        ${L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
         ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2>
             <span class="row"><label class="sr" for="az-cat">Category</label><select class="i" id="az-cat" style="width:auto;max-width:280px"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
@@ -333,8 +334,9 @@
 
     /* ---------- glossary (a dictionary of terms) ---------- */
     async function glossaryView(q) {
-        const staff = !!(S.session.admin || S.session.reviewer);
-        const { terms } = await api('/api/glossary');
+        const direct = !!S.session.admin, canSuggest = !!S.session.contributor && !direct;   // admins change terms at once; tenured VAs and reviewers suggest changes; Info Access reads
+        const { terms, mine } = await api('/api/glossary');
+        const pendingFor = new Map((mine || []).filter(m => m.status === 'pending' && m.termId).map(m => [m.termId, m]));
         setTitle('Glossary');
         const cats = [...new Set(terms.map(t => t.category))].sort();
         const state = { q: q.get('q') || '', cat: q.get('category') || '' };
@@ -343,13 +345,14 @@
             <input class="i" name="category" maxlength="40" placeholder="Category (Legal, Medical…)" list="gl-cats" value="${t ? esc(t.category) : ''}" style="max-width:220px"></div>
             <textarea class="i" name="definition" rows="3" required placeholder="What it means">${t ? esc(t.definition) : ''}</textarea>
             <input class="i" name="example" maxlength="1000" placeholder="Example (optional)" value="${t ? esc(t.example || '') : ''}">
-            <div class="row"><button class="btn primary" type="submit">${t ? 'Save' : 'Add the term'}</button>${t ? '<button class="btn" type="button" data-cancel>Cancel</button>' : ''}</div></form>`;
+            <div class="row"><button class="btn primary" type="submit">${direct ? (t ? 'Save' : 'Add the term') : 'Send for approval'}</button>${t ? '<button class="btn" type="button" data-cancel>Cancel</button>' : ''}</div></form>`;
         view(`<h1>Glossary</h1><p class="lead" style="margin-top:0">Plain-English meanings of the legal and medical terms you meet at work. ${plural(terms.length, 'term')}. Many are general US meanings; rules differ by state and court, so confirm with the attorney.</p>
             <datalist id="gl-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
             <div class="gl-tools"><label class="sr" for="gl-q">Search the glossary</label><input class="i" id="gl-q" type="search" placeholder="Look up a term or a word in its meaning…" value="${esc(state.q)}" autocomplete="off">
                 <div class="gl-cats" id="gl-cat-chips"><button class="chip" data-cat="" aria-pressed="${!state.cat}">All</button>${cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('')}</div>
                 <div class="gl-letters" id="gl-letters"></div></div>
-            ${staff ? `<details class="card" style="margin:12px 0"><summary><b>+ Add a term</b></summary>${form(null)}</details>` : ''}
+            ${direct || canSuggest ? `<details class="card" style="margin:12px 0"><summary><b>${direct ? '+ Add a term' : '+ Suggest a term'}</b></summary>${canSuggest ? '<p class="muted">An admin or another reviewer approves it before it appears in the Glossary.</p>' : ''}${form(null)}</details>` : ''}
+            ${(mine || []).length ? `<section class="card" style="margin:12px 0"><b>Your Glossary suggestions</b><div class="gl-mine">${mine.map(m => `<div class="gl-mine-row"><span class="badge ${m.status === 'pending' ? 'pending' : 'rejected'}">${m.status === 'pending' ? 'Waiting for approval' : 'Sent back'}</span> <b>${esc(m.term)}</b> · ${{ add: 'new term', edit: 'edit', delete: 'removal' }[m.action]}${m.status === 'rejected' && m.reviewNote ? `<br><span class="muted">Reviewer: ${esc(m.reviewNote)}</span>` : ''}${m.status === 'pending' ? ` <button class="btn small" data-withdraw="${m.id}">Withdraw</button>` : ''}</div>`).join('')}</div></section>` : ''}
             <div id="gl-list"></div>`);
         const list = document.getElementById('gl-list'), letters = document.getElementById('gl-letters');
         const paint = () => {
@@ -360,9 +363,10 @@
             const keys = [...by.keys()].sort((a, b) => (a === '#') - (b === '#') || a.localeCompare(b));
             letters.innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').map(l => by.has(l) ? `<a href="#/glossary" data-l="${l}">${l}</a>` : `<span>${l}</span>`).join('');
             list.innerHTML = rows.length ? keys.map(l => `<section class="gl-group" id="gl-${l === '#' ? 'num' : l}"><h2>${l}</h2>${by.get(l).map(t => `<div class="gl-term" id="t${t.id}">
-                <div class="gl-head"><b>${esc(t.term)}</b><span class="badge">${esc(t.category)}</span>${staff ? `<span class="gl-act"><button class="btn small" data-edit="${t.id}">Edit</button> <button class="btn small danger" data-del="${t.id}">Delete</button></span>` : ''}</div>
+                <div class="gl-head"><b>${esc(t.term)}</b><span class="badge">${esc(t.category)}</span>${direct ? `<span class="gl-act"><button class="btn small" data-edit="${t.id}">Edit</button> <button class="btn small danger" data-del="${t.id}">Delete</button></span>`
+                    : canSuggest ? `<span class="gl-act">${pendingFor.has(t.id) ? '<span class="badge pending">Change waiting for approval</span>' : `<button class="btn small" data-edit="${t.id}">Suggest an edit</button> <button class="btn small" data-del="${t.id}">Suggest removal</button>`}</span>` : ''}</div>
                 <p>${esc(t.definition)}</p>${t.example ? `<p class="muted"><i>${esc(t.example)}</i></p>` : ''}</div>`).join('')}</section>`).join('')
-                : `<div class="card"><p>No term matches${state.q ? ` “${esc(state.q)}”` : ''}.</p>${S.session.contributor ? '<p class="muted" style="margin:0">Know it? Ask a reviewer to add it, or leave a note on a page that uses it.</p>' : ''}</div>`;
+                : `<div class="card"><p>No term matches${state.q ? ` “${esc(state.q)}”` : ''}.</p>${canSuggest ? '<p class="muted" style="margin:0">Know it? Use “Suggest a term” above. It goes live once it’s approved.</p>' : ''}</div>`;
         };
         paint();
         document.getElementById('gl-q').oninput = (ev) => { state.q = ev.target.value; paint(); };
@@ -370,14 +374,25 @@
         letters.onclick = (ev) => { const a = ev.target.closest('[data-l]'); if (!a) return; ev.preventDefault(); const el = document.getElementById('gl-' + (a.dataset.l === '#' ? 'num' : a.dataset.l)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
         const save = async (f) => {
             const d = Object.fromEntries(new FormData(f));
-            try { await post('/api/glossary', { action: 'save', id: f.dataset.id || undefined, term: d.term, category: d.category, definition: d.definition, example: d.example }); toast('Saved.'); glossaryView(q); } catch (e) { toast(e.message, true); }
+            try {
+                if (direct) await post('/api/glossary', { action: 'save', id: f.dataset.id || undefined, term: d.term, category: d.category, definition: d.definition, example: d.example });
+                else await post('/api/glossary', { action: 'suggest', change: f.dataset.id ? 'edit' : 'add', id: f.dataset.id || undefined, term: d.term, category: d.category, definition: d.definition, example: d.example });
+                toast(direct ? 'Saved.' : 'Sent. It’s in the Glossary once it’s approved.'); glossaryView(q);
+            } catch (e) { toast(e.message, true); }
         };
         app.querySelectorAll('.gl-form').forEach(f => f.onsubmit = (ev) => { ev.preventDefault(); save(f); });
         list.onclick = async (ev) => {
             const ed = ev.target.closest('[data-edit]'), del = ev.target.closest('[data-del]');
             if (ed) { const t = terms.find(x => x.id === Number(ed.dataset.edit)), box = document.getElementById('t' + t.id); box.innerHTML = form(t); box.querySelector('form').onsubmit = (e2) => { e2.preventDefault(); save(box.querySelector('form')); }; box.querySelector('[data-cancel]').onclick = () => paint(); }
-            if (del && confirm('Delete this term?')) { try { await post('/api/glossary', { action: 'delete', id: Number(del.dataset.del) }); toast('Deleted.'); glossaryView(q); } catch (e) { toast(e.message, true); } }
+            if (del && direct && confirm('Delete this term?')) { try { await post('/api/glossary', { action: 'delete', id: Number(del.dataset.del) }); toast('Deleted.'); glossaryView(q); } catch (e) { toast(e.message, true); } }
+            if (del && !direct) {
+                const why = prompt('Why should this term be removed? (An admin or another reviewer will read this.)');
+                if (why && why.trim()) { try { await post('/api/glossary', { action: 'suggest', change: 'delete', id: Number(del.dataset.del), note: why.trim() }); toast('Sent. The term stays until the removal is approved.'); glossaryView(q); } catch (e) { toast(e.message, true); } }
+            }
         };
+        app.querySelectorAll('[data-withdraw]').forEach(b => b.onclick = async () => {
+            try { await post('/api/glossary', { action: 'withdraw', id: Number(b.dataset.withdraw) }); toast('Withdrawn.'); glossaryView(q); } catch (e) { toast(e.message, true); }
+        });
     }
 
     /* ---------- entry ---------- */
@@ -407,7 +422,7 @@
         if (e.status === 'withdrawn') banner = `<p class="note">You withdrew this entry.</p>`;
         if (e.myPendingEdit) banner += `<p class="note">Your suggested edit is waiting for review. <a href="#/v/${e.myPendingEdit}">See your changes</a></p>`;
         if (staff && e.pendingEdits) banner += `<p class="note">${plural(e.pendingEdits, 'suggested edit is', 'suggested edits are')} waiting for review. <a href="#/review">Open the review queue</a></p>`;
-        const editLabel = staff || (own && !e.publishedAt) ? 'Edit' : 'Suggest an edit';
+        const editLabel = adminUser || (own && !e.publishedAt) ? 'Edit' : 'Suggest an edit';
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><a href="#/c/${e.collection}">${esc(colName(e.collection))}</a>${e.section ? `<span>›</span><span>${esc(e.section)}</span>` : ''}</div>
             ${banner}
             <div class="entry-layout">
@@ -423,14 +438,14 @@
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
                     ${e.status === 'published' ? `<div class="row" style="margin-top:18px"><button class="btn" id="helpful" aria-pressed="${r.voted}">👍 ${r.voted ? 'You found this helpful' : 'Helpful'} · <span id="helpful-n">${r.stats.helpful}</span></button><span class="muted">${plural(r.stats.views, 'view')}</span></div>` : ''}
                     <section class="section" id="replies"><h2>Comments · update current info</h2>
-                        <p class="muted" style="margin-top:0">Is something on this page out of date, or have you used it? Tell us what’s current. A reviewer reads every note and updates the page.</p>
+                        <p class="muted" style="margin-top:0">${s.contributor ? 'Is something on this page out of date, or have you used it? Tell us what’s current. A reviewer reads every note and updates the page.' : 'Tenured team members can send notes about what needs updating. You can read the notes others have left.'}</p>
                         <div class="replies">${r.comments.length ? r.comments.map(c => `<div class="reply"><div class="who"><b>${esc(c.author)}</b>${c.batch ? ' · ' + esc(c.batch) : ''} · ${fmtDate(c.createdAt)} ${c.kind === 'update' ? '<span class="badge">Update to current info</span> ' : ''}${c.done ? '<span class="badge official">✓ Page updated</span> ' : ''}${c.status === 'pending' ? '<span class="badge pending">Waiting for review</span>' : c.status === 'rejected' ? '<span class="badge rejected">Not approved</span>' : ''}</div>
                             <div class="md">${window.KBmd.render(c.body)}</div>
                             ${staff && c.status === 'pending' ? `<div class="row" style="margin-top:6px"><button class="btn small primary" data-reply="${c.id}" data-d="approve">Approve</button><button class="btn small" data-reply="${c.id}" data-d="reject">Don’t publish</button></div>` : ''}
                             ${staff && c.status === 'approved' ? `<div class="row" style="margin-top:6px">${c.kind === 'update' && !c.done ? `<button class="btn small primary" data-reply="${c.id}" data-d="done">Mark page updated</button>` : ''}<button class="btn small danger" data-reply="${c.id}" data-d="delete">Remove</button></div>` : ''}</div>`).join('') : '<p class="muted" style="margin:0">No comments yet.</p>'}</div>
-                        ${e.status === 'published' ? `<form id="reply-form" class="editor" style="margin-top:12px">
-                            ${s.contributor ? `<div class="row"><label><input type="radio" name="reply-kind" value="update" checked> Something needs updating</label> <label><input type="radio" name="reply-kind" value="comment"> Just a comment</label></div>` : ''}
-                            <label class="f">${s.contributor ? 'Your note' : 'What needs updating?'}<textarea class="i" id="reply-body" rows="3" required placeholder="What is out of date, and what should it say now? Add the source or date if you have one."></textarea></label>
+                        ${e.status === 'published' && s.contributor ? `<form id="reply-form" class="editor" style="margin-top:12px">
+                            <div class="row"><label><input type="radio" name="reply-kind" value="update" checked> Something needs updating</label> <label><input type="radio" name="reply-kind" value="comment"> Just a comment</label></div>
+                            <label class="f">Your note<textarea class="i" id="reply-body" rows="3" required placeholder="What is out of date, and what should it say now? Add the source or date if you have one."></textarea></label>
                             <div class="row"><button class="btn primary" type="submit">Send</button>${staff ? '' : '<span class="muted">Notes appear after a reviewer approves them.</span>'}</div></form>` : ''}
                     </section>
                 </article>
@@ -508,19 +523,20 @@
 
     async function editor(id, q) {
         const s = S.session, staff = s.admin || s.reviewer;
-        if (!S.session.contributor) { setTitle('Info Access'); return view(`<div class="card section"><h1>Info Access is view-only</h1><p>Your Portal sign-in gives you Info Access: you can read everything in the library. Tenured team members can add to it, and an admin approves each entry before it goes live. To get tenured access, ask an admin.</p><p><a class="btn" href="#/">Back to the library</a></p></div>`); }
+        if (!S.session.contributor) { setTitle('Info Access'); return view(`<div class="card section"><h1>Info Access is view-only</h1><p>Your Portal sign-in gives you Info Access: you can read everything in the library. Only tenured team members can add or edit, and every change is approved before it goes live. To get tenured access, ask an admin.</p><p><a class="btn" href="#/">Back to the library</a></p></div>`); }
         let e = null;
         if (id) e = (await api(`/api/entries/${id}`)).entry;
         const own = e && e.authorKey === s.who.key;
-        const suggesting = e && !staff && !(own && !e.publishedAt);
+        const direct = !!s.admin;   // only an admin's changes go live at once; everyone else's wait for approval
+        const suggesting = e && !direct && !(own && !e.publishedAt);
         setTitle(e ? (suggesting ? 'Suggest an edit' : 'Edit') + ': ' + e.title : 'Add to the library');
         const d = e || { collection: (q && q.get('collection')) || '', section: '', type: '', title: '', summary: '', body: '', tags: [], credits: [], files: [], official: false };
         const files = d.files.map(f => ({ ...f, state: 'ready' }));
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span>${e ? `<a href="#/e/${id}">${esc(e.title)}</a><span>›</span><span>${suggesting ? 'Suggest an edit' : 'Edit'}</span>` : '<span>Add to the library</span>'}</div>
             <h1>${e ? (suggesting ? 'Suggest an edit' : 'Edit this entry') : 'Add to the library'}</h1>
-            <p class="muted" style="margin-top:0">${staff ? 'Your changes go live as soon as you save. The previous version stays in the history.'
-                : suggesting ? 'Your changes are saved as a suggestion. A reviewer checks it, and the current version stays up until they approve it.'
-                : 'A reviewer checks new entries before they appear in the library. You’ll see the status under My contributions.'}</p>
+            <p class="muted" style="margin-top:0">${direct ? 'Your changes go live as soon as you save. The previous version stays in the history.'
+                : suggesting ? 'Your changes are saved as a suggestion. They need approval, and the current version stays up until then.'
+                : 'New entries need approval before they appear in the library. You’ll see the status under My contributions.'}${!direct && staff ? ' Another reviewer or an admin has to approve your changes.' : ''}</p>
             <form class="editor card" id="ed" novalidate>
                 <div class="grid2">
                     <label class="f">Collection<select class="i" id="ed-col" required><option value="">Choose…</option>${S.lib.collections.map(c => `<option value="${c.slug}"${d.collection === c.slug ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
@@ -545,7 +561,7 @@
                 ${s.admin ? `<label class="check"><input type="checkbox" id="ed-off"${d.official ? ' checked' : ''}> Official: an approved LSH SOP or resource</label>` : ''}
                 ${e ? `<label class="f">What did you change? <small>(shown in the history)</small><input class="i" id="ed-note" maxlength="300" placeholder="e.g. Updated the Medicare step for 2026 forms"></label>` : ''}
                 <p class="muted" id="ed-err" role="alert" style="margin:0"></p>
-                <div class="row"><button class="btn primary" type="submit" id="ed-save">${staff ? (e ? 'Save changes' : 'Publish') : e ? (suggesting ? 'Send suggestion' : 'Resend for review') : 'Send for review'}</button>
+                <div class="row"><button class="btn primary" type="submit" id="ed-save">${direct ? (e ? 'Save changes' : 'Publish') : e ? (suggesting ? 'Send suggestion' : 'Resend for review') : 'Send for review'}</button>
                     <a class="btn" href="${e ? '#/e/' + id : '#/'}">Cancel</a></div>
             </form>`);
 
@@ -629,7 +645,7 @@
         setTitle('History: ' + r.entry.title);
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><a href="#/e/${id}">${esc(r.entry.title)}</a><span>›</span><span>History</span></div>
             <h1>Every version</h1>
-            <p class="muted" style="margin-top:0">Nothing is overwritten. Each save adds a version, and ${S.session.admin || S.session.reviewer ? 'you can restore any earlier one.' : 'reviewers can restore any earlier one.'}</p>
+            <p class="muted" style="margin-top:0">Nothing is overwritten. Each save adds a version, and ${S.session.admin ? 'you can restore any earlier one.' : S.session.reviewer ? 'a restore waits for approval like any other edit.' : 'reviewers and admins can restore any earlier one.'}</p>
             <div class="versions">${r.versions.map(v => { const [l, c] = REV_LABEL[v.status] || [v.status, '']; return `<div class="version">
                 <span><span class="badge ${c}">${l}</span> <b>${esc(v.author)}</b>${v.batch ? ' · ' + esc(v.batch) : ''} · ${fmtWhen(v.createdAt)}${v.note ? `<br><span class="muted">${esc(v.note)}</span>` : ''}${v.reviewNote ? `<br><span class="muted">Reviewer: ${esc(v.reviewNote)}</span>` : ''}</span>
                 <a class="btn small" href="#/v/${v.id}">View${v.status === 'live' ? '' : ' and compare'}</a></div>`; }).join('')}</div>`);
@@ -676,7 +692,7 @@
             <div class="spread"><div><span class="badge ${c}">${l}</span><h1 style="margin-top:6px">${esc(v.data.title)}</h1>
                 <p class="muted" style="margin:0">${esc(v.author)} · ${fmtWhen(v.createdAt)}${v.note ? ' · ' + esc(v.note) : ''}</p></div>
                 <div class="row" id="v-actions">
-                    ${staff && v.status === 'pending' ? `<input class="i" id="v-note" placeholder="Note to the author (needed to send back)" style="min-width:260px"><button class="btn primary" data-d="approve">Approve</button><button class="btn" data-d="reject">Send back</button>` : ''}
+                    ${staff && v.status === 'pending' ? `<input class="i" id="v-note" placeholder="Note to the author (needed to send back)" style="min-width:260px">${mineToo(v) ? '<span class="muted">Another reviewer or an admin has to approve your own change.</span>' : '<button class="btn primary" data-d="approve">Approve</button>'}<button class="btn" data-d="reject">Send back</button>` : ''}
                     ${staff && ['superseded', 'rejected', 'withdrawn'].includes(v.status) ? `<button class="btn primary" id="v-restore">Restore this version</button>` : ''}
                 </div></div>
             <section class="section card"><h2>${compareTo ? 'Changes compared with the current version' : v.status === 'pending' && !live ? 'New entry' : 'Details'}</h2>
@@ -691,7 +707,7 @@
         });
         const rb = document.getElementById('v-restore');
         if (rb) rb.onclick = async () => {
-            try { await post(`/api/entries/${v.entryId}`, { action: 'restore', revision: revId }); toast('Restored. The version it replaced stays in the history.'); location.hash = `#/e/${v.entryId}`; }
+            try { const x = await post(`/api/entries/${v.entryId}`, { action: 'restore', revision: revId }); toast(x.status === 'pending' ? 'Sent for approval. The page stays as it is until it’s approved.' : 'Restored. The version it replaced stays in the history.'); S.lib = null; location.hash = `#/e/${v.entryId}`; }
             catch (e) { toast(e.message, true); }
         };
     }
@@ -738,9 +754,18 @@
                 ${v.note ? `<p style="margin:6px 0 0">“${esc(v.note)}”</p>` : ''}</div>
                 <a class="btn" href="#/v/${v.id}">${v.isNew ? 'Open' : 'Compare'}</a></div>
             <div class="row" style="margin-top:10px"><input class="i" data-note="${v.id}" placeholder="Note to the author (needed to send back)" style="flex:1;min-width:220px">
-                <button class="btn primary" data-rev="${v.id}" data-d="approve">Approve</button><button class="btn" data-rev="${v.id}" data-d="reject">Send back</button></div></div>`;
-        view(`<h1>Review queue</h1><p class="muted" style="margin-top:0">New entries, suggested edits and replies from the community. Approving makes them live; the history keeps every version.</p>
-            ${!r.revisions.length && !r.comments.length ? '<div class="card"><p>Nothing is waiting. 🎉</p></div>' : ''}
+                ${mineToo(v) ? '<span class="muted">Yours: another reviewer or an admin has to approve it.</span>' : `<button class="btn primary" data-rev="${v.id}" data-d="approve">Approve</button>`}<button class="btn" data-rev="${v.id}" data-d="reject">Send back</button></div></div>`;
+        const termCard = (c) => `<div class="card"><div class="row"><span class="badge ${c.action === 'add' ? 'pending' : ''}">${{ add: 'New term', edit: 'Edit to a term', delete: 'Removal of a term' }[c.action]}</span></div>
+                <h3 style="margin:6px 0 0">${esc(c.term)} <small class="muted">${esc(c.category)}</small></h3>
+                <p class="muted" style="margin:0">${esc(c.author)}${c.batch ? ' · ' + esc(c.batch) : ''} · ${fmtWhen(c.createdAt)}</p>
+                ${c.action === 'delete' ? `<p style="margin:6px 0 0"><b>Why:</b> ${esc(c.reviewNote)}</p>` : ''}
+                ${c.action === 'edit' && c.current ? `<div class="changes"><div><b>Now:</b> ${esc(c.current.definition)}</div><div><b>Suggested:</b> ${esc(c.definition)}</div>${c.example !== c.current.example ? `<div><b>Example:</b> ${esc(c.example) || '(none)'}</div>` : ''}${c.category !== c.current.category ? `<div><b>Category:</b> ${esc(c.current.category)} → ${esc(c.category)}</div>` : ''}${c.term !== c.current.term ? `<div><b>Term:</b> ${esc(c.current.term)} → ${esc(c.term)}</div>` : ''}</div>`
+                    : c.action === 'add' ? `<p style="margin:6px 0 0">${esc(c.definition)}</p>${c.example ? `<p class="muted"><i>${esc(c.example)}</i></p>` : ''}` : ''}
+                <div class="row" style="margin-top:10px"><input class="i" data-tnote="${c.id}" placeholder="Note to the author (needed to send back)" style="flex:1;min-width:220px">
+                    ${mineToo(c) ? '<span class="muted">Yours: another reviewer or an admin has to approve it.</span>' : `<button class="btn primary" data-term="${c.id}" data-d="approve">${c.action === 'delete' ? 'Remove the term' : 'Approve'}</button>`}<button class="btn" data-term="${c.id}" data-d="reject">Send back</button></div></div>`;
+        view(`<h1>Review queue</h1><p class="muted" style="margin-top:0">New entries, suggested edits, Glossary changes and notes from tenured team members. Approving makes them live; the history keeps every version. You can’t approve your own change.</p>
+            ${!r.revisions.length && !r.comments.length && !r.terms.length ? '<div class="card"><p>Nothing is waiting. 🎉</p></div>' : ''}
+            ${r.terms.length ? `<section class="section"><h2>Glossary changes (${r.terms.length})</h2><div class="queue">${r.terms.map(termCard).join('')}</div></section>` : ''}
             ${newOnes.length ? `<section class="section"><h2>New entries (${newOnes.length})</h2><div class="queue">${newOnes.map(card).join('')}</div></section>` : ''}
             ${edits.length ? `<section class="section"><h2>Suggested edits (${edits.length})</h2><div class="queue">${edits.map(card).join('')}</div></section>` : ''}
             ${r.comments.length ? `<section class="section"><h2>Comments (${r.comments.length})</h2><div class="queue">${r.comments.map(c => `<div class="card">
@@ -750,6 +775,11 @@
         app.querySelectorAll('[data-rev]').forEach(b => b.onclick = async () => {
             const note = (app.querySelector(`[data-note="${b.dataset.rev}"]`) || {}).value || '';
             try { await post(`/api/revisions/${b.dataset.rev}`, { decision: b.dataset.d, note }); toast(b.dataset.d === 'approve' ? 'Approved.' : 'Sent back with your note.'); S.lib = null; review(); }
+            catch (e) { toast(e.message, true); }
+        });
+        app.querySelectorAll('[data-term]').forEach(b => b.onclick = async () => {
+            const note = (app.querySelector(`[data-tnote="${b.dataset.term}"]`) || {}).value || '';
+            try { await post('/api/glossary', { action: 'review', id: Number(b.dataset.term), decision: b.dataset.d, note }); toast(b.dataset.d === 'approve' ? 'Approved.' : 'Sent back with your note.'); S.lib = null; review(); }
             catch (e) { toast(e.message, true); }
         });
         app.querySelectorAll('[data-cm]').forEach(b => b.onclick = async () => {
@@ -769,7 +799,7 @@
                     <button class="btn primary" type="submit">${r.codeSet ? 'Change the code' : 'Set the code'}</button></form>
                 <p class="muted" style="font-size:13px">This is the same code as the Knowledge Base in the LSH Training Portal.</p></section>` : ''}
             <section class="section card"><h2>Who can add to the library</h2>
-                <p class="muted" style="margin-top:0"><b>Info Access</b> is the default for everyone who opens the Knowledge Base from the Portal: they can read, search and play videos, and nothing else. <b>Tenured</b> team members can also upload files and add entries, edits and replies; each one waits for an admin or reviewer to approve it. <b>Reviewers</b> are trusted VAs who can approve, archive and restore. Only admins can mark entries official, delete permanently or change settings. Type the name exactly as it shows in the LSH Training Portal.</p>
+                <p class="muted" style="margin-top:0"><b>Info Access</b> is the default for everyone who opens the Knowledge Base from the Portal: they can read, search and play videos, and nothing else. <b>Tenured</b> team members are the only ones who can add or edit: new entries, edits, Glossary terms and update notes, and every one waits for approval. <b>Reviewers</b> are trusted VAs who approve other people’s changes (never their own; their own edits wait for another reviewer or an admin) and can archive. Only admins’ own edits go live at once, and only admins can mark entries official, delete permanently or change settings. Type the name exactly as it shows in the LSH Training Portal.</p>
                 ${r.roles.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Batch</th><th>Access</th><th>Added</th><th></th></tr></thead><tbody>${r.roles.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.batch)}</td><td>${x.role === 'tenured' ? 'Tenured' : 'Reviewer'}</td><td>${fmtDate(x.grantedAt)} by ${esc(x.grantedBy || '')}</td><td><button class="btn small danger" data-revoke="${esc(x.key)}">Remove</button></td></tr>`).join('')}</tbody></table></div>` : '<p>Nobody has tenured or reviewer access yet: everyone has Info Access.</p>'}
                 <form class="row" id="rev-form" style="margin-top:10px"><input class="i" id="rev-name" placeholder="Full name, as in the Portal" style="max-width:260px"><input class="i" id="rev-batch" placeholder="Batch, as in the Portal" style="max-width:180px"><select class="i" id="rev-role" style="max-width:150px"><option value="tenured">Tenured</option><option value="reviewer">Reviewer</option></select><button class="btn" type="submit">Give access</button></form></section>
             <section class="section card"><h2>Collections</h2>
@@ -790,7 +820,7 @@
                 <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <button class="btn" id="refresh-search">3. Refresh the search</button> <span class="muted" id="tettra-status"></span></section>
             <section class="section card"><h2>Import documents</h2>
                 <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, plus one page for each topic of the Foundational Training lessons, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
-                <button class="btn primary" id="import-docs">Import documents</button> <button class="btn" id="import-glossary">Import the Glossary only</button> <span class="muted" id="import-docs-status"></span></section>
+                <button class="btn primary" id="import-docs">Import documents</button> <button class="btn" id="import-glossary">Import the Glossary only</button> <button class="btn" id="tidy-titles">Tidy ALL-CAPS titles</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
@@ -854,6 +884,23 @@
             };
         };
         loop('import-tettra', 'import-tettra', (n, x) => x.note || `Imported ${n} ${n === 1 ? 'page' : 'pages'}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`);
+        const tt = document.getElementById('tidy-titles');
+        if (tt) tt.onclick = async () => {
+            tt.disabled = true;
+            const st = document.getElementById('import-docs-status');
+            let total = 0, last = Infinity;
+            try {
+                for (;;) {
+                    const x = await post('/api/admin', { action: 'tidy-titles' });
+                    total += x.fixed;
+                    st.textContent = total ? `Put ${plural(total, 'title')} in sentence case${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}` : 'No title is in ALL CAPS.';
+                    if (!x.remaining || x.remaining >= last) break;
+                    last = x.remaining;
+                }
+                S.lib = null;
+            } catch (e) { st.textContent = e.message; }
+            tt.disabled = false;
+        };
         loop('copy-images', 'copy-images', (n, x) => `Copied ${n} images${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}${x.missing ? ` ${x.missing} no longer exist at Tettra.` : ''}`);
         // Import documents: the Glossary first (so it shows even if a later step stops), then the handouts, procedures and lessons
         // in batches of 10, then the training topics in batches of 12, then the search is refreshed. Each step reports on its own.
