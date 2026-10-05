@@ -39,6 +39,11 @@ export default {
             const seg = path.slice(5).split('/').filter(Boolean);   // after "/api/"
             switch (seg[0]) {
                 case 'library': return await library(ctx);
+                case 'resolve': {   // an old Tettra page's id -> the library entry that replaced it (links inside imported pages use this)
+                    const ref = String(url.searchParams.get('ref') || '');
+                    const row = /^tettra:\d+$/.test(ref) ? await db.prepare(`SELECT id FROM lib_entries WHERE legacy_ref = ? AND status = 'published'`).bind(ref).first() : null;
+                    return row ? json({ success: true, id: row.id }) : fail('That page isn’t in the library.', 404);
+                }
                 case 'entries':
                     if (!seg[1]) return write ? await createEntry(ctx) : await listEntries(ctx);
                     if (seg[2] === 'history') return await history(ctx, Number(seg[1]));
