@@ -647,9 +647,12 @@ async function importTettra(request, env, db, reader) {
     if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no Tettra pages to import.' });
     const { pages, images } = await res.json();
     // Pages not imported yet, and pages imported earlier whose text has since been corrected, are both still to do.
-    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'tettra:%'`).all()).results || [])
-        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
-    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !h || h.data.body !== p.body || (h.data.title !== p.title); });
+    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, e.status, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'tettra:%'`).all()).results || [])
+        .map(r => [r.ref, { id: r.id, status: r.status, data: r.data ? JSON.parse(r.data) : {} }]));
+    const wanted = new Set(pages.map(p => 'tettra:' + p.id));
+    // pages that were imported earlier but are no longer part of the Knowledge Base (company policies and management) are archived
+    const gone = [...have].filter(([ref, h]) => !wanted.has(ref) && h.status !== 'archived');
+    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title || (h.data.tags || []).join() !== (p.tags || []).join(); });
     const now = nowIso();
     if (!have.size || todo.some(p => !have.has('tettra:' + p.id))) {   // the shelves and the image list, for any page not yet imported
         const cats = [...new Set(pages.map(p => p.category))].sort();
@@ -658,11 +661,16 @@ async function importTettra(request, env, db, reader) {
         const rows = Object.entries(images || {});
         for (let i = 0; i < rows.length; i += 90) await db.batch(rows.slice(i, i + 90).map(([h, u]) => db.prepare(`INSERT OR IGNORE INTO lib_images (hash, src) VALUES (?, ?)`).bind(h, u)));
     }
-    let imported = 0;
-    for (const p of todo.slice(0, 12)) {
+    let imported = 0, budget = 12;
+    for (const [, h] of gone.slice(0, budget)) {
+        await db.prepare(`UPDATE lib_entries SET status = 'archived', updated_at = ? WHERE id = ?`).bind(nowIso(), h.id).run();
+        await reindex(db, h.id);
+        imported++; budget--;
+    }
+    for (const p of todo.slice(0, Math.max(0, budget))) {
         const old = have.get('tettra:' + p.id);
         if (old) {   // already imported: a new version with the corrected text
-            const d = { ...old.data, collection: collectionOf(p.category), section: p.subcategory || '', title: p.title, summary: p.summary || '', body: p.body };
+            const d = { ...old.data, collection: collectionOf(p.category), section: p.subcategory || '', title: p.title, summary: p.summary || '', body: p.body, tags: p.tags || [] };
             const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
                 VALUES (?, ?, 'pending', 'Imported from Tettra again with the text corrected', ?, 'Tettra', ?, 1, ?)`).bind(old.id, JSON.stringify(d), p.owner || 'LSH Team', 'tettra|' + p.id, nowIso()).run();
             await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
@@ -671,10 +679,10 @@ async function importTettra(request, env, db, reader) {
             continue;
         }
         const data = { collection: collectionOf(p.category), section: p.subcategory || '', type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
-            tags: [], credits: p.owner ? [p.owner] : [], files: [], official: false };
+            tags: p.tags || [], credits: p.owner ? [p.owner] : [], files: [], official: false };
         const key = 'tettra|' + p.id, created = tettraTime(p.created), updated = tettraTime(p.updated);
         const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-            VALUES ('pending', ?, ?, 'Guide', ?, ?, '', ?, 'Tettra', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
+            VALUES ('pending', ?, ?, 'Guide', ?, ?, ?, ?, 'Tettra', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, data.tags.join(','), p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
         const id = r.meta.last_row_id;
         const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
             VALUES (?, ?, 'pending', 'Imported from Tettra', ?, 'Tettra', ?, 1, ?)`).bind(id, JSON.stringify(data), p.owner || 'LSH Team', key, created).run();
@@ -682,8 +690,9 @@ async function importTettra(request, env, db, reader) {
         await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(created, updated, updated, id).run();
         imported++;
     }
-    if (todo.length - imported === 0) await archiveEmptyStarters(db);
-    return json({ success: true, imported, remaining: todo.length - imported });
+    const left = gone.length + todo.length - imported;
+    if (left === 0) await archiveEmptyStarters(db);
+    return json({ success: true, imported, remaining: left });
 }
 // Once the knowledge is saved, the starter collections that have nothing in them are archived (hidden, not deleted; Admin can bring one back).
 async function archiveEmptyStarters(db) {
