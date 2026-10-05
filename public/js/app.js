@@ -224,7 +224,7 @@
         const all = t.entries ? await api('/api/entries?all=1&sort=az') : { entries: [], total: 0 };
         view(`
         <section class="hero">
-            <h1>The LSH VA community library</h1>
+            <h1>The LSH VA Community Library</h1>
             <p>Official SOPs, training videos, guides and hard-won know-how from across LSH, kept in one place and never lost.</p>
             <form id="hero-search" role="search"><label class="sr" for="hero-q">Search the library</label>
                 <input id="hero-q" type="search" placeholder="Try “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off"></form>
