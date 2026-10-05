@@ -205,3 +205,6 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 @media (max-width:700px){.top{position:static;}.toc{top:0;}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
 .gate [hidden]{display:none !important;}
+
+.md-img{display:block;max-width:100%;height:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;}
+.md-code{background:#f3f5f9;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto;font-family:var(--mono);font-size:13px;}

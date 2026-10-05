@@ -697,6 +697,9 @@
             <section class="section card"><h2>Import from the old Knowledge Base</h2>
                 <p>${r.legacy.total ? `The Training Portal’s Knowledge Base has ${plural(r.legacy.total, 'post')}; ${r.legacy.imported} ${r.legacy.imported === 1 ? 'is' : 'are'} already here. Importing copies each post with its replies, votes and views. It’s safe to run again.` : 'The old Knowledge Base has no posts to import.'}</p>
                 ${r.legacy.total ? `<button class="btn primary" id="import">Import posts</button> <span class="muted" id="import-status"></span>` : ''}</section>
+            <section class="section card"><h2>Import Tettra pages</h2>
+                <p>Publishes the pages exported from Tettra (each Tettra category becomes a collection, each subcategory a section). Step 1 imports the pages, step 2 copies their images into the library so they stay if Tettra is closed. Both are safe to run again.</p>
+                <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <span class="muted" id="tettra-status"></span></section>
             <section class="section card"><h2>Import documents</h2>
                 <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) into the library, with their text searchable. Safe to run again: a document already imported is skipped.</p>
                 <button class="btn primary" id="import-docs">Import documents</button> <span class="muted" id="import-docs-status"></span></section>
@@ -721,6 +724,27 @@
                 toast('Collection saved.'); S.lib = null; admin();
             } catch (e) { toast(e.message, true); }
         });
+        const loop = (btnId, action, text) => {
+            const b = document.getElementById(btnId);
+            if (b) b.onclick = async () => {
+                b.disabled = true;
+                const st = document.getElementById('tettra-status');
+                let total = 0, last = Infinity;
+                try {
+                    for (;;) {
+                        const x = await post('/api/admin', { action });
+                        total += x.imported || x.copied || 0;
+                        st.textContent = text(total, x);
+                        if (!x.remaining || x.remaining >= last) break;   // done, or no progress
+                        last = x.remaining;
+                    }
+                    S.lib = null;
+                } catch (e) { st.textContent = e.message; }
+                b.disabled = false;
+            };
+        };
+        loop('import-tettra', 'import-tettra', (n, x) => x.note || `Imported ${n} ${n === 1 ? 'page' : 'pages'}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`);
+        loop('copy-images', 'copy-images', (n, x) => `Copied ${n} images${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}${x.missing ? ` ${x.missing} no longer exist at Tettra.` : ''}`);
         const impDocs = document.getElementById('import-docs');
         if (impDocs) impDocs.onclick = async () => {
             impDocs.disabled = true;

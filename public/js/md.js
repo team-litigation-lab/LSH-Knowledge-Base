@@ -2,7 +2,7 @@
 // Everything is HTML-escaped first; only this small set of formatting is turned
 // back into markup, so nothing a VA types can run as code on the page:
 //   # / ## / ### headings, **bold**, *italic* / _italic_, `code`, [text](https://…),
-//   - / * / 1. lists, - [ ] / - [x] checklists, > quotes, --- rules, | pipe | tables |
+//   ```fenced code```, ![image](/img/<id>) (only images the library has copied), - / * / 1. lists, - [ ] / - [x] checklists, > quotes, --- rules, | pipe | tables |
 (function () {
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -10,6 +10,7 @@
         let s = esc(text);
         const code = [];
         s = s.replace(/`([^`\n]+)`/g, (_, c) => { code.push(c); return `\u0000${code.length - 1}\u0000`; });
+        s = s.replace(/!\[([^\]\n]*)\]\((\/img\/[0-9a-f]{16})\)/g, (_, t, u) => `<img class="md-img" loading="lazy" src="${u}" alt="${t}">`);
         s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+|\/[^\s)]*)\)/g, (_, t, u) =>
             `<a href="${u}"${/^https?:/.test(u) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t}</a>`);
         s = s.replace(/(^|[\s(])(https:\/\/[^\s<)]*[^\s<).,;:!?'&])/g, (_, p, u) => `${p}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
@@ -35,6 +36,11 @@
             if (!line.trim()) { i++; continue; }
             let m;
             if ((m = line.match(/^(#{1,4})\s+(.+)$/))) { const n = Math.min(4, m[1].length + 1); out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue; }
+            if (/^```/.test(line)) {
+                const code = []; i++;
+                while (i < lines.length && !/^```/.test(lines[i])) { code.push(lines[i]); i++; }
+                i++; out.push(`<pre class="md-code"><code>${esc(code.join('\n'))}</code></pre>`); continue;
+            }
             if (/^\s*(---|\*\*\*|___)\s*$/.test(line)) { out.push('<hr>'); i++; continue; }
             if (/^\s*\|.*\|\s*$/.test(line) && lines[i + 1] && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
                 const block = [lines[i], lines[i + 1]]; i += 2;
@@ -56,7 +62,7 @@
                 out.push(ordered ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`); continue;
             }
             const para = [];
-            while (i < lines.length && lines[i].trim() && !/^(#{1,4})\s|^\s*([-*]|\d+[.)])\s+|^\s*>|^\s*\|.*\|\s*$|^\s*(---|\*\*\*|___)\s*$/.test(lines[i])) { para.push(inline(lines[i])); i++; }
+            while (i < lines.length && lines[i].trim() && !/^```|^(#{1,4})\s|^\s*([-*]|\d+[.)])\s+|^\s*>|^\s*\|.*\|\s*$|^\s*(---|\*\*\*|___)\s*$/.test(lines[i])) { para.push(inline(lines[i])); i++; }
             if (para.length) out.push(`<p>${para.join('<br>')}</p>`);
             else { out.push(`<p>${inline(line)}</p>`); i++; }
         }

@@ -57,6 +57,10 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 
 `public/seed/` holds the Demand Phase and Case Management handouts (`docs.json` with each title, summary, collection, tags and extracted text, and the PDFs in `files/`). **Admin → Import documents** copies each PDF into R2 and publishes it as an entry, searchable by its text. It is safe to run again: a document already imported is skipped (`legacy_ref` = `seed:<file name>`). The Worker answers 404 for `/seed/*`, so these files are only reachable through the library after the import.
 
+## Tettra import (Admin → Import Tettra pages)
+
+`public/seed/tettra.json` holds the 87 pages exported from LSH's Tettra (made by `python3 scripts/tettra_convert.py <export.json>`: the HTML becomes the library's Markdown, owner e-mails are dropped). **Step 1, Import pages** publishes them 12 at a time: each Tettra category becomes a collection, each subcategory a section, and the page's owner, created and updated dates are kept (`legacy_ref` = `tettra:<id>`). **Step 2, Copy images** copies the 629 images into R2 (`kb/img/<hash>`, 15 per call) so they stay if Tettra is closed; until then an image is copied the first time someone opens it. Images are served at `/img/<hash>` to signed-in readers only. Left out on purpose: Tettra's 10 starter templates, an empty test page, and the "How to Install Nitro Pro" page (instructions for a cracked copy).
+
 ## Storage
 
 | Binding | What | Shared with |

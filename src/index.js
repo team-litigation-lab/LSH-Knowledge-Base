@@ -22,7 +22,7 @@ export default {
         const path = url.pathname;
         // public/seed/ holds documents the admin imports into the library; the Worker reads them itself, so they are never served to visitors.
         if (path.startsWith('/seed/')) return new Response('Not found', { status: 404 });
-        if (!path.startsWith('/api/') && !path.startsWith('/files/')) return env.ASSETS.fetch(request);
+        if (!path.startsWith('/api/') && !path.startsWith('/files/') && !path.startsWith('/img/')) return env.ASSETS.fetch(request);
         try {
             if (await siteLocked(env)) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             const db = env.TRAINING_DB;
@@ -35,6 +35,7 @@ export default {
             const ctx = { request, env, db, url, reader };
 
             if (path.startsWith('/files/')) return await serveFile(ctx, path.split('/')[2]);
+            if (path.startsWith('/img/')) return await serveImage(ctx, path.split('/')[2]);
             const seg = path.slice(5).split('/').filter(Boolean);   // after "/api/"
             switch (seg[0]) {
                 case 'library': return await library(ctx);
@@ -576,6 +577,8 @@ async function adminAction({ request, env, db, reader }) {
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
     if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
+    if (body.action === 'import-tettra') return importTettra(request, env, db, reader);
+    if (body.action === 'copy-images') return copyImages(env, db);
     return fail('Unknown action.');
 }
 
@@ -612,6 +615,83 @@ async function importBundled(request, env, db, reader) {
         imported++;
     }
     return json({ success: true, imported, remaining });
+}
+
+// ---- Tettra import (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
+const slugOf = (name) => String(name).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'collection';
+const tettraTime = (t) => String(t || '').replace(' ', 'T') + 'Z';
+
+// Each Tettra category becomes a collection and its subcategory a section. 12 pages per call; run again until none remain.
+// Safe to run again: a page already imported (legacy_ref 'tettra:<id>') is skipped.
+async function importTettra(request, env, db, reader) {
+    const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/tettra.json'));
+    if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no Tettra pages to import.' });
+    const { pages, images } = await res.json();
+    const done = new Set(((await db.prepare(`SELECT legacy_ref FROM lib_entries WHERE legacy_ref LIKE 'tettra:%'`).all()).results || []).map(r => r.legacy_ref));
+    const todo = pages.filter(p => !done.has('tettra:' + p.id));
+    const now = nowIso();
+    if (todo.length === pages.length) {   // first call: the shelves and the image list
+        const cats = [...new Set(pages.map(p => p.category))].sort();
+        await db.batch(cats.map((c, i) => db.prepare(`INSERT INTO lib_collections (slug, name, blurb, sort, archived, created_at) VALUES (?, ?, '', ?, 0, ?)
+            ON CONFLICT(slug) DO NOTHING`).bind(collectionOf(c), c === 'Test. Test' ? 'General' : c, 1000 + i, now)));
+        const rows = Object.entries(images || {});
+        for (let i = 0; i < rows.length; i += 90) await db.batch(rows.slice(i, i + 90).map(([h, u]) => db.prepare(`INSERT OR IGNORE INTO lib_images (hash, src) VALUES (?, ?)`).bind(h, u)));
+    }
+    let imported = 0;
+    for (const p of todo.slice(0, 12)) {
+        const data = { collection: collectionOf(p.category), section: p.subcategory || '', type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
+            tags: [], credits: p.owner ? [p.owner] : [], files: [], official: false };
+        const key = 'tettra|' + p.id, created = tettraTime(p.created), updated = tettraTime(p.updated);
+        const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
+            VALUES ('pending', ?, ?, 'Guide', ?, ?, '', ?, 'Tettra', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
+        const id = r.meta.last_row_id;
+        const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+            VALUES (?, ?, 'pending', 'Imported from Tettra', ?, 'Tettra', ?, 1, ?)`).bind(id, JSON.stringify(data), p.owner || 'LSH Team', key, created).run();
+        await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
+        await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(created, updated, updated, id).run();
+        imported++;
+    }
+    return json({ success: true, imported, remaining: todo.length - imported });
+}
+const collectionOf = (cat) => cat === 'Test. Test' ? 'general' : slugOf(cat);
+
+const IMG_HOSTS = /^https:\/\/(tettra-production\.s3\.us-west-2\.amazonaws\.com|tettra-staging\.s3-us-west-2\.amazonaws\.com|d33v4339jhl8k0\.cloudfront\.net|lh[0-9]\.googleusercontent\.com)\//;
+
+// Copies one imported image from where Tettra kept it into R2 (kb/img/<hash>). Returns the R2 object, or null when the original is gone.
+async function storeImage(env, db, hash) {
+    const row = await db.prepare(`SELECT src, status FROM lib_images WHERE hash = ?`).bind(hash).first();
+    if (!row) return null;
+    const key = 'kb/img/' + hash;
+    if (row.status === 'ready') return await env.FILES.get(key);
+    if (row.status === 'gone' || !IMG_HOSTS.test(row.src)) return null;
+    let res;
+    try { res = await fetch(row.src); } catch (e) { return null; }
+    const type = (res.headers.get('content-type') || '').split(';')[0];
+    if (!res.ok || !/^image\/(png|jpeg|gif|webp)$/.test(type)) {
+        if (res.status === 404 || res.status === 403 || res.ok) await db.prepare(`UPDATE lib_images SET status = 'gone' WHERE hash = ?`).bind(hash).run();
+        return null;
+    }
+    await env.FILES.put(key, await res.arrayBuffer(), { httpMetadata: { contentType: type } });
+    await db.prepare(`UPDATE lib_images SET status = 'ready' WHERE hash = ?`).bind(hash).run();
+    return await env.FILES.get(key);
+}
+
+async function serveImage({ env, db }, hash) {
+    if (!/^[0-9a-f]{16}$/.test(String(hash || '')) || !env.FILES) return fail('Not found.', 404);
+    const obj = await storeImage(env, db, hash);
+    if (!obj) return new Response('', { status: 404 });
+    return new Response(obj.body, { headers: { 'Content-Type': obj.httpMetadata.contentType || 'image/png', 'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff' } });
+}
+
+// Copies the imported images into R2 ahead of time, 15 per call, so they survive Tettra being closed.
+async function copyImages(env, db) {
+    if (!env.FILES) return fail('File storage isn’t connected: the R2 bucket (FILES) is not bound to this Worker.', 500);
+    const { results } = await db.prepare(`SELECT hash FROM lib_images WHERE status = 'pending' LIMIT 15`).all();
+    let copied = 0;
+    for (const r of results || []) if (await storeImage(env, db, r.hash)) copied++;
+    const left = await db.prepare(`SELECT COUNT(*) AS n FROM lib_images WHERE status = 'pending'`).first();
+    const gone = await db.prepare(`SELECT COUNT(*) AS n FROM lib_images WHERE status = 'gone'`).first();
+    return json({ success: true, copied, remaining: left.n, missing: gone.n });
 }
 
 // Copies the old Knowledge Base's posts (with their replies, votes and views)
