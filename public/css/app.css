@@ -208,3 +208,28 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 
 .md-img{display:block;max-width:100%;height:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;}
 .md-code{background:#f3f5f9;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto;font-family:var(--mono);font-size:13px;}
+
+/* Tettra-style side navigation: collections > sections > pages */
+.shell{display:flex;align-items:flex-start;max-width:1560px;margin:0 auto;}
+.shell>main{flex:1;min-width:0;}
+#tree{width:290px;flex:none;position:sticky;top:60px;max-height:calc(100vh - 60px);overflow:auto;padding:22px 8px 40px 20px;font-size:14px;}
+#tree[hidden]{display:none;}
+#tree .t-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 6px;display:block;}
+#tree details{margin:0;}
+#tree summary{cursor:pointer;list-style:none;display:flex;gap:6px;align-items:baseline;padding:6px 8px;border-radius:8px;font-weight:600;color:var(--navy);}
+#tree summary::-webkit-details-marker{display:none;}
+#tree summary::before{content:"▸";font-size:11px;color:var(--muted);transition:transform .12s;}
+#tree details[open]>summary::before{transform:rotate(90deg);}
+#tree summary:hover{background:var(--line-soft);}
+#tree summary .n{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:400;}
+#tree .t-sec{font-size:12px;color:var(--muted);margin:8px 0 2px 24px;font-weight:600;}
+#tree a.t-page{display:block;padding:4px 8px 4px 24px;border-radius:6px;color:var(--ink);text-decoration:none;line-height:1.35;}
+#tree a.t-page:hover{background:var(--line-soft);}
+#tree a.t-page.on{background:var(--orange-soft);color:var(--orange-deep);font-weight:600;}
+#tree a.t-all{display:block;padding:4px 8px 4px 24px;font-size:12.5px;color:var(--navy-soft);}
+@media (max-width:900px){.shell{display:block;}#tree{width:auto;position:static;max-height:none;padding:12px 20px 0;}}
+.on-page{display:grid;gap:2px;font-size:13.5px;}
+.on-page b{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.on-page a{color:var(--ink);text-decoration:none;padding:3px 8px;border-radius:6px;}
+.on-page a:hover{background:var(--line-soft);}
+.on-page a.l3{padding-left:20px;font-size:13px;color:var(--muted);}

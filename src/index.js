@@ -39,6 +39,7 @@ export default {
             const seg = path.slice(5).split('/').filter(Boolean);   // after "/api/"
             switch (seg[0]) {
                 case 'library': return await library(ctx);
+                case 'tree': return await tree(ctx);
                 case 'entries':
                     if (!seg[1]) return write ? await createEntry(ctx) : await listEntries(ctx);
                     if (seg[2] === 'history') return await history(ctx, Number(seg[1]));
@@ -216,6 +217,13 @@ async function listEntries({ db, url, reader }) {
     const { results } = await db.prepare(sql).bind(...bind, pageSize, (page - 1) * pageSize).all();
     const total = await db.prepare(countSql).bind(...countBind).first();
     return json({ success: true, entries: (results || []).map(shapeRow), total: total ? total.n : 0, page, pageSize });
+}
+
+// The side navigation: every published entry's id, collection, section and title (A to Z), nothing else.
+async function tree({ db }) {
+    const { results } = await db.prepare(`SELECT id, collection, section, title FROM lib_entries WHERE status = 'published'
+        ORDER BY section COLLATE NOCASE, title COLLATE NOCASE`).all();
+    return json({ success: true, entries: (results || []).map(r => ({ id: r.id, c: r.collection, s: r.section || '', t: r.title })) });
 }
 
 function canSeeEntry(entry, reader) {

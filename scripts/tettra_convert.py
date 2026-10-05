@@ -181,6 +181,19 @@ def plain(md):
     return re.sub(r'\s+', ' ', t).strip()
 
 
+def summary_of(md):
+    """The first real paragraph (not a heading, image, list, table or code), else the page's plain text."""
+    for blk in re.split(r'\n\s*\n', md):
+        b = blk.strip()
+        if not b or re.match(r'(#|!\[|\||```|- |\d+\. )', b):
+            continue
+        t = plain(b)
+        if len(t) >= 40:
+            return (t[:217] + '…') if len(t) > 220 else t
+    t = plain(md)
+    return (t[:217] + '…') if len(t) > 220 else t
+
+
 def main(src):
     data = json.load(open(src))
     pages = []
@@ -195,10 +208,10 @@ def main(src):
         md = convert(x.get('html') or '')
         if len(md) < 20:
             continue
-        s = plain(md)
+        s = summary_of(md)
         pages.append({'id': x['id'], 'title': x['page_title'].strip(), 'category': cat, 'subcategory': x.get('subcategory_name') or '',
                       'owner': x.get('owner_name') or '', 'created': x['created_at'], 'updated': x['updated_at'],
-                      'url': x['url'], 'summary': (s[:217] + '…') if len(s) > 220 else s, 'body': md})
+                      'url': x['url'], 'summary': s, 'body': md})
     used = {h for p in pages for h in re.findall(r'/img/([0-9a-f]{16})', p['body'])}
     out = {'pages': pages, 'images': {h: u for h, u in IMAGES.items() if h in used}}
     dest = os.path.join(ROOT, 'public', 'seed', 'tettra.json')
