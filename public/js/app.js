@@ -452,11 +452,11 @@
                     ${staff ? `<div class="card"><h3>Reviewer tools</h3><div class="row">
                         ${e.status === 'published' ? `<button class="btn small" data-act="${e.featured ? 'unfeature' : 'feature'}">${e.featured ? 'Unfeature' : '★ Feature'}</button>` : ''}
                         ${adminUser && e.publishedAt ? `<button class="btn small" data-act="official" data-v="${e.official ? '0' : '1'}">${e.official ? 'Remove Official' : '✓ Mark Official'}</button>` : ''}
-                        ${e.status === 'archived' ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : e.publishedAt ? `<button class="btn small" data-act="archive">Archive</button>` : ''}
+                        ${e.status === 'archived' ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : e.publishedAt ? `<button class="btn small" data-act="archive">Remove from library (archive)</button>` : ''}
                     </div>
-                    ${adminUser ? `<details style="margin-top:12px"><summary class="muted">Delete permanently</summary>
-                        <p class="muted" style="font-size:13px">Removes the entry, every version and its files for good. Archive instead if you might need it again.</p>
-                        <div class="row"><input class="i" id="purge-confirm" placeholder="Type DELETE" style="max-width:140px"><button class="btn small danger" data-act="purge">Delete</button></div></details>` : ''}</div>` : ''}
+                    ${adminUser ? `<div style="margin-top:12px"><b>Delete this article</b>
+                        <p class="muted" style="font-size:13px">Removes the article, every version and its files for good. Use Archive instead if you might need it again.</p>
+                        <div class="row"><input class="i" id="purge-confirm" placeholder="Type DELETE" style="max-width:140px"><button class="btn small danger" data-act="purge">Delete article</button></div></div>` : ''}</div>` : ''}
                 </aside>
             </div>`);
         // "On this page": the entry's own headings, as links.

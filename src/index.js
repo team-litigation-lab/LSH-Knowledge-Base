@@ -645,7 +645,10 @@ async function importBundled(request, env, db, reader) {
 }
 
 // ---- Glossary: a dictionary of terms (public/seed/glossary.json, made by scripts/tettra_convert.py), kept apart from the entries ----
-async function glossary({ db }) {
+async function glossary({ request, env, db }) {
+    // First time it is opened with nothing in it: load the bundled terms, so nobody has to find the Admin import.
+    const have = await db.prepare(`SELECT COUNT(*) AS n FROM lib_terms`).first();
+    if (!have || !have.n) await importGlossary(request, env, db);
     const { results } = await db.prepare(`SELECT id, term, definition, example, category, source FROM lib_terms ORDER BY term COLLATE NOCASE`).all();
     return json({ success: true, terms: results || [] });
 }
