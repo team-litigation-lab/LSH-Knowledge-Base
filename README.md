@@ -53,6 +53,10 @@ The LSH VA community library: official SOPs, training videos, guides and know-ho
 | `wrangler.json` | Worker config and bindings |
 | `.github/workflows/checks.yml` | The checks GitHub runs on every pull request and push |
 
+## Bundled documents (Admin → Import documents)
+
+`public/seed/` holds the Demand Phase and Case Management handouts (`docs.json` with each title, summary, collection, tags and extracted text, and the PDFs in `files/`). **Admin → Import documents** copies each PDF into R2 and publishes it as an entry, searchable by its text. It is safe to run again: a document already imported is skipped (`legacy_ref` = `seed:<file name>`). The Worker answers 404 for `/seed/*`, so these files are only reachable through the library after the import.
+
 ## Storage
 
 | Binding | What | Shared with |

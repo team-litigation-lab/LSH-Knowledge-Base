@@ -697,6 +697,9 @@
             <section class="section card"><h2>Import from the old Knowledge Base</h2>
                 <p>${r.legacy.total ? `The Training Portal’s Knowledge Base has ${plural(r.legacy.total, 'post')}; ${r.legacy.imported} ${r.legacy.imported === 1 ? 'is' : 'are'} already here. Importing copies each post with its replies, votes and views. It’s safe to run again.` : 'The old Knowledge Base has no posts to import.'}</p>
                 ${r.legacy.total ? `<button class="btn primary" id="import">Import posts</button> <span class="muted" id="import-status"></span>` : ''}</section>
+            <section class="section card"><h2>Import documents</h2>
+                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) into the library, with their text searchable. Safe to run again: a document already imported is skipped.</p>
+                <button class="btn primary" id="import-docs">Import documents</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
@@ -718,6 +721,17 @@
                 toast('Collection saved.'); S.lib = null; admin();
             } catch (e) { toast(e.message, true); }
         });
+        const impDocs = document.getElementById('import-docs');
+        if (impDocs) impDocs.onclick = async () => {
+            impDocs.disabled = true;
+            const st = document.getElementById('import-docs-status');
+            try {
+                const x = await post('/api/admin', { action: 'import-bundled' });
+                st.textContent = x.imported ? `Imported ${plural(x.imported, 'document')}.` : (x.note || 'Everything is already imported.');
+                S.lib = null;
+            } catch (e) { st.textContent = e.message; }
+            impDocs.disabled = false;
+        };
         const imp = document.getElementById('import');
         if (imp) imp.onclick = async () => {
             imp.disabled = true;
