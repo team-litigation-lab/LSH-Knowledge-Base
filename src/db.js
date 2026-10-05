@@ -92,6 +92,7 @@ let ready = false;   // once per Worker instance
 export async function ensureSchema(db) {
     if (ready) return;
     for (const s of SCHEMA) await db.prepare(s).run();
+    try { await db.prepare(`ALTER TABLE kb_comments ADD COLUMN kind TEXT`).run(); } catch (e) { /* the column is already there */ }   // 'update' = a note about out-of-date information
     const n = await db.prepare(`SELECT COUNT(*) AS n FROM lib_collections`).first();
     if (!n || !n.n) {
         const now = nowIso();
