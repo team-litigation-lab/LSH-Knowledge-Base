@@ -11,7 +11,7 @@
           'The LSH VA community library: official SOPs, training videos, guides and know-how from the whole community.',
           'Entries sit in collections, one per program or role: Foundational Training, Reception, Intake, Case Management, EA / PA and more.',
           'Inside a collection, entries are grouped by section.',
-          'Anyone in the community can add to it; reviewers keep it accurate.'],
+          'Everyone signed in can read it (Info Access). Tenured team members can add to it, and an admin approves each entry; reviewers keep it accurate.'],
         where: 'Top bar → Library.',
         tip: 'Look for ✓ Official: those entries are the firm\'s approved way of doing it.' },
       { icon: '🔑', title: 'Signing in', points: [

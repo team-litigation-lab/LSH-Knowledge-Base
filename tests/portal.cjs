@@ -31,6 +31,19 @@ const post = (body, cookie) => fetch(B + '/api/session', { method: 'POST', heade
   check(s.unlocked === true && s.admin === false && s.who && s.who.name === 'Ann Lee' && s.who.batch === 'B300926', 'the session carries the name and batch from the Portal');
   r = await fetch(B + '/api/library', { headers: { Cookie: cookie } }); check(r.status === 200, 'the trainee opens the library');
   r = await fetch(B + '/api/admin', { headers: { Cookie: cookie } }); check(r.status === 403, 'the trainee cannot open an admin API');
+  // Info Access: a trainee reads only. Tenured access (given by an admin) lets them add, and the entry waits for approval.
+  const entry = { collection: 'foundational', type: 'Tip', title: 'Always confirm the time zone', body: 'Before you schedule a call, confirm the client time zone out loud.' };
+  const postJson = (path, body, ck) => fetch(B + path, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: B, Cookie: ck }, body: JSON.stringify(body) });
+  s = await (await fetch(B + '/api/session', { headers: { Cookie: cookie } })).json(); check(s.contributor === false && s.tier === 'info', 'a trainee has Info Access');
+  r = await postJson('/api/entries', entry, cookie); check(r.status === 403 && (await r.json()).code === 'INFO_ONLY', 'a trainee cannot add an entry');
+  r = await postJson('/api/files', { action: 'start', name: 'a.pdf', size: 10, type: 'application/pdf' }, cookie); check(r.status === 403, 'a trainee cannot upload a file');
+  r = await post({ action: 'admin-login', password: 'master-ok' }); const adm0 = (r.headers.get('set-cookie') || '').split(';')[0];
+  r = await postJson('/api/admin', { action: 'grant-role', role: 'tenured', name: 'Ann Lee', batch: 'B300926' }, adm0); check(r.status === 200, 'an admin gives Ann Lee tenured access');
+  s = await (await fetch(B + '/api/session', { headers: { Cookie: cookie } })).json(); check(s.contributor === true && s.tier === 'tenured', 'she is now tenured');
+  r = await postJson('/api/entries', entry, cookie); const made = await r.json(); check(r.status === 200 && made.status === 'pending', 'a tenured member can add an entry and it waits for approval');
+  r = await fetch(B + '/api/entries/' + made.id, { headers: { Cookie: cookie } }); check(r.status === 200, 'she can see her own pending entry');
+  r = await postJson('/api/admin', { action: 'revoke-reviewer', key: 'ann lee|b300926' }, adm0); check(r.status === 200, 'an admin takes the access away');
+  r = await postJson('/api/entries', entry, cookie); check(r.status === 403, 'and she is back to Info Access');
   r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'nope' }); check(r.status === 401, 'the Master Account with a wrong password is refused');
   r = await post({ action: 'admin-login', password: 'master-ok' }); check(r.status === 200, 'the admin password alone signs in too');
   r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'master-ok' }); check(r.status === 200, 'the Master Account signs in with the admin password (checked by the Portal)');
