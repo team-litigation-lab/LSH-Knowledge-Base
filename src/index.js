@@ -253,7 +253,7 @@ async function getEntry({ db, reader }, id) {
             version: { id: rev.id, by: rev.author_name, at: rev.created_at, note: rev.note || '', status: rev.status },
             versions: counts.versions || 0, pendingEdits: reader.staff ? (counts.pending || 0) : undefined, myPendingEdit: myPending ? myPending.id : null },
         stats: { views: st ? st.views : 0, helpful: st ? st.helpful : 0 }, voted,
-        comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at })),
+        comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at, kind: c.kind || 'comment', done: c.review_note === 'done' })),
         can: { edit: e.status !== 'archived' && reader.contributor, staff: reader.staff, admin: reader.admin } });
 }
 
@@ -287,7 +287,7 @@ async function reviewQueue({ db, reader }) {
         LEFT JOIN lib_entries e ON 'e:' || e.id = c.article_ref WHERE c.status = 'pending' AND c.article_ref LIKE 'e:%' ORDER BY c.id LIMIT 300`).all();
     return json({ success: true,
         revisions: (revs || []).map(r => ({ ...shapeRev(r, true), isNew: r.entry_status === 'pending' || r.entry_status === 'rejected', entryTitle: r.entry_title, entryStatus: r.entry_status })),
-        comments: (cm || []).map(c => ({ id: c.id, entryId: Number(c.article_ref.slice(2)), entryTitle: c.entry_title || '', body: c.body, author: c.author_name, batch: c.author_batch || '', createdAt: c.created_at })) });
+        comments: (cm || []).map(c => ({ id: c.id, entryId: Number(c.article_ref.slice(2)), entryTitle: c.entry_title || '', body: c.body, author: c.author_name, batch: c.author_batch || '', createdAt: c.created_at, kind: c.kind || 'comment' })) });
 }
 
 async function people({ db }) {
@@ -495,22 +495,25 @@ async function comments({ request, db, reader }) {
     if (request.method !== 'POST') return fail('POST only.', 405);
     const body = await readJson(request) || {};
     if (body.action === 'submit') {
-        if (!reader.contributor) return infoOnly();
+        const kind = body.kind === 'update' ? 'update' : 'comment';
+        if (!reader.contributor && kind !== 'update') return infoOnly();   // anyone signed in may report out-of-date information; only contributors add other comments
         if (!reader.staff && await overLimit(request, db, 'comment', 20)) return fail('You’ve replied a lot in a short time. Wait a few minutes and try again.', 429);
         const e = await db.prepare(`SELECT status FROM lib_entries WHERE id = ?`).bind(Number(body.entryId)).first();
         if (!e || e.status !== 'published') return fail('Replies are open on published entries only.');
         const text = clean(body.body, 5000);
         if (text.length < 5) return fail('Write a little more before sending.');
         const status = reader.staff ? 'approved' : 'pending';
-        await db.prepare(`INSERT INTO kb_comments (article_ref, body, author_name, author_batch, author_key, by_admin, status, created_at, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-            .bind(refOf(Number(body.entryId)), text, reader.who.name, reader.who.batch, reader.who.key, reader.staff ? 1 : 0, status, nowIso(), request.headers.get('CF-Connecting-IP') || null).run();
+        await db.prepare(`INSERT INTO kb_comments (article_ref, body, author_name, author_batch, author_key, by_admin, status, created_at, ip, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .bind(refOf(Number(body.entryId)), text, reader.who.name, reader.who.batch, reader.who.key, reader.staff ? 1 : 0, status, nowIso(), request.headers.get('CF-Connecting-IP') || null, kind).run();
         return json({ success: true, status });
     }
     if (body.action === 'review') {
         if (!reader.staff) return fail('Reviewer access required.', 403);
-        const status = { approve: 'approved', reject: 'rejected', delete: 'deleted' }[body.decision];
+        const status = { approve: 'approved', reject: 'rejected', delete: 'deleted', done: 'approved' }[body.decision];
         if (!status) return fail('Unknown decision.');
-        await db.prepare(`UPDATE kb_comments SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?`).bind(status, reader.adminUser || reader.who.name, nowIso(), Number(body.id)).run();
+        // 'done': the page has been updated for this comment (it stays shown, marked as done)
+        await db.prepare(`UPDATE kb_comments SET status = ?, reviewed_by = ?, reviewed_at = ?, review_note = CASE WHEN ? = 'done' THEN 'done' ELSE review_note END WHERE id = ?`)
+            .bind(status, reader.adminUser || reader.who.name, nowIso(), body.decision, Number(body.id)).run();
         return json({ success: true });
     }
     return fail('Unknown action.');

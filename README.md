@@ -53,6 +53,10 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 | `wrangler.json` | Worker config and bindings |
 | `.github/workflows/checks.yml` | The checks GitHub runs on every pull request and push |
 
+## Comments · update current info
+
+Every page ends with a **Comments · update current info** section. Anyone signed in, including Info Access readers, can send a note that something is out of date and what it should say now (`kind` = `update`); contributors can also add a plain comment. A note waits for a reviewer (it appears in the review queue with an *Update to current info* badge) unless a reviewer or admin wrote it. Once approved it shows on the page; a reviewer updates the page and presses **Mark page updated**, which adds a *✓ Page updated* badge. Info Access readers still cannot add entries, edits or plain comments. The `kind` column is added to `kb_comments` automatically.
+
 ## Bundled documents (Admin → Import documents)
 
 `public/seed/docs.json` holds the Demand Phase and Case Management handouts as Markdown (headings, lists, tables), made from the PDFs with `scripts/pdf_to_md.py`. **Admin → Import documents** publishes each one as a page of the library, not as a PDF in a viewer, and refreshes the search. It is safe to run again: a handout already imported is skipped, and one imported earlier as a PDF attachment is rewritten as a page (`legacy_ref` = `seed:<file name>`). The Worker answers 404 for `/seed/*` and handles every request first (`run_worker_first`), so the bundled data is only reachable through the library.

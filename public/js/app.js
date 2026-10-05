@@ -364,13 +364,16 @@
                     ${e.tags.length ? `<div class="tags" style="margin-top:18px">${e.tags.map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
                     ${e.status === 'published' ? `<div class="row" style="margin-top:18px"><button class="btn" id="helpful" aria-pressed="${r.voted}">👍 ${r.voted ? 'You found this helpful' : 'Helpful'} · <span id="helpful-n">${r.stats.helpful}</span></button><span class="muted">${plural(r.stats.views, 'view')}</span></div>` : ''}
-                    <section class="section" id="replies"><h2>Experience from the team</h2>
-                        <div class="replies">${r.comments.length ? r.comments.map(c => `<div class="reply"><div class="who"><b>${esc(c.author)}</b>${c.batch ? ' · ' + esc(c.batch) : ''} · ${fmtDate(c.createdAt)} ${c.status === 'pending' ? '<span class="badge pending">Waiting for review</span>' : c.status === 'rejected' ? '<span class="badge rejected">Not approved</span>' : ''}</div>
+                    <section class="section" id="replies"><h2>Comments · update current info</h2>
+                        <p class="muted" style="margin-top:0">Is something on this page out of date, or have you used it? Tell us what’s current. A reviewer reads every note and updates the page.</p>
+                        <div class="replies">${r.comments.length ? r.comments.map(c => `<div class="reply"><div class="who"><b>${esc(c.author)}</b>${c.batch ? ' · ' + esc(c.batch) : ''} · ${fmtDate(c.createdAt)} ${c.kind === 'update' ? '<span class="badge">Update to current info</span> ' : ''}${c.done ? '<span class="badge official">✓ Page updated</span> ' : ''}${c.status === 'pending' ? '<span class="badge pending">Waiting for review</span>' : c.status === 'rejected' ? '<span class="badge rejected">Not approved</span>' : ''}</div>
                             <div class="md">${window.KBmd.render(c.body)}</div>
                             ${staff && c.status === 'pending' ? `<div class="row" style="margin-top:6px"><button class="btn small primary" data-reply="${c.id}" data-d="approve">Approve</button><button class="btn small" data-reply="${c.id}" data-d="reject">Don’t publish</button></div>` : ''}
-                            ${staff && c.status === 'approved' ? `<div class="row" style="margin-top:6px"><button class="btn small danger" data-reply="${c.id}" data-d="delete">Remove</button></div>` : ''}</div>`).join('') : '<p class="muted" style="margin:0">No replies yet. Used this? Add what worked for you.</p>'}</div>
-                        ${e.status === 'published' && s.contributor ? `<form id="reply-form" class="editor" style="margin-top:12px"><label class="f">Add your experience<textarea class="i" id="reply-body" rows="3" required placeholder="What worked, what to watch out for, an example…"></textarea></label>
-                            <div class="row"><button class="btn primary" type="submit">Send reply</button>${staff ? '' : '<span class="muted">Replies appear after a reviewer approves them.</span>'}</div></form>` : ''}
+                            ${staff && c.status === 'approved' ? `<div class="row" style="margin-top:6px">${c.kind === 'update' && !c.done ? `<button class="btn small primary" data-reply="${c.id}" data-d="done">Mark page updated</button>` : ''}<button class="btn small danger" data-reply="${c.id}" data-d="delete">Remove</button></div>` : ''}</div>`).join('') : '<p class="muted" style="margin:0">No comments yet.</p>'}</div>
+                        ${e.status === 'published' ? `<form id="reply-form" class="editor" style="margin-top:12px">
+                            ${s.contributor ? `<div class="row"><label><input type="radio" name="reply-kind" value="update" checked> Something needs updating</label> <label><input type="radio" name="reply-kind" value="comment"> Just a comment</label></div>` : ''}
+                            <label class="f">${s.contributor ? 'Your note' : 'What needs updating?'}<textarea class="i" id="reply-body" rows="3" required placeholder="What is out of date, and what should it say now? Add the source or date if you have one."></textarea></label>
+                            <div class="row"><button class="btn primary" type="submit">Send</button>${staff ? '' : '<span class="muted">Notes appear after a reviewer approves them.</span>'}</div></form>` : ''}
                     </section>
                 </article>
                 <aside class="side">
@@ -415,7 +418,7 @@
         const rf = document.getElementById('reply-form');
         if (rf) rf.onsubmit = async (ev) => {
             ev.preventDefault();
-            try { const v = await post('/api/comments', { action: 'submit', entryId: id, body: val('reply-body') }); toast(v.status === 'approved' ? 'Reply published.' : 'Thanks. Your reply will appear after review.'); entry(id); }
+            try { const v = await post('/api/comments', { action: 'submit', entryId: id, body: val('reply-body'), kind: (document.querySelector('input[name=reply-kind]:checked') || {}).value || 'update' }); toast(v.status === 'approved' ? 'Comment published.' : 'Thanks. A reviewer will read your note.'); entry(id); }
             catch (e) { toast(e.message, true); }
         };
         app.querySelectorAll('[data-reply]').forEach(b => b.onclick = async () => {
@@ -682,8 +685,8 @@
             ${!r.revisions.length && !r.comments.length ? '<div class="card"><p>Nothing is waiting. 🎉</p></div>' : ''}
             ${newOnes.length ? `<section class="section"><h2>New entries (${newOnes.length})</h2><div class="queue">${newOnes.map(card).join('')}</div></section>` : ''}
             ${edits.length ? `<section class="section"><h2>Suggested edits (${edits.length})</h2><div class="queue">${edits.map(card).join('')}</div></section>` : ''}
-            ${r.comments.length ? `<section class="section"><h2>Replies (${r.comments.length})</h2><div class="queue">${r.comments.map(c => `<div class="card">
-                <p class="muted" style="margin:0 0 6px">${esc(c.author)}${c.batch ? ' · ' + esc(c.batch) : ''} on <a href="#/e/${c.entryId}">${esc(c.entryTitle)}</a> · ${fmtWhen(c.createdAt)}</p>
+            ${r.comments.length ? `<section class="section"><h2>Comments (${r.comments.length})</h2><div class="queue">${r.comments.map(c => `<div class="card">
+                <p class="muted" style="margin:0 0 6px">${c.kind === 'update' ? '<span class="badge">Update to current info</span> ' : ''}${esc(c.author)}${c.batch ? ' · ' + esc(c.batch) : ''} on <a href="#/e/${c.entryId}">${esc(c.entryTitle)}</a> · ${fmtWhen(c.createdAt)}</p>
                 <div class="md">${window.KBmd.render(c.body)}</div>
                 <div class="row" style="margin-top:8px"><button class="btn small primary" data-cm="${c.id}" data-d="approve">Approve</button><button class="btn small" data-cm="${c.id}" data-d="reject">Don’t publish</button></div></div>`).join('')}</div></section>` : ''}`);
         app.querySelectorAll('[data-rev]').forEach(b => b.onclick = async () => {
