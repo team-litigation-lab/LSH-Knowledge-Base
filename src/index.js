@@ -6,6 +6,7 @@ import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFil
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
 
+const infoOnly = () => fail('Info Access is view-only. Tenured team members can add to the library, and an admin approves it. Ask an admin for tenured access.', 403, { code: 'INFO_ONLY' });
 const READER_DAYS = 30, ADMIN_HOURS = 12, PAGE = 24, PORTAL_READER_HOURS = 12;
 // People sign in once, on the LSH Training Portal. It sends them here with a short-lived signed ticket, which this Worker
 // hands back to the Portal to check (so this Worker needs no shared secret) before it starts its own session.
@@ -44,6 +45,7 @@ export default {
                 case 'comments': return await comments(ctx);
                 case 'people': return await people(ctx);
                 case 'files':
+                    if (write && !reader.contributor) return infoOnly();
                     if (request.method === 'PUT' && seg[1] && seg[2]) return await putPart(ctx, seg[1], Number(seg[2]));
                     return await files(ctx);
                 case 'admin':
@@ -67,7 +69,7 @@ async function session(request, env) {
     if (request.method === 'GET') {
         const reader = await getReader(request, env);
         return json({ success: true, configured: !!(await getSetting(db, 'code_hash')), unlocked: !!reader, portalUrl: portalBase(env), codeLogin: codeLoginOn(env),
-            admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer),
+            admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer), contributor: !!(reader && reader.contributor), tier: reader ? reader.tier : null,
             who: reader ? { name: reader.who.name, batch: reader.who.batch, key: reader.who.key } : null });
     }
     if (!sameOrigin(request)) return fail('Requests must come from the LSH Knowledge Base.', 403);
@@ -243,7 +245,7 @@ async function getEntry({ db, reader }, id) {
             versions: counts.versions || 0, pendingEdits: reader.staff ? (counts.pending || 0) : undefined, myPendingEdit: myPending ? myPending.id : null },
         stats: { views: st ? st.views : 0, helpful: st ? st.helpful : 0 }, voted,
         comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at })),
-        can: { edit: e.status !== 'archived', staff: reader.staff, admin: reader.admin } });
+        can: { edit: e.status !== 'archived' && reader.contributor, staff: reader.staff, admin: reader.admin } });
 }
 
 const shapeRev = (r, withData) => ({ id: r.id, entryId: r.entry_id, status: r.status, note: r.note || '', author: r.author_name, batch: r.author_batch || '',
@@ -328,6 +330,7 @@ async function addRevision(db, entryId, data, note, reader, status) {
 }
 
 async function createEntry({ request, db, reader }) {
+    if (!reader.contributor) return infoOnly();
     if (!reader.staff && await overLimit(request, db, 'entry', 15)) return fail('You’ve added a lot in a short time. Wait a few minutes and try again.', 429);
     const body = await readJson(request) || {};
     const f = await fields(db, body, reader, null);
@@ -345,6 +348,7 @@ async function createEntry({ request, db, reader }) {
 
 async function entryAction({ request, db, reader, env }, id) {
     const body = await readJson(request) || {};
+    if (!reader.contributor && body.action !== 'helpful') return infoOnly();
     const e = await db.prepare(`SELECT * FROM lib_entries WHERE id = ?`).bind(id).first();
     if (!e) return fail('That entry no longer exists.', 404);
     const reviewer = reader.adminUser || reader.who.name, now = nowIso();
@@ -482,6 +486,7 @@ async function comments({ request, db, reader }) {
     if (request.method !== 'POST') return fail('POST only.', 405);
     const body = await readJson(request) || {};
     if (body.action === 'submit') {
+        if (!reader.contributor) return infoOnly();
         if (!reader.staff && await overLimit(request, db, 'comment', 20)) return fail('You’ve replied a lot in a short time. Wait a few minutes and try again.', 429);
         const e = await db.prepare(`SELECT status FROM lib_entries WHERE id = ?`).bind(Number(body.entryId)).first();
         if (!e || e.status !== 'published') return fail('Replies are open on published entries only.');
@@ -542,12 +547,13 @@ async function adminAction({ request, db, reader }) {
         await setSetting(db, 'code_changed_by', reader.adminUser);
         return json({ success: true });
     }
-    if (body.action === 'grant-reviewer') {
+    if (body.action === 'grant-reviewer' || body.action === 'grant-role') {
+        const role = body.role === 'tenured' ? 'tenured' : 'reviewer';
         const name = oneLine(body.name, 80), batch = oneLine(body.batch, 40);
-        if (name.length < 2) return fail('Enter the person’s full name exactly as they sign in.');
-        await db.prepare(`INSERT INTO lib_roles (person_key, name, batch, role, granted_by, granted_at) VALUES (?, ?, ?, 'reviewer', ?, ?)
-            ON CONFLICT(person_key) DO UPDATE SET role = 'reviewer', granted_by = excluded.granted_by, granted_at = excluded.granted_at`)
-            .bind(personKey(name, batch), name, batch, reader.adminUser, now).run();
+        if (name.length < 2) return fail('Enter the person’s full name exactly as it shows in the LSH Training Portal.');
+        await db.prepare(`INSERT INTO lib_roles (person_key, name, batch, role, granted_by, granted_at) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(person_key) DO UPDATE SET role = excluded.role, granted_by = excluded.granted_by, granted_at = excluded.granted_at`)
+            .bind(personKey(name, batch), name, batch, role, reader.adminUser, now).run();
         return json({ success: true });
     }
     if (body.action === 'revoke-reviewer') {

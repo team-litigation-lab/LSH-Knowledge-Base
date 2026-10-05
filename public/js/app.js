@@ -90,7 +90,7 @@
             link('#/', 'Library'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
-            `<a class="cta" href="#/new">+ Add to the library</a>`,
+            s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
             `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Sign out</button>`
         ].join('');
         if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
@@ -228,9 +228,10 @@
                 <input id="hero-q" type="search" placeholder="Try “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off"></form>
             <div class="stats"><span><b>${t.entries}</b>entries</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
         </section>
+        ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Tenured team members can add to the library, and an admin approves it before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${L.queue && (L.queue.revisions || L.queue.comments) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')} and ${plural(L.queue.comments, 'reply', 'replies')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
-        ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p><a class="btn accent" href="#/new">+ Add to the library</a></div>` : ''}
+        ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
         <section class="section"><div class="spread"><h2>Collections</h2></div>
             <div class="cols">${L.collections.map(c => `<a class="col" href="#/c/${c.slug}"><h3>${esc(c.name)}</h3><p>${esc(c.blurb)}</p>
                 <span class="meta">${plural(c.count, 'entry', 'entries')}${c.videos ? ' · ' + plural(c.videos, 'video') : ''}</span></a>`).join('')}</div></section>
@@ -259,7 +260,7 @@
         const chipHref = (k, v) => { const p = new URLSearchParams(q); if (p.get(k) === v) p.delete(k); else p.set(k, v); return `#/c/${slug}?${p}`; };
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><span>${esc(c.name)}</span></div>
             <div class="spread"><div><h1>${esc(c.name)}</h1><p class="muted" style="margin:0">${esc(c.blurb)}</p></div>
-                <a class="btn accent" href="#/new?collection=${slug}">+ Add to ${esc(c.name)}</a></div>
+                ${S.session.contributor ? `<a class="btn accent" href="#/new?collection=${slug}">+ Add to ${esc(c.name)}</a>` : ''}</div>
             <div class="filters">
                 <a class="chip" aria-pressed="${q.get('video') === '1'}" href="${chipHref('video', '1')}">Videos</a>
                 <a class="chip" aria-pressed="${q.get('official') === '1'}" href="${chipHref('official', '1')}">Official only</a>
@@ -270,7 +271,7 @@
             <div class="layout">
                 <nav class="toc" aria-label="Sections">${keys.length ? `<b>Sections</b>${keys.map(k => `<a href="#/c/${slug}" data-jump="${anchor(k)}">${esc(k || 'Other')}<span>${groups.get(k).length}</span></a>`).join('')}` : ''}</nav>
                 <div>${keys.length ? keys.map(k => `<section class="group" id="${anchor(k)}"><h2>${esc(k || 'Other')} <span>${groups.get(k).length}</span></h2>${listHTML(groups.get(k), { showCollection: false })}</section>`).join('')
-                    : `<div class="card"><p>Nothing here yet${q.toString().includes('=1') || q.get('type') ? ' with these filters' : ''}.</p><a class="btn accent" href="#/new?collection=${slug}">+ Add the first entry</a></div>`}
+                    : `<div class="card"><p>Nothing here yet${q.toString().includes('=1') || q.get('type') ? ' with these filters' : ''}.</p>${S.session.contributor ? `<a class="btn accent" href="#/new?collection=${slug}">+ Add the first entry</a>` : ''}</div>`}
                 ${r.total > r.entries.length ? `<p class="muted">Showing the first ${r.entries.length}. Use search to find the rest.</p>` : ''}</div>
             </div>`);
         document.getElementById('c-type').onchange = (ev) => { const p = new URLSearchParams(q); ev.target.value ? p.set('type', ev.target.value) : p.delete('type'); location.hash = `#/c/${slug}?${p}`; };
@@ -300,7 +301,7 @@
                 <span class="muted">${plural(r.total, 'result')}</span>
             </div>
             ${r.entries.length ? listHTML(r.entries) : `<div class="card"><p>Nothing matches${q.get('q') ? ` “${esc(q.get('q'))}”` : ''}. Try fewer or different words${q.get('collection') || q.get('type') || q.get('official') ? ', or clear the filters' : ''}.</p>
-                <p class="muted" style="margin:0">Know the answer? <a href="#/new">Add it to the library</a> so the next person finds it.</p></div>`}
+                ${S.session.contributor ? '<p class="muted" style="margin:0">Know the answer? <a href="#/new">Add it to the library</a> so the next person finds it.</p>' : ''}</div>`}
             ${pages > 1 ? `<div class="pager">${r.page > 1 ? `<a class="btn small" href="${link('page', String(r.page - 1))}">← Previous</a>` : ''}<span class="muted">Page ${r.page} of ${pages}</span>${r.page < pages ? `<a class="btn small" href="${link('page', String(r.page + 1))}">Next →</a>` : ''}</div>` : ''}`);
         const sel = (id, k) => { const el = document.getElementById(id); if (el) el.onchange = () => { location.hash = link(k, el.value || null); }; };
         sel('s-col', 'collection'); sel('s-type', 'type'); sel('s-sort', 'sort');
@@ -353,7 +354,7 @@
                             <div class="md">${window.KBmd.render(c.body)}</div>
                             ${staff && c.status === 'pending' ? `<div class="row" style="margin-top:6px"><button class="btn small primary" data-reply="${c.id}" data-d="approve">Approve</button><button class="btn small" data-reply="${c.id}" data-d="reject">Don’t publish</button></div>` : ''}
                             ${staff && c.status === 'approved' ? `<div class="row" style="margin-top:6px"><button class="btn small danger" data-reply="${c.id}" data-d="delete">Remove</button></div>` : ''}</div>`).join('') : '<p class="muted" style="margin:0">No replies yet. Used this? Add what worked for you.</p>'}</div>
-                        ${e.status === 'published' ? `<form id="reply-form" class="editor" style="margin-top:12px"><label class="f">Add your experience<textarea class="i" id="reply-body" rows="3" required placeholder="What worked, what to watch out for, an example…"></textarea></label>
+                        ${e.status === 'published' && s.contributor ? `<form id="reply-form" class="editor" style="margin-top:12px"><label class="f">Add your experience<textarea class="i" id="reply-body" rows="3" required placeholder="What worked, what to watch out for, an example…"></textarea></label>
                             <div class="row"><button class="btn primary" type="submit">Send reply</button>${staff ? '' : '<span class="muted">Replies appear after a reviewer approves them.</span>'}</div></form>` : ''}
                     </section>
                 </article>
@@ -367,7 +368,7 @@
                         <dt>Versions</dt><dd><a href="#/e/${id}/history">${plural(e.versions, 'version')}</a></dd>
                     </dl></div>
                     <div class="card row">
-                        ${r.can.edit ? `<a class="btn primary" href="#/e/${id}/edit">${editLabel}</a>` : ''}
+                        ${r.can.edit && s.contributor ? `<a class="btn primary" href="#/e/${id}/edit">${editLabel}</a>` : ''}
                         <a class="btn" href="#/e/${id}/history">History</a>
                         ${own && e.status === 'pending' && !e.publishedAt ? `<button class="btn danger" data-act="withdraw">Withdraw</button>` : ''}
                     </div>
@@ -421,6 +422,7 @@
 
     async function editor(id, q) {
         const s = S.session, staff = s.admin || s.reviewer;
+        if (!S.session.contributor) { setTitle('Info Access'); return view(`<div class="card section"><h1>Info Access is view-only</h1><p>Your Portal sign-in gives you Info Access: you can read everything in the library. Tenured team members can add to it, and an admin approves each entry before it goes live. To get tenured access, ask an admin.</p><p><a class="btn" href="#/">Back to the library</a></p></div>`); }
         let e = null;
         if (id) e = (await api(`/api/entries/${id}`)).entry;
         const own = e && e.authorKey === s.who.key;
@@ -680,10 +682,10 @@
                 <form class="row" id="code-form"><label class="sr" for="code">New code</label><input class="i" id="code" type="text" minlength="6" maxlength="64" placeholder="At least 6 characters" style="max-width:280px" autocomplete="off">
                     <button class="btn primary" type="submit">${r.codeSet ? 'Change the code' : 'Set the code'}</button></form>
                 <p class="muted" style="font-size:13px">This is the same code as the Knowledge Base in the LSH Training Portal.</p></section>` : ''}
-            <section class="section card"><h2>Reviewers</h2>
-                <p class="muted" style="margin-top:0">Trusted VAs who can approve entries, edits and replies, archive and restore. Only admins can mark entries official, delete permanently or change settings.</p>
-                ${r.roles.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Batch</th><th>Added</th><th></th></tr></thead><tbody>${r.roles.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.batch)}</td><td>${fmtDate(x.grantedAt)} by ${esc(x.grantedBy || '')}</td><td><button class="btn small danger" data-revoke="${esc(x.key)}">Remove</button></td></tr>`).join('')}</tbody></table></div>` : '<p>No reviewers yet.</p>'}
-                <form class="row" id="rev-form" style="margin-top:10px"><input class="i" id="rev-name" placeholder="Full name, as they sign in" style="max-width:260px"><input class="i" id="rev-batch" placeholder="Batch, as they sign in" style="max-width:180px"><button class="btn" type="submit">Add reviewer</button></form></section>
+            <section class="section card"><h2>Who can add to the library</h2>
+                <p class="muted" style="margin-top:0"><b>Info Access</b> is the default for everyone who opens the Knowledge Base from the Portal: they can read, search and play videos, and nothing else. <b>Tenured</b> team members can also upload files and add entries, edits and replies; each one waits for an admin or reviewer to approve it. <b>Reviewers</b> are trusted VAs who can approve, archive and restore. Only admins can mark entries official, delete permanently or change settings. Type the name exactly as it shows in the LSH Training Portal.</p>
+                ${r.roles.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Batch</th><th>Access</th><th>Added</th><th></th></tr></thead><tbody>${r.roles.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.batch)}</td><td>${x.role === 'tenured' ? 'Tenured' : 'Reviewer'}</td><td>${fmtDate(x.grantedAt)} by ${esc(x.grantedBy || '')}</td><td><button class="btn small danger" data-revoke="${esc(x.key)}">Remove</button></td></tr>`).join('')}</tbody></table></div>` : '<p>Nobody has tenured or reviewer access yet: everyone has Info Access.</p>'}
+                <form class="row" id="rev-form" style="margin-top:10px"><input class="i" id="rev-name" placeholder="Full name, as in the Portal" style="max-width:260px"><input class="i" id="rev-batch" placeholder="Batch, as in the Portal" style="max-width:180px"><select class="i" id="rev-role" style="max-width:150px"><option value="tenured">Tenured</option><option value="reviewer">Reviewer</option></select><button class="btn" type="submit">Give access</button></form></section>
             <section class="section card"><h2>Collections</h2>
                 <p class="muted" style="margin-top:0">The library’s shelves. Lower numbers show first. Archiving a collection hides it from the home page; its entries stay.</p>
                 <div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Description</th><th>Order</th><th>Entries</th><th>Archived</th><th></th></tr></thead><tbody>
@@ -704,7 +706,7 @@
         };
         document.getElementById('rev-form').onsubmit = async (ev) => {
             ev.preventDefault();
-            try { await post('/api/admin', { action: 'grant-reviewer', name: val('rev-name'), batch: val('rev-batch') }); toast('Reviewer added.'); admin(); } catch (e) { toast(e.message, true); }
+            try { await post('/api/admin', { action: 'grant-role', role: val('rev-role'), name: val('rev-name'), batch: val('rev-batch') }); toast('Access saved.'); admin(); } catch (e) { toast(e.message, true); }
         };
         app.querySelectorAll('[data-revoke]').forEach(b => b.onclick = async () => {
             try { await post('/api/admin', { action: 'revoke-reviewer', key: b.dataset.revoke }); admin(); } catch (e) { toast(e.message, true); }
