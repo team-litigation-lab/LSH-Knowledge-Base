@@ -793,7 +793,31 @@
                 <button class="btn primary" id="import-docs">Import documents</button> <button class="btn" id="import-glossary">Import the Glossary only</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
-                <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
+                <p>Every entry, version, glossary term, reply, vote and role is also copied into R2 under <code>kb/backups/</code>: automatically every night, and whenever you press the button. The last 30 days are kept. The access-code settings are not copied, and the search is rebuilt after a restore.</p>
+                <div class="row"><button class="btn primary" id="backup-r2">Back up to R2 now</button> <a class="btn" href="/api/admin/export">Download a backup (JSON)</a> <span class="muted" id="backup-status"></span></div>
+                ${(r.backups || []).length ? `<details style="margin-top:12px"><summary class="muted">Backups in R2 (${r.backups.length} newest)</summary>
+                    <div class="row" style="margin:8px 0"><select class="i" id="restore-key" style="max-width:420px">${r.backups.map(b => `<option value="${esc(b.key)}">${esc(b.uploaded.slice(0, 16).replace('T', ' '))} · ${fmtSize(b.bytes)}${b.by ? ' · ' + esc(b.by) : ''}</option>`).join('')}</select>
+                        <input class="i" id="restore-confirm" placeholder="Type RESTORE" style="max-width:140px"><button class="btn small danger" id="restore-r2">Restore</button></div>
+                    <p class="muted" style="font-size:13px">A restore puts back every row in the backup, replacing rows with the same id. Anything created after the backup is kept.</p></details>` : '<p class="muted">No backups in R2 yet.</p>'}</section>`);
+        const bk = document.getElementById('backup-r2');
+        if (bk) bk.onclick = async () => {
+            bk.disabled = true;
+            const st = document.getElementById('backup-status');
+            try { const x = await post('/api/admin', { action: 'backup-r2' }); st.textContent = `Saved ${plural(x.rows, 'row')} (${fmtSize(x.bytes)}) to R2.`; toast('Backed up to R2.'); setTimeout(admin, 1200); } catch (e) { st.textContent = e.message; }
+            bk.disabled = false;
+        };
+        const rr = document.getElementById('restore-r2');
+        if (rr) rr.onclick = async () => {
+            rr.disabled = true;
+            try {
+                const x = await post('/api/admin', { action: 'restore-r2', key: document.getElementById('restore-key').value, confirm: document.getElementById('restore-confirm').value.trim() });
+                toast(`Restored ${plural(Object.values(x.restored).reduce((n, v) => n + v, 0), 'row')}. Refreshing the search…`);
+                let after = 0;
+                for (;;) { const y = await post('/api/admin', { action: 'reindex', after }); after = y.next; if (!y.remaining || !y.indexed) break; }
+                S.lib = null; toast('Restored and search refreshed.'); admin();
+            } catch (e) { toast(e.message, true); }
+            rr.disabled = false;
+        };
         const codeForm = document.getElementById('code-form');   // not drawn when the team access code sign-in is off
         if (codeForm) codeForm.onsubmit = async (ev) => {
             ev.preventDefault();

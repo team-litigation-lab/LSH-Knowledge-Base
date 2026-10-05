@@ -1,6 +1,7 @@
 import { json, fail, nowIso, clean, oneLine, personKey, signToken, hashPassword, verifyPassword, setCookie, sameOrigin, readJson } from './util.js';
 import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf,
     READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
+import { backupToR2, listBackups, restoreFromR2 } from './backup.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
 
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
@@ -17,6 +18,10 @@ const MASTER_USERNAME = 'LSHADMIN123';   // the Portal's Master Account (functio
 const codeLoginOn = (env) => String(env.KB_CODE_LOGIN || '').toLowerCase() === 'on';
 
 export default {
+    // The daily backup of the whole library into R2 (cron trigger in wrangler.json).
+    async scheduled(event, env, ctx) {
+        ctx.waitUntil((async () => { const db = env.TRAINING_DB; await ensureSchema(db); await backupToR2(env, db, 'scheduled'); })());
+    },
     async fetch(request, env) {
         const url = new URL(request.url);
         const path = url.pathname;
@@ -538,7 +543,7 @@ async function files(ctx) {
 /* =====================================================================
    ADMIN
    ===================================================================== */
-async function adminInfo({ db }) {
+async function adminInfo({ env, db }) {
     const { results: roles } = await db.prepare(`SELECT * FROM lib_roles ORDER BY name`).all();
     const { results: cols } = await db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM lib_entries e WHERE e.collection = c.slug) AS n FROM lib_collections c ORDER BY c.sort, c.name`).all();
     let legacy = 0;
@@ -548,7 +553,8 @@ async function adminInfo({ db }) {
     return json({ success: true, codeSet: !!(await getSetting(db, 'code_hash')), codeChangedAt: await getSetting(db, 'code_changed_at'),
         roles: (roles || []).map(r => ({ key: r.person_key, name: r.name, batch: r.batch || '', role: r.role, grantedBy: r.granted_by, grantedAt: r.granted_at })),
         collections: (cols || []).map(c => ({ slug: c.slug, name: c.name, blurb: c.blurb || '', sort: c.sort, archived: !!c.archived, count: c.n })),
-        legacy: { total: legacy, imported }, storage: { files: storage.n, bytes: storage.bytes } });
+        legacy: { total: legacy, imported }, storage: { files: storage.n, bytes: storage.bytes },
+        backups: (await listBackups(env)).slice(0, 15) });
 }
 
 async function adminAction({ request, env, db, reader }) {
@@ -562,6 +568,15 @@ async function adminAction({ request, env, db, reader }) {
         await setSetting(db, 'code_changed_at', now);
         await setSetting(db, 'code_changed_by', reader.adminUser);
         return json({ success: true });
+    }
+    if (body.action === 'backup-r2') {
+        try { return json({ success: true, ...(await backupToR2(env, db, reader.adminUser)) }); }
+        catch (e) { return fail(e.message, 500); }
+    }
+    if (body.action === 'restore-r2') {
+        if (body.confirm !== 'RESTORE') return fail('Type RESTORE to confirm.');
+        try { return json({ success: true, ...(await restoreFromR2(env, db, String(body.key || ''))) }); }
+        catch (e) { return fail(e.message); }
     }
     if (body.action === 'grant-reviewer' || body.action === 'grant-role') {
         const role = body.role === 'tenured' ? 'tenured' : 'reviewer';

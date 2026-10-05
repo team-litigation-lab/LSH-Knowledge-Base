@@ -45,6 +45,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 | Path | What it is |
 |---|---|
 | `src/index.js` | The Worker: routing, sign-in, entries, versions, review, replies, admin, import, backup |
+| `src/backup.js` | Backups of every library table into R2 (`kb/backups/`), run nightly by the cron trigger in `wrangler.json` and by Admin → Back up to R2 now; restore from a chosen backup. Skips `kb_settings` (access-code hash), `kb_rate` and the search index. Keeps 30 days |
 | `src/files.js` | Uploads (R2 multipart) and file streaming with Range support |
 | `src/db.js` | Tables, collections, making a version live, the search index |
 | `src/util.js` | Tokens, passwords and cookies, in the same formats as the portal |
@@ -99,7 +100,7 @@ A lesson written for the Knowledge Base, not taken from a PDF or Tettra, lives a
 |---|---|---|
 | `TRAINING_DB` (D1 `lsh-training-activities-db`) | `lib_*` tables (collections, entries, versions, files, reviewers, search) plus the old `kb_*` tables for the code, replies, votes and views | LSH Training Portal |
 | `DB` (D1 `lshcasemanagementtraining-trainingcrmlogins`) | Read-only: admin sign-in (`users`) and the site lock (`site_state`) | LSH Training Portal |
-| `FILES` (R2 `lshtraining`) | Uploaded files, under `kb/files/<year>/<month>/<id>/<name>` | EA/PA portal (its `DOCUMENTS` bucket) |
+| `FILES` (R2 `lshtraining`) | Uploaded files, under `kb/files/<year>/<month>/<id>/<name>`; copied images under `kb/img/`; backups of the whole library under `kb/backups/<date>/<time>.json` | EA/PA portal (its `DOCUMENTS` bucket) |
 
 The tables are created automatically on the first request.
 

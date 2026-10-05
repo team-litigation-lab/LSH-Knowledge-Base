@@ -213,6 +213,15 @@ with sync_playwright() as p:
     check(r['ok'] and fetchinfo(a, B + f"/files/{z['id']}/x")['status'] == 404, 'admin purge removes the entry and its files')
     ex = jget(a, B + '/api/admin/export')
     check('versions' in ex and len(ex['versions']) >= 5, 'backup export has every version')
+    # R2 backup and restore
+    bk = jpost(a, B + '/api/admin', {'action': 'backup-r2'})
+    check(bk['ok'] and bk['body'].get('key', '').startswith('kb/backups/') and bk['body'].get('rows', 0) > 10, 'admin backs the whole library up into R2')
+    info = jget(a, B + '/api/admin')
+    check(any(x['key'] == bk['body'].get('key') for x in info.get('backups', [])), 'the backup is listed from R2')
+    check(jpost(a, B + '/api/admin', {'action': 'restore-r2', 'key': bk['body']['key'], 'confirm': 'no'})['status'] == 400, 'restore needs RESTORE typed')
+    check(jpost(a, B + '/api/admin', {'action': 'restore-r2', 'key': '../../etc/passwd', 'confirm': 'RESTORE'})['status'] == 400, 'restore refuses a key outside kb/backups/')
+    rs = jpost(a, B + '/api/admin', {'action': 'restore-r2', 'key': bk['body']['key'], 'confirm': 'RESTORE'})
+    check(rs['ok'] and rs['body'].get('restored', {}).get('lib_entries', 0) >= 1, 'restore puts the backed-up rows back')
 
     check(not errs, 'no page errors ' + '; '.join(errs[:3]))
     br.close()
