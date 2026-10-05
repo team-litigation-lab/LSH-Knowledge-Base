@@ -63,7 +63,7 @@
             <span class="ic${e.hasVideo ? ' video' : e.official ? ' official' : ''}" aria-hidden="true">${e.hasVideo ? '▶' : TYPE_ICON[e.type] || '📄'}</span>
             <span><h3>${esc(e.title)}</h3>${snip}
             <span class="meta-line">
-                ${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}
+                ${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}${(e.tags || []).includes('from-tettra') ? '<span class="badge">From our Tettra</span>' : ''}
                 ${showStatus ? statusBadge(e.status) : ''}
                 <span>${esc(e.type)}</span>
                 ${showCollection ? `<span>${esc(colName(e.collection))}${e.section ? ' › ' + esc(e.section) : ''}</span>` : ''}
@@ -413,13 +413,13 @@
             <div class="entry-layout">
                 <article>
                     <header class="entry-head">
-                        <div class="row">${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}<span class="badge">${esc(e.type)}</span>${e.featured ? '<span class="badge">★ Featured</span>' : ''}${statusBadge(e.status)}</div>
+                        <div class="row">${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}<span class="badge">${esc(e.type)}</span>${(e.tags || []).includes('from-tettra') ? '<a class="badge" href="#/search?tag=from-tettra" title="See every page that came from our Tettra">From our Tettra</a>' : ''}${e.featured ? '<span class="badge">★ Featured</span>' : ''}${statusBadge(e.status)}</div>
                         <h1>${esc(e.title)}</h1>
                         ${e.summary ? `<p class="lead">${esc(e.summary)}</p>` : ''}
                     </header>
                     ${mediaHTML(e.files)}
                     <div class="md">${window.KBmd.render(e.body)}</div>
-                    ${e.tags.length ? `<div class="tags" style="margin-top:18px">${e.tags.map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
+                    ${e.tags.filter(t => t !== 'from-tettra').length ? `<div class="tags" style="margin-top:18px">${e.tags.filter(t => t !== 'from-tettra').map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
                     ${e.status === 'published' ? `<div class="row" style="margin-top:18px"><button class="btn" id="helpful" aria-pressed="${r.voted}">👍 ${r.voted ? 'You found this helpful' : 'Helpful'} · <span id="helpful-n">${r.stats.helpful}</span></button><span class="muted">${plural(r.stats.views, 'view')}</span></div>` : ''}
                     <section class="section" id="replies"><h2>Comments · update current info</h2>
@@ -790,7 +790,7 @@
                 <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <button class="btn" id="refresh-search">3. Refresh the search</button> <span class="muted" id="tettra-status"></span></section>
             <section class="section card"><h2>Import documents</h2>
                 <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, plus one page for each topic of the Foundational Training lessons, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
-                <button class="btn primary" id="import-docs">Import documents</button> <span class="muted" id="import-docs-status"></span></section>
+                <button class="btn primary" id="import-docs">Import documents</button> <button class="btn" id="import-glossary">Import the Glossary only</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
@@ -855,25 +855,41 @@
         };
         loop('import-tettra', 'import-tettra', (n, x) => x.note || `Imported ${n} ${n === 1 ? 'page' : 'pages'}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`);
         loop('copy-images', 'copy-images', (n, x) => `Copied ${n} images${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}${x.missing ? ` ${x.missing} no longer exist at Tettra.` : ''}`);
+        // Import documents: the Glossary first (so it shows even if a later step stops), then the handouts, procedures and lessons
+        // in batches of 10, then the training topics in batches of 12, then the search is refreshed. Each step reports on its own.
+        const batches = async (action, st, label) => {
+            let total = 0, last = Infinity;
+            for (;;) {
+                const x = await post('/api/admin', { action });
+                total += (x.imported || 0) + (x.updated || 0);
+                st.textContent = `${label}: ${total} done${x.remaining ? `, ${x.remaining} to go…` : '.'}`;
+                if (!x.remaining || x.remaining >= last) break;
+                last = x.remaining;
+            }
+            return total;
+        };
+        const impGl = document.getElementById('import-glossary');
+        if (impGl) impGl.onclick = async () => {
+            impGl.disabled = true;
+            const st = document.getElementById('import-docs-status');
+            try { const x = await post('/api/admin', { action: 'import-glossary' }); st.textContent = `Glossary: ${x.imported} terms loaded. Open Glossary in the top bar.`; S.lib = null; } catch (e) { st.textContent = 'Glossary: ' + e.message; }
+            impGl.disabled = false;
+        };
         const impDocs = document.getElementById('import-docs');
         if (impDocs) impDocs.onclick = async () => {
             impDocs.disabled = true;
             const st = document.getElementById('import-docs-status');
+            const done = [];
+            const step = async (name, fn) => { try { done.push(await fn()); } catch (e) { done.push(`${name} stopped: ${e.message}`); throw e; } };
             try {
-                const x = await post('/api/admin', { action: 'import-bundled' });
-                await post('/api/admin', { action: 'import-glossary' });
-                let topics = 0;
-                for (let last = Infinity;;) {   // the training topics, 12 per call
-                    const t = await post('/api/admin', { action: 'import-training' });
-                    topics += t.imported;
-                    if (!t.remaining || t.remaining >= last) break;
-                    last = t.remaining;
-                }
-                x.topics = topics;
-                st.textContent = (x.imported || x.updated || x.topics) ? `${x.imported ? 'Imported ' + plural(x.imported, 'document') + '. ' : ''}${x.updated ? 'Changed ' + plural(x.updated, 'document') + ' from a PDF to a page. ' : ''}${x.topics ? 'Added ' + plural(x.topics, 'training topic') + '.' : ''}` : (x.note || 'Everything is already imported.');
-                await refreshSearch(document.getElementById('tettra-status') || st);
+                await step('Glossary', async () => { const g = await post('/api/admin', { action: 'import-glossary' }); return `Glossary ${g.imported} terms`; });
+                st.textContent = done.join('. ');
+                await step('Documents', async () => `Documents ${await batches('import-bundled', st, 'Documents')}`);
+                await step('Training topics', async () => `Training topics ${await batches('import-training', st, 'Training topics')}`);
+                await step('Search', async () => { await refreshSearch(document.getElementById('tettra-status') || st); return 'Search refreshed'; });
+                st.textContent = done.join('. ') + '.';
                 S.lib = null;
-            } catch (e) { st.textContent = e.message; }
+            } catch (e) { st.textContent = done.join('. ') + ' (' + e.message + ')'; }
             impDocs.disabled = false;
         };
         const imp = document.getElementById('import');
