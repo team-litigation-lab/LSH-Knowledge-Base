@@ -7,7 +7,7 @@ Each page's HTML becomes the Knowledge Base's safe Markdown. Images become ![alt
 first 16 hex characters of the SHA-1 of the image's original address; the original addresses are kept in "images" so
 the Worker can copy them into R2. Owner e-mail addresses are not carried over. Pages deleted in Tettra, pages with no\ncontent (the empty "asd" test page) and the cracked-Nitro-Pro install page are skipped; everything else is kept, including\nTettra's starter templates (pages with no category, shelved under "Tettra starter templates").
 """
-import hashlib, json, os, re, sys
+import hashlib, json, os, re, sys, urllib.parse
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -198,8 +198,49 @@ def summary_of(md):
     return (t[:217] + '…') if len(t) > 220 else t
 
 
+def tidy(md, by_slug):
+    """Brings a page up to date after the move from Tettra: links to other Tettra pages point at their Knowledge Base
+    pages, "Tettra article" becomes "Knowledge Base article", attachments get their file name as link text, and the
+    Tettra login that was written into the Task Assessment Manual is removed."""
+    md = re.sub(r'[\ue000-\uf8ff]', '', md)
+    # the Tettra login written into the Task Assessment Manual (an account that is no longer used)
+    md = re.sub(r'### Learn more: Introduction to LSH Tettra\n\n.*?(?=\n\n)',
+                "### Learn more: The LSH Knowledge Base\n\nThe LSH Knowledge Base is the team's internal library of SOPs, guides and training videos. "
+                "Open it from the LSH Training Portal.", md, flags=re.S)
+    md = re.sub(r'Username:\s*\[?[^\s\]]+\]?(\([^)]*\))?\s*Password:\s*\S+', '', md)
+
+    def target(url):
+        m = re.match(r'https?://app\.tettra\.co/teams/([^/]+)/pages/([A-Za-z0-9_-]+)', url)
+        if not m:
+            return None
+        pid = by_slug.get(m.group(2)) if m.group(1).lower() == 'lsh' else None
+        return pid if pid else False
+
+    def link(m):
+        text, url = m.group(1), m.group(2)
+        t = target(url)
+        if t is None:
+            return m.group(0)
+        return f'[{text}](/#/go/{t})' if t else text
+    md = re.sub(r'(?<!!)\[([^\]\n]*)\]\((https?://app\.tettra\.co/[^)\s]*)\)', link, md)
+
+    def bare(m):
+        t = target(m.group(0))
+        return f'[this page](/#/go/{t})' if t else '(an old Tettra page that is not in the library)'
+    md = re.sub(r'https?://app\.tettra\.co/teams/[^\s)\]]+', bare, md)
+
+    def attach(m):
+        name = urllib.parse.unquote(m.group(1).split('?')[0].rsplit('/', 1)[-1]) or 'attachment'
+        return f'[{name}]({m.group(1)})'
+    md = re.sub(r'(?<!!)\[\s*\]\((https?://[^)\s]+)\)', attach, md)
+    md = re.sub(r'\bTettra [Aa]rticles\b', 'Knowledge Base articles', md)
+    md = re.sub(r'\bTettra [Aa]rticle\b', 'Knowledge Base article', md)
+    return md
+
+
 def main(src):
     data = json.load(open(src))
+    by_slug = {x['url'].rsplit('/', 1)[-1]: x['id'] for x in data if x.get('url')}
     pages = []
     for x in data:
         cat = x.get('category_name') or 'Tettra starter templates'
@@ -207,7 +248,7 @@ def main(src):
             continue                      # deleted in Tettra
         if 'crack version' in (x.get('html') or '').lower():
             continue                      # instructions for installing a cracked copy of Nitro Pro; left out on purpose
-        md = convert(x.get('html') or '')
+        md = tidy(convert(x.get('html') or ''), by_slug)
         if len(md) < 20:
             continue
         s = summary_of(md)

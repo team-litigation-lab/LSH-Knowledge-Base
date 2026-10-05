@@ -191,6 +191,10 @@
                     if (parts[2] === 'edit') return await editor(id);
                     if (parts[2] === 'history') return await history(id);
                     return await entry(id);
+                case 'go': {   // a link from an imported Tettra page to another one
+                    const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
+                    return location.replace('#/e/' + r.id);
+                }
                 case 'v': return await version(id);
                 case 'new': return await editor(null, q);
                 case 'mine': return await mine();
