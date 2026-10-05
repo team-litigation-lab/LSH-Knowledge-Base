@@ -1,6 +1,22 @@
 {
  "terms": [
   {
+   "term": "911 CAD Report",
+   "definition": "A record from the emergency dispatch system showing calls, times and what callers said. It can capture early statements about how the crash happened.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:911-cad-report",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Accident Reconstruction",
+   "definition": "An expert’s analysis of physical evidence and data to work out how a crash happened.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:accident-reconstruction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "ADD",
    "definition": "Attention Deficit Disorder",
    "example": "",
@@ -33,6 +49,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Admission Against Interest",
+   "definition": "A statement by a party that hurts their own case, such as “I did not see him”. The other side can use it as evidence.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:admission-against-interest",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Affidavit",
    "definition": "A written statement of facts that the person swears is true, signed before a notary or other authorized officer.",
    "example": "",
@@ -62,6 +86,14 @@
    "example": "",
    "category": "Legal",
    "ref": "us:appeal",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Apportionment of Fault",
+   "definition": "Dividing responsibility for an accident among everyone involved, as percentages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:apportionment-of-fault",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -105,6 +137,30 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Attractive Nuisance",
+   "definition": "A hazard on property, like a pool, that is likely to attract children who cannot understand the danger, so the owner owes extra care.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:attractive-nuisance",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Authentication",
+   "definition": "Proving that a document, photo or object is what the party says it is, so it can be used as evidence.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:authentication",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Bad Faith",
+   "definition": "An insurer’s unreasonable refusal to pay, or delay in paying, a valid claim. It can expose the insurer to more than the policy limits.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:bad-faith",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Bates Number",
    "definition": "A unique number stamped on each page of documents in a case so each page can be identified.",
    "example": "",
@@ -121,12 +177,28 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Bicycle Accident",
+   "definition": "A crash involving a cyclist, often a collision with a car or a road hazard.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:bicycle-accident",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "bid",
    "definition": "Twice per day",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:4",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Billed vs. Paid",
+   "definition": "The difference between a provider’s full charge and the smaller amount actually accepted. Some states limit claims to the paid amount.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:billed-vs-paid",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "Bodily Injury (BI)",
@@ -142,6 +214,14 @@
    "example": "",
    "category": "Personal Injury",
    "ref": "us:breach-of-duty",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Bulging Disc",
+   "definition": "A spinal disc that extends beyond its normal edge without breaking through. Common in imaging, so the cause matters in a claim.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:bulging-disc",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -177,6 +257,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Case Status Update",
+   "definition": "A report to the client about where the case stands, which the firm owes the client from time to time.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:case-status-update",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Causation",
    "definition": "The link between what the defendant did and the plaintiff’s injury. The plaintiff must show the injury was caused by the accident.",
    "example": "",
@@ -191,6 +279,62 @@
    "category": "Medical",
    "ref": "tettra:848165:5",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Cervical, Thoracic, Lumbar",
+   "definition": "The three main regions of the spine: neck (cervical), mid-back (thoracic) and lower back (lumbar). Injuries are described by region.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:cervical-thoracic-lumbar",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Chain of Custody",
+   "definition": "The record of who held a piece of evidence and when, showing it was not changed.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:chain-of-custody",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Check Disbursement",
+   "definition": "Issuing the settlement check from the firm’s trust account to pay fees, costs, liens, and the client.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:check-disbursement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Chiropractic Care",
+   "definition": "Treatment by a chiropractor, focused on the spine and joints. It is often the first treatment after a crash.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:chiropractic-care",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Chronic Pain",
+   "definition": "Pain that lasts for months or longer, often beyond the expected healing time.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:chronic-pain",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Citation",
+   "definition": "A ticket for a traffic violation. Whether it can be used as evidence of fault depends on the state.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:citation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Claim Valuation",
+   "definition": "Estimating what an injury claim is worth, from medical bills, lost income, the injuries and their lasting effects, liability and policy limits.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:claim-valuation",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "Claimant",
@@ -217,11 +361,43 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Client File",
+   "definition": "All documents and information a firm keeps for a client’s case.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:client-file",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "CMS-1500 (HCFA)",
    "definition": "The standard billing form used by doctors and most outpatient providers to bill insurers.",
    "example": "",
    "category": "Medical-Legal",
    "ref": "us:cms-1500-hcfa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Collateral Source Rule",
+   "definition": "A rule in many states that stops the defense from reducing damages because the plaintiff’s health insurance or others paid some bills.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:collateral-source-rule",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Colossus",
+   "definition": "Software many auto insurers use to value injury claims. It scores injuries, treatment and other inputs, which is why complete, well-organized records matter.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:colossus",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Commercial Vehicle Accident",
+   "definition": "A crash involving a truck, bus, delivery van or other vehicle used for business. These often involve bigger companies and more insurance.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:commercial-vehicle-accident",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -265,6 +441,22 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Concussion",
+   "definition": "A mild brain injury caused by a blow or sudden movement, with symptoms such as headache, dizziness, confusion or memory trouble.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:concussion",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Conflict Check",
+   "definition": "A search of the firm’s records to be sure it does not already represent, or have a duty to, someone on the other side.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:conflict-check",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Conflict of Interest",
    "definition": "A situation where a lawyer’s duty to one client, or their own interests, could harm another client. Firms run a conflict check before taking a new matter.",
    "example": "",
@@ -294,6 +486,14 @@
    "example": "",
    "category": "Personal Injury",
    "ref": "us:contributory-negligence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Contusion",
+   "definition": "A bruise, which is bleeding under the skin from a blow.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:contusion",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -329,6 +529,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "CT Scan",
+   "definition": "A computed tomography scan. Many X-ray images combined to show bones, organs and bleeding in detail.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:ct-scan",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "D/C or DC",
    "definition": "Discharge or discontinue",
    "example": "",
@@ -342,6 +550,22 @@
    "example": "",
    "category": "Personal Injury",
    "ref": "us:damages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dashcam Footage",
+   "definition": "Video from a camera in a vehicle that can show how a crash happened.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:dashcam-footage",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Day-in-the-Life Video",
+   "definition": "A video showing how an injury affects a person’s everyday activities, used to show non-economic damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:day-in-the-life-video",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -393,6 +617,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Demonstrative Evidence",
+   "definition": "Charts, models, diagrams or videos used at trial to help explain testimony.",
+   "example": "",
+   "category": "Litigation",
+   "ref": "us:demonstrative-evidence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Demurrer",
    "definition": "In some states, such as California, a challenge to the complaint saying that even if the facts are true there is no valid claim.",
    "example": "",
@@ -406,6 +638,14 @@
    "example": "",
    "category": "Litigation",
    "ref": "us:deposition",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Design Defect",
+   "definition": "A product that is dangerous because of how it was designed, so every unit has the problem.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:design-defect",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -433,11 +673,43 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Disc Protrusion",
+   "definition": "A disc that sticks out, often described by its size in millimeters on an MRI report.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:disc-protrusion",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Discectomy",
+   "definition": "Surgery that removes part of a damaged disc that presses on a nerve.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:discectomy",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Discovery",
    "definition": "The stage where each side gets information from the other through written questions, document requests and depositions.",
    "example": "",
    "category": "Litigation",
    "ref": "us:discovery",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Disfigurement and Scarring",
+   "definition": "Lasting changes to a person’s appearance, such as scars. They add to non-economic damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:disfigurement-and-scarring",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dislocation",
+   "definition": "A joint forced out of its normal position.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:dislocation",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -470,6 +742,30 @@
    "example": "",
    "category": "Litigation",
    "ref": "us:docket",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dog Bite",
+   "definition": "An injury from a dog attack. Owner responsibility depends on the state, from strict liability to a “one-bite” rule.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:dog-bite",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Dram Shop Liability",
+   "definition": "Responsibility of a bar or seller who serves alcohol to someone visibly drunk or underage who then hurts another person, in states that allow it.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:dram-shop-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Durable Medical Equipment (DME)",
+   "definition": "Items such as braces, crutches or a TENS unit that a provider prescribes.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:durable-medical-equipment-dme",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -553,6 +849,38 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Electronic Logging Device (ELD)",
+   "definition": "A device that records a truck driver’s hours, which can be requested as evidence.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:electronic-logging-device-eld",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Emergency Room (ER) Visit",
+   "definition": "Care after the accident at a hospital emergency department. Its records are often the first proof of injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:emergency-room-er-visit",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "EMG / NCV",
+   "definition": "Nerve tests (electromyography and nerve conduction velocity) that show whether a nerve is damaged, used for radiculopathy.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:emg-ncv",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Epidural Steroid Injection (ESI)",
+   "definition": "An injection of steroid medicine near the spinal nerves to reduce pain and swelling. Often the step before surgery.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:epidural-steroid-injection-esi",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "ERISA Plan",
    "definition": "A health plan from a private employer governed by a federal law. A self-funded ERISA plan can claim strong repayment rights from a settlement, subject to its plan terms.",
    "example": "",
@@ -574,6 +902,14 @@
    "example": "",
    "category": "Legal",
    "ref": "us:esquire-esq",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Event Data Recorder (EDR / Black Box)",
+   "definition": "A device in most modern vehicles that records speed, braking and other data just before and during a crash.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:event-data-recorder-edr-black-box",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -625,6 +961,14 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Failure to Warn",
+   "definition": "A product that lacks proper warnings or instructions about a danger.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:failure-to-warn",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Federal Question",
    "definition": "A case that arises under the US Constitution or a federal law, so a federal court can hear it.",
    "example": "",
@@ -649,11 +993,51 @@
    "source": "Tettra: LSH Legal Jargon"
   },
   {
+   "term": "File Closing",
+   "definition": "Final steps after payout, such as closing the file, returning originals and keeping records for the required time.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:file-closing",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Final Lien Amount",
+   "definition": "The amount a lienholder agrees to accept to settle its claim, confirmed in writing before the settlement is paid out.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:final-lien-amount",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "First-Party Claim",
    "definition": "A claim made against your own insurance company.",
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:first-party-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "FMCSA",
+   "definition": "The Federal Motor Carrier Safety Administration, which sets safety rules for trucking companies and drivers.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:fmcsa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Fracture",
+   "definition": "A broken bone. Types include closed (skin intact), open or compound (bone through skin) and comminuted (broken into pieces).",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:fracture",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Future Damages",
+   "definition": "Compensation for losses that will happen after the case ends, such as later surgery or ongoing pain.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:future-damages",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -721,6 +1105,14 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Herniated Disc",
+   "definition": "A spinal disc whose soft center pushes through its outer layer and can press on a nerve. Often called a slipped or ruptured disc.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:herniated-disc",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "HIPAA",
    "definition": "The federal privacy law that protects patients’ medical information. Providers need a signed authorization before releasing records to a law firm.",
    "example": "",
@@ -737,6 +1129,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Hit and Run",
+   "definition": "Leaving the scene of a crash without giving information or helping. The injured person may turn to their own uninsured motorist coverage.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:hit-and-run",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Hospital Lien",
    "definition": "A claim by a hospital on an injury settlement, created by a state statute or by contract, for the cost of emergency or hospital care.",
    "example": "",
@@ -750,6 +1150,22 @@
    "example": "",
    "category": "Legal",
    "ref": "us:hourly-rate",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Hours of Service (HOS)",
+   "definition": "Federal limits on how long a commercial driver may drive and must rest. Violations can show fatigue.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:hours-of-service-hos",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Household Services",
+   "definition": "The value of everyday work a person can no longer do, such as cooking, cleaning or child care, that is sometimes claimed as damages.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:household-services",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -809,6 +1225,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Indemnity",
+   "definition": "An agreement or duty by one party to cover another party’s loss or liability.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:indemnity",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Independent Medical Examination (IME)",
    "definition": "An exam by a doctor chosen by the insurance company or defense, to give an opinion on the injury and treatment.",
    "example": "",
@@ -830,6 +1254,14 @@
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:insured",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Intake",
+   "definition": "The first step of a case: collecting facts, documents and signatures from a new client and checking for conflicts and deadlines.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:intake",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -865,6 +1297,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Joint and Several Liability",
+   "definition": "When two or more people share fault, each can be held responsible for the whole amount. Many states now limit this.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:joint-and-several-liability",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "JT",
    "definition": "Joint",
    "example": "",
@@ -894,6 +1334,22 @@
    "example": "",
    "category": "Litigation",
    "ref": "us:jury-instructions",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Laceration",
+   "definition": "A cut or tear in the skin that may need stitches.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:laceration",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Last Clear Chance",
+   "definition": "A doctrine in some states that lets a negligent plaintiff recover if the defendant had the final chance to avoid the accident and did not.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:last-clear-chance",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -953,11 +1409,35 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Lien Letter / Notice of Lien",
+   "definition": "A letter from a lienholder that states what it is owed from a settlement.",
+   "example": "",
+   "category": "Insurance & Liens",
+   "ref": "us:lien-letter-notice-of-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Lien Reduction",
    "definition": "Negotiating a lienholder down to a smaller repayment from a settlement.",
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:lien-reduction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Life Care Plan",
+   "definition": "An expert’s plan listing the care a seriously injured person will need for life and its cost.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:life-care-plan",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Limitations Date",
+   "definition": "The calendared date by which a lawsuit must be filed. It should be checked and entered at intake.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:limitations-date",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -977,11 +1457,35 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Loss of Consciousness (LOC)",
+   "definition": "Passing out at the time of an injury, which providers record because it points to a possible head injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:loss-of-consciousness-loc",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Loss of Consortium",
    "definition": "A spouse’s claim for the loss of companionship, support and intimacy caused by the other spouse’s injury.",
    "example": "",
    "category": "Personal Injury",
    "ref": "us:loss-of-consortium",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Loss of Earning Capacity",
+   "definition": "The reduction in a person’s ability to earn income in the future because of lasting injuries.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:loss-of-earning-capacity",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Loss of Enjoyment of Life",
+   "definition": "A non-economic loss for being unable to do activities that used to bring enjoyment, like sports or hobbies.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:loss-of-enjoyment-of-life",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -993,11 +1497,43 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Lost Wages",
+   "definition": "Income the injured person lost while unable to work because of the injury. It is proved with pay records and a note from the employer.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:lost-wages",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Lowball Offer",
+   "definition": "An insurer’s first offer, set far below what the claim is worth, to see whether the claimant will accept less.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:lowball-offer",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Lump Sum",
+   "definition": "A settlement paid in one payment.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:lump-sum",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Made-Whole Doctrine",
    "definition": "The rule that an injured person must be fully compensated before an insurer can take repayment from the settlement. Plan terms and state law can change it.",
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:made-whole-doctrine",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Manufacturing Defect",
+   "definition": "A product that is dangerous because of a mistake in making it, so only some units have the problem.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:manufacturing-defect",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1038,6 +1574,14 @@
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:medicaid-lien",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Medical Authorization",
+   "definition": "A signed form that lets the firm get a client’s medical records. See HIPAA authorization.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:medical-authorization",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1161,11 +1705,51 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Motor Carrier",
+   "definition": "A company that transports goods or people by truck or bus for pay, and is regulated by federal and state safety rules.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:motor-carrier",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Motorcycle Accident",
+   "definition": "A crash involving a motorcycle. Injuries are often severe, and bias against riders can affect fault arguments.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:motorcycle-accident",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "MRI",
+   "definition": "Magnetic resonance imaging. A scan that shows soft tissues such as discs, nerves, ligaments and the brain.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:mri",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Multidistrict Litigation (MDL)",
    "definition": "A federal procedure that combines many similar cases from different districts before one judge for pretrial work.",
    "example": "",
    "category": "Personal Injury",
    "ref": "us:multidistrict-litigation-mdl",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Multiplier",
+   "definition": "A rule of thumb that multiplies medical bills by a number to estimate pain and suffering. It is a negotiating tool, not a law.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:multiplier",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Muscle Spasm",
+   "definition": "An involuntary tightening of a muscle, which a provider can feel. It is treated as an objective sign of injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:muscle-spasm",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1177,6 +1761,14 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Narrative Report",
+   "definition": "A doctor’s written report that explains the injury, its cause, the treatment and the outlook, often requested for a demand.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:narrative-report",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Negligence",
    "definition": "Failing to use the care a reasonably careful person would use, which causes harm. It has four parts: duty, breach, causation and damages.",
    "example": "",
@@ -1185,11 +1777,43 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Negligence Per Se",
+   "definition": "Negligence that is presumed because the defendant broke a safety law meant to protect people like the plaintiff, such as running a red light.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:negligence-per-se",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Negligent Entrustment",
+   "definition": "Letting someone use a vehicle or dangerous item when you know they are unfit or unsafe, such as a car owner lending to an unlicensed driver.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:negligent-entrustment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Negligent Hiring",
+   "definition": "An employer’s fault for hiring, training or keeping an employee they knew, or should have known, was unfit for the job.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:negligent-hiring",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Net to Client",
    "definition": "The money the client receives after fees, costs, liens and bills are paid.",
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:net-to-client",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Neurologist",
+   "definition": "A doctor who treats the brain and nervous system, such as for head injuries and nerve damage.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:neurologist",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1225,12 +1849,36 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Notice (Actual and Constructive)",
+   "definition": "In premises cases, whether the owner knew about a hazard (actual notice) or should have known because it was there long enough (constructive).",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:notice-actual-and-constructive",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Notice of Claim",
+   "definition": "A required written notice, often with a short deadline, before suing a government body or agency.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:notice-of-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "NP",
    "definition": "Nurse Practitioner",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:31",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Nursing Home Abuse and Neglect",
+   "definition": "Harm to a resident from poor care, abuse or neglect by a facility or its staff.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:nursing-home-abuse-and-neglect",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "Objection",
@@ -1257,6 +1905,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Open and Obvious Hazard",
+   "definition": "A danger so plain that a reasonable person would see and avoid it. It can defeat a premises liability claim.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:open-and-obvious-hazard",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Opposing Counsel",
    "definition": "The lawyer who represents the other side in a case.",
    "example": "",
@@ -1271,6 +1927,14 @@
    "category": "Medical",
    "ref": "tettra:848165:32",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Orthopedic Surgeon",
+   "definition": "A doctor who specializes in bones, joints and the spine and can recommend or perform surgery.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:orthopedic-surgeon",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "p.o.",
@@ -1305,6 +1969,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Pain Management",
+   "definition": "A medical specialty that treats pain that does not go away with basic care, often with injections or medication.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:pain-management",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Paralegal",
    "definition": "A trained professional who helps lawyers with legal work (drafting, research, case organization) but is not a lawyer and cannot give legal advice.",
    "example": "",
@@ -1329,6 +2001,22 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "Pedestrian Accident",
+   "definition": "A crash where a vehicle strikes a person on foot. Fault depends on right of way, crosswalks and signals.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:pedestrian-accident",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Permanent Impairment",
+   "definition": "A lasting loss of function that a doctor says will not fully recover.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:permanent-impairment",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Person",
    "definition": "Can either be a natural person (individual) or artificial person (legal entity such as corporations or a government instrumentality).",
    "example": "",
@@ -1342,6 +2030,14 @@
    "example": "",
    "category": "Legal",
    "ref": "us:personal-jurisdiction",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Physical Therapy (PT)",
+   "definition": "Exercises and treatments to restore movement and strength.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:physical-therapy-pt",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1369,6 +2065,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Police Report (Crash Report)",
+   "definition": "The officer’s written report of a crash, with parties, insurance, diagram, citations and often a narrative. It is not final proof of fault.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:police-report-crash-report",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Policy Limits",
    "definition": "The most an insurance policy will pay for a covered claim, such as $25,000 per person and $50,000 per accident.",
    "example": "",
@@ -1377,11 +2081,35 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Policy Limits Demand",
+   "definition": "A demand to the at-fault driver’s insurer to pay the full policy limits, sometimes with a deadline, which can set up a bad faith claim if refused unreasonably.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:policy-limits-demand",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Post-Traumatic Stress Disorder (PTSD)",
+   "definition": "A mental health condition that can follow a frightening event such as a crash, with flashbacks, anxiety or avoiding driving.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:post-traumatic-stress-disorder-ptsd",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Power of Attorney (POA)",
    "definition": "A document that lets one person act for another in legal or financial matters.",
    "example": "",
    "category": "Legal",
    "ref": "us:power-of-attorney-poa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Pre-Existing Condition",
+   "definition": "A health problem the person had before the accident. The defendant is usually responsible only for what the accident added or made worse.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:pre-existing-condition",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1422,6 +2150,38 @@
    "example": "",
    "category": "Legal",
    "ref": "us:preponderance-of-the-evidence",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Prescription Records",
+   "definition": "Pharmacy records showing the medicines prescribed, which support the pain and treatment claimed.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:prescription-records",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Present Value",
+   "definition": "What a future amount of money is worth today. Future losses are often reduced to present value.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:present-value",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Primary Care Physician (PCP)",
+   "definition": "The patient’s regular doctor, whose records may also show pre-existing conditions.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:primary-care-physician-pcp",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Prior Claims History",
+   "definition": "A record of earlier injury claims the person made, which insurers look up and may use to question a new claim.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:prior-claims-history",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1497,6 +2257,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Provider",
+   "definition": "A doctor, hospital, clinic, therapist or other person or facility that gives medical care.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:provider",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Proximate Cause",
    "definition": "A cause that is close enough to the harm that the law holds the person responsible for it. The harm must have been a foreseeable result.",
    "example": "",
@@ -1535,6 +2303,70 @@
    "category": "Medical",
    "ref": "tettra:848165:39",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Radiculopathy",
+   "definition": "Pain, numbness or weakness caused by a pinched or irritated nerve root, such as pain traveling down the arm or leg.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:radiculopathy",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Radiofrequency Ablation (RFA)",
+   "definition": "A procedure that uses heat to disrupt pain signals from certain nerves, often for chronic back or neck pain.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:radiofrequency-ablation-rfa",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Radiology Report",
+   "definition": "The radiologist’s written reading of an X-ray, MRI or CT scan. It is key evidence of injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:radiology-report",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Range of Motion (ROM)",
+   "definition": "How far a joint or the spine can move. Limited motion is a common objective finding.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:range-of-motion-rom",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Rear-End Collision",
+   "definition": "A crash where one vehicle hits the back of another. The rear driver is often presumed at fault, but not always.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:rear-end-collision",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Reasonable and Necessary",
+   "definition": "The standard for medical bills that can be recovered: the treatment must be reasonable in cost and necessary for the injury.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:reasonable-and-necessary",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Recorded Statement",
+   "definition": "A statement to an insurance adjuster that is recorded. Claimants often give one only after talking with their lawyer.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:recorded-statement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Referral",
+   "definition": "A doctor sending the patient to another provider or test, such as an MRI or a specialist.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:referral",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "Release",
@@ -1585,11 +2417,35 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Respondeat Superior",
+   "definition": "The rule that an employer is responsible for harm caused by an employee acting within their job.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:respondeat-superior",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Retainer Agreement",
    "definition": "The written contract between a client and a law firm that sets out the work to be done, the fee and each side’s responsibilities.",
    "example": "",
    "category": "Legal",
    "ref": "us:retainer-agreement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Rideshare Accident (TNC)",
+   "definition": "A crash involving Uber, Lyft or another transportation network company. Coverage depends on whether the app was off, waiting for a ride or on a trip.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:rideshare-accident-tnc",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Right of Way",
+   "definition": "The legal right of one driver or pedestrian to go first in a situation. Failing to yield it is a common cause of fault.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:right-of-way",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1633,11 +2489,35 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Scene Photos",
+   "definition": "Photos of the crash site, vehicles, skid marks and injuries, ideally taken as soon as possible.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:scene-photos",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Scheduling Order",
    "definition": "The court’s order setting the deadlines for a case, such as discovery cut-off, motions and trial date.",
    "example": "",
    "category": "Litigation",
    "ref": "us:scheduling-order",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Sciatica",
+   "definition": "Pain along the sciatic nerve, from the lower back through the hip and down the leg.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:sciatica",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Scope of Employment",
+   "definition": "Whether an employee was doing work for the employer when the harm happened. It decides if the employer is also liable.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:scope-of-employment",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1673,6 +2553,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Settlement Release Forms",
+   "definition": "The documents the client signs to accept a settlement, giving up further claims. Reviewed before signing.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:settlement-release-forms",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Settlement Statement (Closing Statement)",
    "definition": "The final accounting of a settlement showing the total, attorney fees, costs, liens and bills paid, and the amount the client receives.",
    "example": "",
@@ -1689,12 +2577,28 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "SOAP Note",
+   "definition": "A provider’s visit note in four parts: Subjective (what the patient says), Objective (findings), Assessment (diagnosis) and Plan (treatment).",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:soap-note",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "SOB",
    "definition": "Shortness of breath",
    "example": "",
    "category": "Medical",
    "ref": "tettra:848165:46",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Social Media Evidence",
+   "definition": "Posts and photos that the other side may use to argue an injury is not as serious as claimed. Claimants are told not to post about the case.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:social-media-evidence",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "Soft Tissue Injury",
@@ -1705,11 +2609,43 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Soft Tissue Swelling",
+   "definition": "Swelling of muscles, ligaments or skin around an injury, often noted on exam.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:soft-tissue-swelling",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Sovereign Immunity",
+   "definition": "The rule that protects government bodies from some lawsuits unless the law allows them, usually with special notice rules.",
+   "example": "",
+   "category": "Legal",
+   "ref": "us:sovereign-immunity",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Spinal Fusion",
+   "definition": "Surgery that joins two or more vertebrae so they heal into one piece.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:spinal-fusion",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Spoliation",
    "definition": "Destroying, losing or altering evidence that should have been kept for a case.",
    "example": "",
    "category": "Litigation",
    "ref": "us:spoliation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Sprain and Strain",
+   "definition": "A sprain is a stretched or torn ligament; a strain is a stretched or torn muscle or tendon.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:sprain-and-strain",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1769,6 +2705,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Structured Settlement",
+   "definition": "A settlement paid over time in set payments, instead of one lump sum.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:structured-settlement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "stsg",
    "definition": "Split-thickness skin graft",
    "example": "",
@@ -1817,6 +2761,30 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Surgical Recommendation",
+   "definition": "A doctor’s written advice that surgery is needed. It raises the value of a claim, along with the cost of the future care.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:surgical-recommendation",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Surveillance",
+   "definition": "Video or photos an insurer or defense takes of a claimant to show activity that seems to conflict with the injury claim.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:surveillance",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Survival Action",
+   "definition": "A claim by a deceased person’s estate for the harm they suffered before death, separate from the wrongful death claim.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:survival-action",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "sxs",
    "definition": "Symptoms; surgery",
    "example": "",
@@ -1825,11 +2793,43 @@
    "source": "Tettra: Medical Terminologies and Abbreviations"
   },
   {
+   "term": "T-Bone (Broadside) Collision",
+   "definition": "A crash where the front of one vehicle hits the side of another, often at an intersection.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:t-bone-broadside-collision",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Tear (Rotator Cuff, Meniscus, ACL)",
+   "definition": "A rip in a tendon, cartilage or ligament, often seen on MRI. Common tears are in the shoulder (rotator cuff), the knee (meniscus, ACL).",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:tear-rotator-cuff-meniscus-acl",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Tender",
+   "definition": "An offer to pay, such as an insurer tendering its policy limits to settle.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:tender",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Third-Party Claim",
    "definition": "A claim made against the at-fault person’s insurance company.",
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:third-party-claim",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Third-Party Claim (Work Injury)",
+   "definition": "A lawsuit against someone other than the employer who caused a work injury, such as a negligent driver or equipment maker.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:third-party-claim-work-injury",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1855,6 +2855,14 @@
    "category": "Medical",
    "ref": "tettra:848165:48",
    "source": "Tettra: Medical Terminologies and Abbreviations"
+  },
+  {
+   "term": "Time-Limited Demand",
+   "definition": "A settlement demand that expires on a set date. If the insurer lets it pass unreasonably, the insurer may be responsible for a verdict above the limits.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:time-limited-demand",
+   "source": "General US legal knowledge (rules differ by state)"
   },
   {
    "term": "TKR",
@@ -1913,11 +2921,35 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Traumatic Brain Injury (TBI)",
+   "definition": "An injury to the brain caused by an outside force, from mild (concussion) to severe, with effects that can be lasting.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:traumatic-brain-injury-tbi",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Treating Physician",
+   "definition": "The doctor who is actually caring for the patient, whose opinions carry weight about the injury.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:treating-physician",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Treatment Gap",
    "definition": "A period with no medical treatment between visits. Adjusters may argue the injury was not serious, so gaps should be explained.",
    "example": "",
    "category": "Personal Injury",
    "ref": "us:treatment-gap",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Trigger Point Injection",
+   "definition": "An injection into a tight muscle knot to ease pain.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:trigger-point-injection",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -1958,6 +2990,14 @@
    "example": "",
    "category": "Insurance & Liens",
    "ref": "us:um-uim-uninsured-underinsured-motorist",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Urgent Care",
+   "definition": "A walk-in clinic for non-emergency injuries.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:urgent-care",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -2017,6 +3057,14 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Wage Loss Verification",
+   "definition": "A form or letter from the employer showing pay rate, hours and time missed.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:wage-loss-verification",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Whiplash",
    "definition": "A neck injury caused by a sudden back-and-forth movement of the head, common in rear-end collisions.",
    "example": "",
@@ -2025,11 +3073,27 @@
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
+   "term": "Witness Statement",
+   "definition": "A written or recorded account from someone who saw the accident.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:witness-statement",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
    "term": "Work Product",
    "definition": "Notes, research, strategy and other materials a lawyer prepares for a case. They are generally protected from disclosure to the other side.",
    "example": "",
    "category": "Legal",
    "ref": "us:work-product",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Workers’ Compensation",
+   "definition": "A no-fault system that pays medical bills and part of lost wages for work injuries. It is usually the employee’s only claim against the employer.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:workers-compensation",
    "source": "General US legal knowledge (rules differ by state)"
   },
   {
@@ -2054,6 +3118,22 @@
    "example": "",
    "category": "Personal Injury",
    "ref": "us:wrongful-death",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "Wrongful Death Beneficiaries",
+   "definition": "The family members the law allows to recover in a wrongful death case, usually a spouse, children or parents.",
+   "example": "",
+   "category": "Personal Injury",
+   "ref": "us:wrongful-death-beneficiaries",
+   "source": "General US legal knowledge (rules differ by state)"
+  },
+  {
+   "term": "X-Ray",
+   "definition": "A basic image mainly used to show bones. It often looks normal with soft-tissue injuries.",
+   "example": "",
+   "category": "Medical-Legal",
+   "ref": "us:x-ray",
    "source": "General US legal knowledge (rules differ by state)"
   }
  ]
