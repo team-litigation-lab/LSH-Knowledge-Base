@@ -24,8 +24,9 @@ The LSH VA community library: official SOPs, training videos, guides and know-ho
 
 ## Who can get in
 
-- **VAs** enter their name, batch and the **team access code**. It's the same code as the portal's Knowledge Base, stored in the same `kb_settings` rows. The browser stays signed in for 30 days, and changing the code signs everyone out.
-- **Admins** sign in with their **LSH Training Portal admin username and password**. They're checked against the portal's `users` table.
+- **Everyone signs in once, on the LSH Training Portal** and opens the Knowledge Base from there. The Portal sends them here with a short-lived signed ticket (`?ticket=…`); this Worker hands it back to the Portal's `/api/verify-ticket` to check (so it needs no shared secret) and starts a 12-hour session with their name and batch from their Portal account. There is no second sign-in. `PORTAL_URL` (default `https://cm-training-activity.pages.dev`) points at the Portal.
+- **Admins always type the admin password here**: their **LSH Training Portal admin username and password** (checked against the Portal's `users` table). No ticket signs an admin in; the Portal opens this site on the **Admin Portal** tab (`?admin=1`).
+- The old **team access code** sign-in is off. It works only if the variable `KB_CODE_LOGIN` is set to `on` (the end-to-end tests do that).
 - The portal's site lock (Master Control) closes this site too.
 
 ## 🧭 Blueprint (how the Knowledge Base works, for VAs and for admins)
@@ -71,10 +72,9 @@ The tables are created automatically on the first request.
    Use the Cloudflare account that holds the portal's D1 databases and the `lshtraining` R2 bucket. The Worker is `lsh-knowledge-base`, at `https://lsh-knowledge-base.legalsupporthelp.workers.dev/` unless you add a custom domain.
 2. Add the secret `SESSION_SECRET`: a long random string, set in **Settings → Variables and Secrets** or with `npx wrangler secret put SESSION_SECRET`.
 3. Open the site and sign in on the **Admin** tab with your portal login. Then, in **Admin**:
-   - check the **team access code** (if the portal's Knowledge Base already had one, it works here too);
    - click **Import posts** to copy the old Knowledge Base's posts, replies, votes and views;
    - add **reviewers**.
-4. Point the portal's Knowledge Base links (`/kb.html` on the home page, the Training Index and Master Control) to the new site.
+4. The portal's Knowledge Base links open this site through `/api/launch?tool=kb`, which signs trainees in.
 
 **Limits.**
 - Each upload part is 10 MB, which is under the Workers request limit, so file size isn't limited by the plan. This site caps files at 5 GB.

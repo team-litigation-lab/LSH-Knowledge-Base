@@ -44,11 +44,16 @@ jobs:
         run: |
           npm run seed:local
           echo "SESSION_SECRET=ci-secret" > .dev.vars
-          npx wrangler dev --port 8787 --ip 127.0.0.1 > "$RUNNER_TEMP/dev.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && break; sleep 1; done
+          # the old team-access-code sign-in is switched on for the end-to-end run only (KB_CODE_LOGIN); the real site has it off
+          npx wrangler dev --port 8787 --ip 127.0.0.1 --var KB_CODE_LOGIN:on > "$RUNNER_TEMP/dev.log" 2>&1 &
+          # a second copy, as the site runs (single sign-on only), pointed at a mock Portal for tests/portal.cjs
+          npx wrangler dev --port 8790 --ip 127.0.0.1 --inspector-port 9331 --var PORTAL_URL:http://127.0.0.1:8788 > "$RUNNER_TEMP/dev2.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && curl -sf http://127.0.0.1:8790/ > /dev/null && break; sleep 1; done
       - name: End-to-end (sign-in, import, uploads, video, search, review, history)
         run: python tests/e2e.py || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
       - name: Blueprint (the VA and admin decks and their PDFs)
         env:
           NODE_PATH: ${{ runner.temp }}/pw/node_modules
         run: node tests/blueprint.cjs || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
+      - name: Single sign-on (a Portal ticket signs a trainee in; no second sign-in; admins type the password)
+        run: node tests/portal.cjs || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev2.log"; exit 1; }

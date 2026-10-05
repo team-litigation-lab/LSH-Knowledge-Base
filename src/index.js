@@ -6,7 +6,13 @@ import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFil
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
 
-const READER_DAYS = 30, ADMIN_HOURS = 12, PAGE = 24;
+const READER_DAYS = 30, ADMIN_HOURS = 12, PAGE = 24, PORTAL_READER_HOURS = 12;
+// People sign in once, on the LSH Training Portal. It sends them here with a short-lived signed ticket, which this Worker
+// hands back to the Portal to check (so this Worker needs no shared secret) before it starts its own session.
+const PORTAL_URL = 'https://cm-training-activity.pages.dev';
+const portalBase = (env) => String(env.PORTAL_URL || PORTAL_URL).replace(/\/+$/, '');
+// The team access code only works when KB_CODE_LOGIN is set to "on" (it is off: nobody signs in a second time here).
+const codeLoginOn = (env) => String(env.KB_CODE_LOGIN || '').toLowerCase() === 'on';
 
 export default {
     async fetch(request, env) {
@@ -59,7 +65,7 @@ async function session(request, env) {
     const db = env.TRAINING_DB;
     if (request.method === 'GET') {
         const reader = await getReader(request, env);
-        return json({ success: true, configured: !!(await getSetting(db, 'code_hash')), unlocked: !!reader,
+        return json({ success: true, configured: !!(await getSetting(db, 'code_hash')), unlocked: !!reader, portalUrl: portalBase(env), codeLogin: codeLoginOn(env),
             admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer),
             who: reader ? { name: reader.who.name, batch: reader.who.batch, key: reader.who.key } : null });
     }
@@ -71,7 +77,22 @@ async function session(request, env) {
     if (body.action === 'admin-logout') {
         return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, '', 0) });
     }
+    if (body.action === 'portal-ticket') {
+        if (await overLimit(request, db, 'ticket', 30)) return fail('Too many tries from this connection. Wait 10 minutes and try again.', 429);
+        let v = null;
+        try {
+            const r = await fetch(portalBase(env) + '/api/verify-ticket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticket: String(body.ticket || '') }) });
+            v = await r.json();
+        } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check your sign-in. Try again in a moment.', 502); }
+        if (!v || !v.ok) return fail('That sign-in link has expired. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'TICKET' });
+        // Administrators type the admin password here, like on every platform: a ticket never signs one in.
+        if (v.admin || v.system) return fail('Administrators sign in here with the admin password.', 403, { code: 'ADMIN_PASSWORD_REQUIRED' });
+        const name = oneLine(`${v.first} ${v.last}`, 80), batch = oneLine(v.batch, 40);
+        const token = await signToken({ kb: 1, sso: 1, name, batch }, env.SESSION_SECRET, PORTAL_READER_HOURS * 3600);
+        return json({ success: true }, 200, { 'Set-Cookie': setCookie(READER_COOKIE, token, PORTAL_READER_HOURS * 3600) });
+    }
     if (body.action === 'unlock') {
+        if (!codeLoginOn(env)) return fail('Open the Knowledge Base from the LSH Training Portal. It signs you in; there is no second sign-in here.', 403, { code: 'PORTAL_ONLY' });
         if (await overLimit(request, db, 'unlock', 10)) return fail('Too many tries from this connection. Wait 10 minutes and try again.', 429);
         const hash = await getSetting(db, 'code_hash');
         if (!hash) return fail('The Knowledge Base isn’t open yet. An admin needs to set the team access code.', 409);
@@ -88,7 +109,7 @@ async function session(request, env) {
         if (!username || !password) return fail('Enter your portal username and password.');
         const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(username).first();
         if (!user || !(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
-        if ((user.user_type || user.userType) !== 'Admin') return fail('This account isn’t an admin account. VAs open the Knowledge Base with the team access code.', 403);
+        if ((user.user_type || user.userType) !== 'Admin') return fail('This account isn’t an admin account. Open the Knowledge Base from the LSH Training Portal.', 403);
         if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
         const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username;
         const token = await signToken({ adm: 1, username: user.username, name }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
