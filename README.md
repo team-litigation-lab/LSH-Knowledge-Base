@@ -25,7 +25,7 @@ The LSH VA community library: official SOPs, training videos, guides and know-ho
 ## Who can get in
 
 - **Everyone signs in once, on the LSH Training Portal** and opens the Knowledge Base from there. The Portal sends them here with a short-lived signed ticket (`?ticket=…`); this Worker hands it back to the Portal's `/api/verify-ticket` to check (so it needs no shared secret) and starts a 12-hour session with their name and batch from their Portal account. There is no second sign-in. `PORTAL_URL` (default `https://cm-training-activity.pages.dev`) points at the Portal.
-- **Admins always type the admin password here**: their **LSH Training Portal admin username and password** (checked against the Portal's `users` table). No ticket signs an admin in; the Portal opens this site on the **Admin Portal** tab (`?admin=1`).
+- **Admins always type the admin password here**: the same one as on every LSH platform (`MASTER_ADMIN_PASSWORD`, which the Portal holds, so the Worker asks the Portal's `/api/login` to check it). There is no username box: it signs in as the Master Account. No ticket signs an admin in; the Portal opens this site on the **Admin Portal** tab (`?admin=1`).
 - The old **team access code** sign-in is off. It works only if the variable `KB_CODE_LOGIN` is set to `on` (the end-to-end tests do that).
 - The portal's site lock (Master Control) closes this site too.
 

@@ -126,9 +126,9 @@
                     <a class="btn primary" href="${esc(portal)}/programs.html">Go to the LSH Training Portal</a>
                 </div>`}
                 <form id="f-admin"${wantAdmin ? '' : ' hidden'}>
-                    <p class="muted" style="margin:0">Administrators type their LSH Training Portal admin username and password here.</p>
-                    <label class="f">Username<input class="i" id="g-user" required autocomplete="username"></label>
-                    <label class="f">Password<input class="i" id="g-pass" type="password" required autocomplete="current-password"></label>
+                    <p class="muted" style="margin:0">Administrators type the admin password, the same one as on every LSH platform.</p>
+                    ${codeLogin ? '<label class="f">Username <small>(test mode)</small><input class="i" id="g-user" autocomplete="username"></label>' : ''}
+                    <label class="f">Admin password<input class="i" id="g-pass" type="password" required autocomplete="current-password"></label>
                     <button class="btn primary" type="submit">Sign in as admin</button>
                     <p class="muted" id="g-err2" role="alert"></p>
                 </form>
