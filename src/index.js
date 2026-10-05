@@ -105,26 +105,28 @@ async function session(request, env) {
     }
     if (body.action === 'admin-login') {
         if (await overLimit(request, db, 'admin-login', 10)) return fail('Too many tries from this connection. Wait 10 minutes and try again.', 429);
-        if (!env.DB) return fail('Admin sign-in isn’t connected: the portal accounts database (DB) is not bound to this Worker.', 500);
-        const username = oneLine(body.username, 80), password = String(body.password || '');
-        if (!username || !password) return fail('Enter your portal username and password.');
-        // The Master Account has no row in `users`: its password is the Portal's MASTER_ADMIN_PASSWORD secret, so the Portal checks it.
-        if (username === MASTER_USERNAME) {
-            let r;
-            try {
-                r = await fetch(portalBase(env) + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ portalMode: 'Admin', username, password }) });
-            } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check the admin password. Try again in a moment.', 502); }
-            if (!r.ok) return fail(r.status === 429 ? 'Too many wrong passwords. Wait 10 minutes and try again.' : 'Incorrect username or password.', r.status === 429 ? 429 : 401);
-            const token = await signToken({ adm: 1, username: MASTER_USERNAME, name: 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
-            return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        const typed = oneLine(body.username, 80), password = String(body.password || '');
+        if (!password) return fail('Enter the admin password.');
+        const give = (username, name) => signToken({ adm: 1, username, name }, env.SESSION_SECRET, ADMIN_HOURS * 3600)
+            .then(token => json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) }));
+        // 1. A Portal admin account typed with its own username and password.
+        if (typed && typed !== MASTER_USERNAME && env.DB) {
+            const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(typed).first();
+            if (user && (user.user_type || user.userType) === 'Admin' && await verifyPassword(password, user.password)) {
+                if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
+                return give(user.username, [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username);
+            }
         }
-        const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(username).first();
-        if (!user || !(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
-        if ((user.user_type || user.userType) !== 'Admin') return fail('This account isn’t an admin account. Open the Knowledge Base from the LSH Training Portal.', 403);
-        if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
-        const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username;
-        const token = await signToken({ adm: 1, username: user.username, name }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
-        return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        // 2. The admin password, the same one as on every platform (MASTER_ADMIN_PASSWORD, which the Portal holds, so the Portal checks it).
+        //    A name typed with it is who the entries are credited to, as on the CMS; with no name it is the Master Account.
+        let r;
+        try {
+            r = await fetch(portalBase(env) + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ portalMode: 'Admin', username: MASTER_USERNAME, password }) });
+        } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check the admin password. Try again in a moment.', 502); }
+        if (r.status === 429) return fail('Too many wrong passwords. Wait 10 minutes and try again.', 429);
+        if (!r.ok) return fail('Incorrect admin password.', 401);
+        if (!typed || typed === MASTER_USERNAME) return give(MASTER_USERNAME, 'System Administrator');
+        return give('admin:' + typed.toLowerCase(), typed);
     }
     return fail('Unknown action.');
 }

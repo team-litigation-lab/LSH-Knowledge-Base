@@ -32,6 +32,7 @@ const post = (body, cookie) => fetch(B + '/api/session', { method: 'POST', heade
   r = await fetch(B + '/api/library', { headers: { Cookie: cookie } }); check(r.status === 200, 'the trainee opens the library');
   r = await fetch(B + '/api/admin', { headers: { Cookie: cookie } }); check(r.status === 403, 'the trainee cannot open an admin API');
   r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'nope' }); check(r.status === 401, 'the Master Account with a wrong password is refused');
+  r = await post({ action: 'admin-login', password: 'master-ok' }); check(r.status === 200, 'the admin password alone signs in too');
   r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'master-ok' }); check(r.status === 200, 'the Master Account signs in with the admin password (checked by the Portal)');
   const adm = (r.headers.get('set-cookie') || '').split(';')[0];
   s = await (await fetch(B + '/api/session', { headers: { Cookie: adm } })).json(); check(s.admin === true, 'and is an admin here');
