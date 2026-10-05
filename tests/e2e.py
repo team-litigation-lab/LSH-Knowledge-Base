@@ -140,7 +140,7 @@ with sync_playwright() as p:
     # ================= REVIEWER (Kim, a VA) =================
     o.goto(B + '/#/review'); o.wait_for_selector('.queue')
     qtxt = o.inner_text('#app')
-    check('New entries (2)' in qtxt and 'Suggested edits (1)' in qtxt and 'Replies (1)' in qtxt, 'review queue lists 2 new entries, 1 edit, 1 reply')
+    check('New entries (2)' in qtxt and 'Suggested edits (1)' in qtxt and 'Comments (1)' in qtxt, 'review queue lists 2 new entries, 1 edit, 1 comment')
     # compare the suggestion
     sugg = [r for r in jget(o, B + '/api/review')['revisions'] if not r['isNew']][0]
     o.goto(B + f"/#/v/{sugg['id']}"); o.wait_for_selector('.diff')
