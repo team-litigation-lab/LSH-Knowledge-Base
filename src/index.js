@@ -202,10 +202,10 @@ async function listEntries({ db, url, reader }) {
         bind.unshift(fq);
         countBind = [...bind];
     } else {
-        const order = { helpful: `helpful DESC, views DESC`, views: `views DESC`, title: `e.title COLLATE NOCASE`, section: `e.section COLLATE NOCASE, e.title COLLATE NOCASE` }[p.get('sort')]
+        const order = { helpful: `helpful DESC, views DESC`, views: `views DESC`, title: `e.title COLLATE NOCASE`, az: `e.title COLLATE NOCASE`, section: `e.section COLLATE NOCASE, e.title COLLATE NOCASE` }[p.get('sort')]
             || `e.featured DESC, e.updated_at DESC`;
         const w = where.length ? 'WHERE ' + where.join(' AND ') : '';
-        sql = `SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} ${w} ORDER BY e.official DESC, ${order} LIMIT ? OFFSET ?`;
+        sql = `SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} ${w} ORDER BY ${p.get('sort') === 'az' ? '' : 'e.official DESC, '}${order} LIMIT ? OFFSET ?`;
         countSql = `SELECT COUNT(*) AS n FROM lib_entries e ${w}`;
         countBind = [...bind];
     }
