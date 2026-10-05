@@ -728,7 +728,7 @@
                 <p>Publishes the pages exported from Tettra (each Tettra category becomes a collection, each subcategory a section). Step 1 imports the pages, step 2 copies their images into the library so they stay if Tettra is closed. Both are safe to run again.</p>
                 <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <button class="btn" id="refresh-search">3. Refresh the search</button> <span class="muted" id="tettra-status"></span></section>
             <section class="section card"><h2>Import documents</h2>
-                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
+                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, plus one page for each topic of the Foundational Training lessons, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
                 <button class="btn primary" id="import-docs">Import documents</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
@@ -800,7 +800,15 @@
             const st = document.getElementById('import-docs-status');
             try {
                 const x = await post('/api/admin', { action: 'import-bundled' });
-                st.textContent = (x.imported || x.updated) ? `${x.imported ? 'Imported ' + plural(x.imported, 'document') + '. ' : ''}${x.updated ? 'Changed ' + plural(x.updated, 'document') + ' from a PDF to a page.' : ''}` : (x.note || 'Everything is already imported.');
+                let topics = 0;
+                for (let last = Infinity;;) {   // the training topics, 12 per call
+                    const t = await post('/api/admin', { action: 'import-training' });
+                    topics += t.imported;
+                    if (!t.remaining || t.remaining >= last) break;
+                    last = t.remaining;
+                }
+                x.topics = topics;
+                st.textContent = (x.imported || x.updated || x.topics) ? `${x.imported ? 'Imported ' + plural(x.imported, 'document') + '. ' : ''}${x.updated ? 'Changed ' + plural(x.updated, 'document') + ' from a PDF to a page. ' : ''}${x.topics ? 'Added ' + plural(x.topics, 'training topic') + '.' : ''}` : (x.note || 'Everything is already imported.');
                 await refreshSearch(document.getElementById('tettra-status') || st);
                 S.lib = null;
             } catch (e) { st.textContent = e.message; }

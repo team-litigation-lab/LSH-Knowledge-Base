@@ -594,6 +594,7 @@ async function adminAction({ request, env, db, reader }) {
         const r = await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE archived = 0 AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).run();
         return json({ success: true, archived: (r.meta && r.meta.changes) || 0 });
     }
+    if (body.action === 'import-training') return importTraining(request, env, db, reader);
     if (body.action === 'import-tettra') return importTettra(request, env, db, reader);
     if (body.action === 'copy-images') return copyImages(env, db);
     return fail('Unknown action.');
@@ -634,6 +635,39 @@ async function importBundled(request, env, db, reader) {
     const targets = [...new Set(docs.map(d => d.collection))];   // the handouts' collections show again, even if the starters were tidied away
     if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
     return json({ success: true, imported, updated, remaining: 0 });
+}
+
+// ---- Training topics (public/seed/training.json, made by scripts/training_topics.mjs) ----
+// One page per topic of the Foundational Training lessons, in the Foundational Training collection, one section per lesson.
+// 12 pages per call; run again until none remain. Safe to run again: a page already imported is skipped, or updated if its text changed.
+async function importTraining(request, env, db, reader) {
+    const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/training.json'));
+    if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no training topics to import.' });
+    const { pages } = await res.json();
+    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'train:%'`).all()).results || [])
+        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
+    const dataOf = (p) => ({ collection: 'foundational', section: `Lesson ${p.lesson} · ${p.lessonTitle}`, type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
+        tags: ['training', 'lesson ' + p.lesson], credits: [], files: [], official: false });
+    const todo = pages.filter(p => { const h = have.get('train:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title; });
+    let done = 0;
+    for (const p of todo.slice(0, 12)) {
+        const now = nowIso(), data = dataOf(p), old = have.get('train:' + p.id);
+        if (old) {
+            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+                VALUES (?, ?, 'pending', 'Training topic updated from the lesson', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...old.data, ...data }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+            await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
+        } else {
+            const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
+                VALUES ('pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.type, data.title, data.summary, data.tags.join(','),
+                    reader.who.name, reader.who.batch || '', reader.who.key, 'train:' + p.id, now, now).run();
+            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+                VALUES (?, ?, 'pending', 'Made from the Foundational Training lesson', ?, ?, ?, 1, ?)`).bind(r.meta.last_row_id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+            await makeLive(db, r.meta.last_row_id, rv.meta.last_row_id, { reviewer: reader.adminUser });
+        }
+        done++;
+    }
+    await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug = 'foundational'`).run();   // the training topics live here, even if the starter shelves were tidied away
+    return json({ success: true, imported: done, remaining: todo.length - done });
 }
 
 // ---- Tettra import (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
