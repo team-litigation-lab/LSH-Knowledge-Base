@@ -7,6 +7,11 @@ const failures = []; const check = (ok, m) => { console.log((ok ? 'PASS ' : 'FAI
 const answers = { 'good-trainee': { ok: true, first: 'Ann', last: 'Lee', batch: 'B300926' }, 'good-admin': { ok: true, admin: true }, 'good-system': { ok: true, system: true } };
 const mock = http.createServer((req, res) => {
   let b = ''; req.on('data', d => b += d); req.on('end', () => {
+    if (req.url === '/api/login') {   // the Portal's admin sign-in: only the Master Account's password "master-ok" passes
+      let j = {}; try { j = JSON.parse(b); } catch (e) {}
+      const ok = j.portalMode === 'Admin' && j.username === 'LSHADMIN123' && j.password === 'master-ok';
+      res.writeHead(ok ? 200 : 401, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ success: ok }));
+    }
     let t = ''; try { t = JSON.parse(b).ticket; } catch (e) {}
     const a = answers[t] || { ok: false, code: 'signature' };
     res.writeHead(a.ok ? 200 : 401, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(a));
@@ -26,6 +31,10 @@ const post = (body, cookie) => fetch(B + '/api/session', { method: 'POST', heade
   check(s.unlocked === true && s.admin === false && s.who && s.who.name === 'Ann Lee' && s.who.batch === 'B300926', 'the session carries the name and batch from the Portal');
   r = await fetch(B + '/api/library', { headers: { Cookie: cookie } }); check(r.status === 200, 'the trainee opens the library');
   r = await fetch(B + '/api/admin', { headers: { Cookie: cookie } }); check(r.status === 403, 'the trainee cannot open an admin API');
+  r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'nope' }); check(r.status === 401, 'the Master Account with a wrong password is refused');
+  r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'master-ok' }); check(r.status === 200, 'the Master Account signs in with the admin password (checked by the Portal)');
+  const adm = (r.headers.get('set-cookie') || '').split(';')[0];
+  s = await (await fetch(B + '/api/session', { headers: { Cookie: adm } })).json(); check(s.admin === true, 'and is an admin here');
   mock.close();
   console.log(failures.length ? `\n${failures.length} failed` : '\nall passed'); process.exit(failures.length ? 1 : 0);
 })();
