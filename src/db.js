@@ -88,6 +88,12 @@ const SCHEMA = [
         id INTEGER PRIMARY KEY AUTOINCREMENT, term TEXT NOT NULL, definition TEXT NOT NULL, example TEXT, category TEXT NOT NULL DEFAULT 'General',
         source TEXT, ref TEXT UNIQUE, edited INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS lib_terms_term ON lib_terms (term COLLATE NOCASE)`,
+    // Glossary changes wait here for approval: a new term, an edit to one, or a request to remove one.
+    `CREATE TABLE IF NOT EXISTS lib_term_changes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, term_id INTEGER, action TEXT NOT NULL, term TEXT, definition TEXT, example TEXT, category TEXT,
+        status TEXT NOT NULL DEFAULT 'pending', author_name TEXT NOT NULL, author_batch TEXT, author_key TEXT NOT NULL,
+        review_note TEXT, reviewed_by TEXT, reviewed_at TEXT, created_at TEXT NOT NULL)`,
+    `CREATE INDEX IF NOT EXISTS lib_term_changes_status ON lib_term_changes (status, id)`,
     `CREATE TABLE IF NOT EXISTS lib_roles (person_key TEXT PRIMARY KEY, name TEXT NOT NULL, batch TEXT, role TEXT NOT NULL, granted_by TEXT, granted_at TEXT)`,
     `CREATE VIRTUAL TABLE IF NOT EXISTS lib_fts USING fts5(title, summary, body, tags, files, tokenize = 'porter unicode61')`
 ];
@@ -130,8 +136,8 @@ export const READER_COOKIE = 'lshkb';
 export const ADMIN_COOKIE = 'lshkb_admin';
 
 // { admin, reviewer, staff, tenured, contributor, tier, adminUser, who:{name,batch,key} } or null (no access).
-// Tiers: "info" (a trainee: reads the library, nothing else), "tenured" (can add and upload; an admin approves every
-// entry before it goes live), "reviewer" (approves for the community), "admin".
+// Tiers: "info" (a trainee: reads the library, nothing else), "tenured" (can add, edit and upload; every change waits for approval),
+// "reviewer" (approves other people's changes; their own still wait for someone else), "admin" (the only one whose edits go live at once).
 export async function getReader(request, env) {
     const db = env.TRAINING_DB;
     const adm = await readToken(getCookie(request, ADMIN_COOKIE), env.SESSION_SECRET);

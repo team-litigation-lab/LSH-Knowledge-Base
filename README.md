@@ -11,13 +11,15 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 - **Nothing is lost.**
   - Every save adds a version. Nothing is overwritten.
   - The history shows every version and compares any version with the current one.
-  - Reviewers can restore any earlier version.
+  - Admins can restore any earlier version at once; a reviewer's restore waits for approval like any other edit.
   - Removing an entry archives it. Only an admin can delete permanently, by typing DELETE.
   - Admin → **Download a backup** exports every entry and version as JSON.
 - **Search that scales.** Search runs on the server (SQLite FTS5 in D1). It covers titles, summaries, content, tags, sections and the **text inside uploaded PDFs and Word, Excel and PowerPoint files**, which the browser extracts at upload. Results are ranked, highlighted and paged.
 - **Community review.**
-  - New entries, suggested edits and replies from VAs wait for review.
-  - A VA's edit to someone else's entry is a *suggestion*: the current version stays up until a reviewer approves it.
+  - **Only tenured VAs, reviewers and admins can edit.** Info Access readers can read and search, and nothing else (no entries, edits, Glossary changes or notes).
+  - **Every edit waits for approval.** A new entry, an edit (to anyone's entry, your own included), a restore of an earlier version, a Glossary term and an "update current info" note are all held until approved. The current version stays up until then.
+  - **Only an admin's own edits go live at once.** A reviewer's edits wait too, and nobody can approve their own change: another reviewer or an admin does (the server refuses it; admins are the final authority).
+  - A reviewer who wants to fix someone else's new entry that isn't live yet approves it or sends it back with a note; only its author or an admin edits it.
   - Admins can make trusted VAs **reviewers**, so admins aren't the bottleneck.
   - Only admins mark entries **Official**, change settings or delete permanently.
 - Helpful votes, view counts, featured entries, "experience from the team" replies, a contributors directory and a "My contributions" page.
@@ -55,7 +57,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 
 ## Comments · update current info
 
-Every page ends with a **Comments · update current info** section. Anyone signed in, including Info Access readers, can send a note that something is out of date and what it should say now (`kind` = `update`); contributors can also add a plain comment. A note waits for a reviewer (it appears in the review queue with an *Update to current info* badge) unless a reviewer or admin wrote it. Once approved it shows on the page; a reviewer updates the page and presses **Mark page updated**, which adds a *✓ Page updated* badge. Info Access readers still cannot add entries, edits or plain comments. The `kind` column is added to `kb_comments` automatically.
+Every page ends with a **Comments · update current info** section. Tenured team members, reviewers and admins can send a note that something is out of date and what it should say now (`kind` = `update`), or add a plain comment; Info Access readers see the notes but cannot send any (a note is a suggested edit, so it follows the same rule). A note waits for a reviewer (it appears in the review queue with an *Update to current info* badge) unless a reviewer or admin wrote it. Once approved it shows on the page; a reviewer updates the page and presses **Mark page updated**, which adds a *✓ Page updated* badge. The `kind` column is added to `kb_comments` automatically.
 
 ## How Tettra pages are marked
 
@@ -63,7 +65,7 @@ Every page that came from the firm's Tettra carries the tag `from-tettra`, shown
 
 ## Glossary (top bar → Glossary)
 
-A dictionary kept apart from the entries: `lib_terms` (term, meaning, example, category). The page has a search box (it matches the term or any word of its meaning), A to Z letter links, category chips and one card per term; a library search also shows matching terms above the entries. It starts with about 970 terms: 62 from the two Tettra pages (7 legal terms from "LSH Legal Jargon", 55 medical abbreviations from "Medical Terminologies and Abbreviations") and 330 general US legal-industry terms, with the most in personal injury (claims, evidence, injuries, treatment, damages, accident types) written from general knowledge (`scripts/glossary_extra.py`: Legal, Litigation, Personal Injury, Insurance & Liens and Medical-Legal; plain-English meanings, and rules differ by state, so a reviewer should check them). `scripts/glossary_us.py` adds about 580 more across the whole of US law (civil procedure, evidence, contracts, torts, criminal, property, family, estates and trusts, business, employment, immigration, insurance and Latin phrases). The Glossary loads these itself the first time it is opened empty. Add more by editing those files and running `scripts/tettra_convert.py`, or on the page itself. They are loaded by **Admin → Import documents**. Admins and reviewers can add, edit and delete terms on the page; a term someone has edited is not overwritten by a later import (`edited` = 1). Everyone signed in can read it.
+A dictionary kept apart from the entries: `lib_terms` (term, meaning, example, category). The page has a search box (it matches the term or any word of its meaning), A to Z letter links, category chips and one card per term; a library search also shows matching terms above the entries. It starts with about 970 terms: 62 from the two Tettra pages (7 legal terms from "LSH Legal Jargon", 55 medical abbreviations from "Medical Terminologies and Abbreviations") and 330 general US legal-industry terms, with the most in personal injury (claims, evidence, injuries, treatment, damages, accident types) written from general knowledge (`scripts/glossary_extra.py`: Legal, Litigation, Personal Injury, Insurance & Liens and Medical-Legal; plain-English meanings, and rules differ by state, so a reviewer should check them). `scripts/glossary_us.py` adds about 580 more across the whole of US law (civil procedure, evidence, contracts, torts, criminal, property, family, estates and trusts, business, employment, immigration, insurance and Latin phrases). The Glossary loads these itself the first time it is opened empty. Add more by editing those files and running `scripts/tettra_convert.py`, or on the page itself. They are loaded by **Admin → Import documents**. Changes follow the same rule as entries. Tenured VAs and reviewers use **Suggest a term**, **Suggest an edit** and **Suggest removal** (a removal needs a reason); each is held in `lib_term_changes` and appears under **Review → Glossary changes**, where an admin or another reviewer (never the person who made it) approves or sends it back with a note. Admins add, edit and delete directly. A term someone has edited is not overwritten by a later import (`edited` = 1). Everyone signed in can read it; Info Access readers cannot suggest changes.
 
 ## Bundled documents (Admin → Import documents)
 
@@ -84,6 +86,14 @@ Two PDFs with no text layer were transcribed by hand from their page images: a 3
 ## Written lessons (scripts/add_lesson.py)
 
 A lesson written for the Knowledge Base, not taken from a PDF or Tettra, lives as Markdown in `scripts/lessons/` and is added to `public/seed/docs.json` with `python3 scripts/add_lesson.py scripts/lessons/<file>.md --title … --summary … --collection … --tags …`; **Admin → Import documents** publishes it (and updates it if the text changes). The first is **Insurance Coverage in Personal Injury Claims: What Applies, Who Pays and How to Find It** (about 3,000 words, in Insurance Communication): the coverages in an injury claim, 1P and 3P claims, who pays first with a worked example, the coverage hunt, reading a declarations page, common coverage problems and a quick-reference table. It is written from general knowledge of US insurance practice, so a reviewer should check state-specific points.
+
+The second is **How to calculate non-economic damages** (about 3,000 words, in Medsum & Demands): what pain and suffering and the other non-economic losses are, why there is no formula, the support team's role (gather and organize, never quote a value), how a value is built step by step, the multiplier, per diem, evaluation-software and comparable-verdict methods with worked examples, what raises or lowers the value, limits that vary by state (comparative fault, no-fault thresholds, caps), an evidence checklist, the damages section of the demand and common mistakes. Also written from general knowledge, so an attorney should check it.
+
+A third page is a transcription of an image-only infographic, **What happens after a car accident in Florida? The property damage claim process** (in Insurance Communication): the six steps (intake, liability, insurance and coverage, vehicle damage, repair or total loss, documentation and follow-up), what is gathered at each and the skill used.
+
+## Titles in sentence case
+
+An ALL-CAPS title or heading is shown in sentence case ("WRITE A WINNING DEMAND LETTER" becomes "Write a winning demand letter"; mixed-case titles are not touched). `scripts/sentence_case.py` does it for the bundled files (`python3 scripts/sentence_case.py` rewrites `public/seed/*.json`, and the converters `tettra_convert.py`, `add_docx.py` and `add_lesson.py` apply it themselves). The Worker applies the same rules to a title when an entry is saved (`fixTitle` in `src/util.js`), and **Admin → Import documents → Tidy ALL-CAPS titles** fixes entries already in the library (each fix is a new version, so the history keeps the old title). Acronyms (SOP, PIP, ADR, ERISA and so on) and a few proper nouns (Medicare, Medicaid, United States) keep their capitals; the lists are in both files. Long bold sentences in capitals inside a contract are left alone, because they are emphasis.
 
 ## Training topics (Admin → Import documents)
 

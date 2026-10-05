@@ -13,6 +13,43 @@ export const fail = (error, status = 400, extra = {}) => json({ success: false, 
 export const nowIso = () => new Date().toISOString();
 export const clean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, n);
 export const oneLine = (v, n) => clean(v, n * 2).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+
+// An ALL-CAPS title becomes sentence case ("WRITE A WINNING DEMAND LETTER" -> "Write a winning demand letter"). Mixed-case titles are left alone.
+// Same rules as scripts/sentence_case.py: keep the two lists in step.
+const ACRONYMS = new Set(('SOP SOPS SOL PI VA VAS LSH TAM HIPAA ERISA MRI CT DUI ADR CME PIP UM UIM BI PD EOB HCFA CMS FAQ USA EMG NCV ER ID IME DV HR IP MVA ' +
+    'RFP PDF CPT ICD HMO PPO SSI SSDI CPA IRS DOB SSN PHI POA ASAP ETA OCR EHR EMR ICU DME PT OT PCP OB GYN ENT NP PA MD DC RN LPN EA AI FL CA TX NY NJ GA').split(' '));
+const PROPER = { medicare: 'Medicare', medicaid: 'Medicaid', tricare: 'Tricare', florida: 'Florida', california: 'California', texas: 'Texas', chartswap: 'Chartswap',
+    compex: 'Compex', filevine: 'Filevine', clio: 'Clio', american: 'American', americans: 'Americans' };
+const lettersOf = (t) => t.replace(/[^A-Za-z]/g, '');
+export function isAllCaps(t) {
+    const L = lettersOf(String(t).replace(/\b[A-Z]{1,3}\b(?=\s*[.)])/g, ''));
+    return L.length >= 4 && (L.replace(/[^A-Z]/g, '').length / L.length) > 0.8;
+}
+export function sentenceCase(t) {
+    t = String(t).replace(/\b(I{1,3}|IV|VI{0,3}|IX|X{1,3})\.(?=[A-Za-z])/g, '$1. ');
+    let first = true;
+    const out = t.split(' ').map(w => {
+        const core = w.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+        if (!core) return w;
+        if (!/[A-Za-z]/.test(core)) return w;
+        if (first && (/^(?:\d{1,3}|[A-Z])[.)]$/.test(w) || (/^(?:I{1,3}|IV|VI{0,3}|IX|X{1,3})$/.test(core) && /[.)]$/.test(w)))) return w;   // numbering: "1." "A." "IV."
+        const up = core.toUpperCase();
+        let next;
+        if (ACRONYMS.has(up) && core.length > 1) next = up;
+        else if (PROPER[core.toLowerCase()]) next = PROPER[core.toLowerCase()];
+        else if (/^(?:I{1,3}|IV|VI{0,3}|IX|X{1,3})$/.test(core) && core.length > 1 && !first) next = up;
+        else { next = core.toLowerCase(); if (first) next = next[0].toUpperCase() + next.slice(1); }
+        first = false;
+        return w.replace(core, next);
+    }).join(' ');
+    return out.replace(/\bunited states\b/gi, 'United States').replace(/\bsocial security\b/gi, 'Social Security');
+}
+export function fixTitle(t) {
+    t = String(t).trim();
+    const one = t.toUpperCase().replace(/^[.:]+|[.:]+$/g, '');
+    return isAllCaps(t) && !(t.split(/\s+/).length === 1 && ACRONYMS.has(one)) ? sentenceCase(t) : t;
+}
+
 export const personKey = (name, batch) => (oneLine(name, 80) + '|' + oneLine(batch, 40)).toLowerCase();
 
 /* ---------- base64url ---------- */
