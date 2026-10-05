@@ -11,7 +11,7 @@
           'The LSH VA community library: official SOPs, training videos, guides and know-how from the whole community.',
           'Entries sit in collections, one per program or role: Foundational Training, Reception, Intake, Case Management, EA / PA and more.',
           'Inside a collection, entries are grouped by section.',
-          'Anyone in the community can add to it; reviewers keep it accurate.'],
+          'Everyone signed in can read it (Info Access). Tenured team members can add to it, and an admin approves each entry; reviewers keep it accurate.'],
         where: 'Top bar → Library.',
         tip: 'Look for ✓ Official: those entries are the firm\'s approved way of doing it.' },
       { icon: '🔑', title: 'Signing in', points: [
@@ -63,15 +63,15 @@
     sub: 'Running the Knowledge Base: the admin side',
     slides: [
       { icon: '🔑', title: 'Signing in as an admin', points: [
-          'Admins sign in with their LSH Training Portal admin username and password.',
+          'Admins sign in with the admin password, the same one as on every LSH platform.',
           'Admin in the top bar has the settings, the reviewers, the import and the backup.',
           'The portal\'s site lock (Master Control) closes this site too.'],
         where: 'The sign-in screen → Admin · Top bar → Admin.',
-        tip: 'Your admin sign-in is the same as the Training Portal\'s: no separate account to keep.' },
+        tip: 'It is the same admin password as the Training Portal\'s: nothing separate to keep.' },
       { icon: '🗝', title: 'How people get in', points: [
           'Everyone signs in once, on the LSH Training Portal, and opens the Knowledge Base from there.',
           'Trainees never see an admin page, the Admin tab or the admin password.',
-          'Admins type their Portal admin username and password on this site every time.'],
+          'Admins type the admin password on this site every time.'],
         where: 'The sign-in screen → Admin Portal.',
         tip: 'Remove a trainee\'s access in the Portal (Master Control) and they can no longer open the Knowledge Base from it.' },
       { icon: '✅', title: 'The review queue', points: [

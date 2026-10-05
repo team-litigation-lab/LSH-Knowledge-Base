@@ -123,26 +123,32 @@ export async function siteLocked(env) {
 export const READER_COOKIE = 'lshkb';
 export const ADMIN_COOKIE = 'lshkb_admin';
 
-// { admin, reviewer, staff, adminUser, who:{name,batch,key} } or null (no access).
+// { admin, reviewer, staff, tenured, contributor, tier, adminUser, who:{name,batch,key} } or null (no access).
+// Tiers: "info" (a trainee: reads the library, nothing else), "tenured" (can add and upload; an admin approves every
+// entry before it goes live), "reviewer" (approves for the community), "admin".
 export async function getReader(request, env) {
     const db = env.TRAINING_DB;
     const adm = await readToken(getCookie(request, ADMIN_COOKIE), env.SESSION_SECRET);
     if (adm && adm.adm) {
         const name = adm.name || adm.username;
-        return { admin: true, reviewer: false, staff: true, adminUser: adm.username,
+        return { admin: true, reviewer: false, staff: true, tenured: false, contributor: true, tier: 'admin', adminUser: adm.username,
             who: { name, batch: 'Admin', key: 'admin|' + String(adm.username).toLowerCase() } };
     }
     const p = await readToken(getCookie(request, READER_COOKIE), env.SESSION_SECRET);
     if (!p || !p.kb) return null;
-    if (!p.sso) {   // an old team-access-code session: only while the code sign-in is switched on, and until the code changes
+    const legacy = !p.sso;
+    if (legacy) {   // an old team-access-code session: only while the code sign-in is switched on, and until the code changes
         if (String(env.KB_CODE_LOGIN || '').toLowerCase() !== 'on') return null;
         const version = await getSetting(db, 'code_version');
         if (!version || p.v !== version) return null;   // the code changed since they signed in
     }
     const key = personKey(p.name, p.batch);
     const role = await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();
-    const reviewer = !!(role && role.role === 'reviewer');
-    return { admin: false, reviewer, staff: reviewer, adminUser: null, who: { name: p.name, batch: p.batch || '', key } };
+    const reviewer = !!(role && role.role === 'reviewer'), tenured = !!(role && role.role === 'tenured');
+    // Someone who signed in from the Portal has Info Access (view only) unless an admin made them tenured or a reviewer.
+    const contributor = reviewer || tenured || legacy;
+    return { admin: false, reviewer, staff: reviewer, tenured, contributor, tier: reviewer ? 'reviewer' : (contributor ? 'tenured' : 'info'),
+        adminUser: null, who: { name: p.name, batch: p.batch || '', key } };
 }
 
 // Per-connection limit: `limit` hits of `kind` per 10 minutes. True when over.

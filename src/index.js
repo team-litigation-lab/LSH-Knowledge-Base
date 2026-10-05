@@ -6,6 +6,7 @@ import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFil
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
 
+const infoOnly = () => fail('Info Access is view-only. Tenured team members can add to the library, and an admin approves it. Ask an admin for tenured access.', 403, { code: 'INFO_ONLY' });
 const READER_DAYS = 30, ADMIN_HOURS = 12, PAGE = 24, PORTAL_READER_HOURS = 12;
 // People sign in once, on the LSH Training Portal. It sends them here with a short-lived signed ticket, which this Worker
 // hands back to the Portal to check (so this Worker needs no shared secret) before it starts its own session.
@@ -44,6 +45,7 @@ export default {
                 case 'comments': return await comments(ctx);
                 case 'people': return await people(ctx);
                 case 'files':
+                    if (write && !reader.contributor) return infoOnly();
                     if (request.method === 'PUT' && seg[1] && seg[2]) return await putPart(ctx, seg[1], Number(seg[2]));
                     return await files(ctx);
                 case 'admin':
@@ -67,7 +69,7 @@ async function session(request, env) {
     if (request.method === 'GET') {
         const reader = await getReader(request, env);
         return json({ success: true, configured: !!(await getSetting(db, 'code_hash')), unlocked: !!reader, portalUrl: portalBase(env), codeLogin: codeLoginOn(env),
-            admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer),
+            admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer), contributor: !!(reader && reader.contributor), tier: reader ? reader.tier : null,
             who: reader ? { name: reader.who.name, batch: reader.who.batch, key: reader.who.key } : null });
     }
     if (!sameOrigin(request)) return fail('Requests must come from the LSH Knowledge Base.', 403);
@@ -105,26 +107,29 @@ async function session(request, env) {
     }
     if (body.action === 'admin-login') {
         if (await overLimit(request, db, 'admin-login', 10)) return fail('Too many tries from this connection. Wait 10 minutes and try again.', 429);
-        if (!env.DB) return fail('Admin sign-in isn’t connected: the portal accounts database (DB) is not bound to this Worker.', 500);
-        const username = oneLine(body.username, 80), password = String(body.password || '');
-        if (!username || !password) return fail('Enter your portal username and password.');
-        // The Master Account has no row in `users`: its password is the Portal's MASTER_ADMIN_PASSWORD secret, so the Portal checks it.
-        if (username === MASTER_USERNAME) {
-            let r;
-            try {
-                r = await fetch(portalBase(env) + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ portalMode: 'Admin', username, password }) });
-            } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check the admin password. Try again in a moment.', 502); }
-            if (!r.ok) return fail(r.status === 429 ? 'Too many wrong passwords. Wait 10 minutes and try again.' : 'Incorrect username or password.', r.status === 429 ? 429 : 401);
-            const token = await signToken({ adm: 1, username: MASTER_USERNAME, name: 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
-            return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        const typed = oneLine(body.username, 80), password = String(body.password || '');
+        if (!password) return fail('Enter the admin password.');
+        const give = (username, name) => signToken({ adm: 1, username, name }, env.SESSION_SECRET, ADMIN_HOURS * 3600)
+            .then(token => json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) }));
+        // 1. A Portal admin account typed with its own username and password.
+        if (typed && typed !== MASTER_USERNAME && env.DB) {
+            const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(typed).first();
+            if (user && (user.user_type || user.userType) === 'Admin') {   // a real Portal admin account is checked on its own password only
+                if (!(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
+                if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
+                return give(user.username, [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username);
+            }
         }
-        const user = await env.DB.prepare(`SELECT * FROM users WHERE username = ?`).bind(username).first();
-        if (!user || !(await verifyPassword(password, user.password))) return fail('Incorrect username or password.', 401);
-        if ((user.user_type || user.userType) !== 'Admin') return fail('This account isn’t an admin account. Open the Knowledge Base from the LSH Training Portal.', 403);
-        if (['Pending', 'Rejected', 'Revoked', 'Suspended'].includes(user.status)) return fail('This admin account isn’t active.', 403);
-        const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username;
-        const token = await signToken({ adm: 1, username: user.username, name }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
-        return json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        // 2. The admin password, the same one as on every platform (MASTER_ADMIN_PASSWORD, which the Portal holds, so the Portal checks it).
+        //    A name typed with it is who the entries are credited to, as on the CMS; with no name it is the Master Account.
+        let r;
+        try {
+            r = await fetch(portalBase(env) + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ portalMode: 'Admin', username: MASTER_USERNAME, password }) });
+        } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check the admin password. Try again in a moment.', 502); }
+        if (r.status === 429) return fail('Too many wrong passwords. Wait 10 minutes and try again.', 429);
+        if (!r.ok) return fail('Incorrect admin password.', 401);
+        if (!typed || typed === MASTER_USERNAME) return give(MASTER_USERNAME, 'System Administrator');
+        return give('admin:' + typed.toLowerCase(), typed);
     }
     return fail('Unknown action.');
 }
@@ -241,7 +246,7 @@ async function getEntry({ db, reader }, id) {
             versions: counts.versions || 0, pendingEdits: reader.staff ? (counts.pending || 0) : undefined, myPendingEdit: myPending ? myPending.id : null },
         stats: { views: st ? st.views : 0, helpful: st ? st.helpful : 0 }, voted,
         comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at })),
-        can: { edit: e.status !== 'archived', staff: reader.staff, admin: reader.admin } });
+        can: { edit: e.status !== 'archived' && reader.contributor, staff: reader.staff, admin: reader.admin } });
 }
 
 const shapeRev = (r, withData) => ({ id: r.id, entryId: r.entry_id, status: r.status, note: r.note || '', author: r.author_name, batch: r.author_batch || '',
@@ -326,6 +331,7 @@ async function addRevision(db, entryId, data, note, reader, status) {
 }
 
 async function createEntry({ request, db, reader }) {
+    if (!reader.contributor) return infoOnly();
     if (!reader.staff && await overLimit(request, db, 'entry', 15)) return fail('You’ve added a lot in a short time. Wait a few minutes and try again.', 429);
     const body = await readJson(request) || {};
     const f = await fields(db, body, reader, null);
@@ -343,6 +349,7 @@ async function createEntry({ request, db, reader }) {
 
 async function entryAction({ request, db, reader, env }, id) {
     const body = await readJson(request) || {};
+    if (!reader.contributor && body.action !== 'helpful') return infoOnly();
     const e = await db.prepare(`SELECT * FROM lib_entries WHERE id = ?`).bind(id).first();
     if (!e) return fail('That entry no longer exists.', 404);
     const reviewer = reader.adminUser || reader.who.name, now = nowIso();
@@ -480,6 +487,7 @@ async function comments({ request, db, reader }) {
     if (request.method !== 'POST') return fail('POST only.', 405);
     const body = await readJson(request) || {};
     if (body.action === 'submit') {
+        if (!reader.contributor) return infoOnly();
         if (!reader.staff && await overLimit(request, db, 'comment', 20)) return fail('You’ve replied a lot in a short time. Wait a few minutes and try again.', 429);
         const e = await db.prepare(`SELECT status FROM lib_entries WHERE id = ?`).bind(Number(body.entryId)).first();
         if (!e || e.status !== 'published') return fail('Replies are open on published entries only.');
@@ -540,12 +548,13 @@ async function adminAction({ request, db, reader }) {
         await setSetting(db, 'code_changed_by', reader.adminUser);
         return json({ success: true });
     }
-    if (body.action === 'grant-reviewer') {
+    if (body.action === 'grant-reviewer' || body.action === 'grant-role') {
+        const role = body.role === 'tenured' ? 'tenured' : 'reviewer';
         const name = oneLine(body.name, 80), batch = oneLine(body.batch, 40);
-        if (name.length < 2) return fail('Enter the person’s full name exactly as they sign in.');
-        await db.prepare(`INSERT INTO lib_roles (person_key, name, batch, role, granted_by, granted_at) VALUES (?, ?, ?, 'reviewer', ?, ?)
-            ON CONFLICT(person_key) DO UPDATE SET role = 'reviewer', granted_by = excluded.granted_by, granted_at = excluded.granted_at`)
-            .bind(personKey(name, batch), name, batch, reader.adminUser, now).run();
+        if (name.length < 2) return fail('Enter the person’s full name exactly as it shows in the LSH Training Portal.');
+        await db.prepare(`INSERT INTO lib_roles (person_key, name, batch, role, granted_by, granted_at) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(person_key) DO UPDATE SET role = excluded.role, granted_by = excluded.granted_by, granted_at = excluded.granted_at`)
+            .bind(personKey(name, batch), name, batch, role, reader.adminUser, now).run();
         return json({ success: true });
     }
     if (body.action === 'revoke-reviewer') {
