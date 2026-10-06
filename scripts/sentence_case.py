@@ -75,8 +75,12 @@ BOLD = re.compile(r'^\*\*\s*([^*]+?)\s*\*\*(:?)\s*$')
 def fix_markdown(md):
     """ALL-CAPS headings (and short bold lines used as headings) in a page's Markdown. Long bold sentences in capitals are kept:
     they are emphasis, such as a warning in a contract."""
-    out = []
+    out, fenced = [], False
     for ln in md.split('\n'):
+        if ln.lstrip().startswith('```'):
+            fenced = not fenced
+        if fenced:
+            out.append(ln); continue   # code is left as it is
         m = HEAD.match(ln)
         if m:
             text = m.group(3)

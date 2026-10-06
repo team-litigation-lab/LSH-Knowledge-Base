@@ -467,7 +467,7 @@
                     ${staff ? `<div class="card"><h3>Reviewer tools</h3><div class="row">
                         ${e.status === 'published' ? `<button class="btn small" data-act="${e.featured ? 'unfeature' : 'feature'}">${e.featured ? 'Unfeature' : '★ Feature'}</button>` : ''}
                         ${adminUser && e.publishedAt ? `<button class="btn small" data-act="official" data-v="${e.official ? '0' : '1'}">${e.official ? 'Remove Official' : '✓ Mark Official'}</button>` : ''}
-                        ${e.status === 'archived' ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : e.publishedAt ? `<button class="btn small" data-act="archive">Remove from library (archive)</button>` : ''}
+                        ${e.status === 'archived' ? (adminUser ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : '') : e.publishedAt ? `<button class="btn small" data-act="archive">Remove from library (archive)</button>` : ''}
                     </div>
                     ${adminUser ? `<div style="margin-top:12px"><b>Delete this article</b>
                         <p class="muted" style="font-size:13px">Removes the article, every version and its files for good. Use Archive instead if you might need it again.</p>
@@ -719,7 +719,7 @@
         const by = (st) => r.entries.filter(e => st.includes(e.status));
         const sec = (title, items, note) => items.length ? `<section class="section"><h2>${title}</h2>${note ? `<p class="muted" style="margin-top:-6px">${note}</p>` : ''}${listHTML(items, { showStatus: true })}</section>` : '';
         view(`<h1>My contributions</h1><p class="muted" style="margin-top:0">Signed in as <b>${esc(S.session.who.name)}</b>${S.session.who.batch ? ' · ' + esc(S.session.who.batch) : ''}. Suggested edits to other entries show in each entry’s history.</p>
-            ${!r.entries.length ? `<div class="card"><p>You haven’t added anything yet.</p><a class="btn accent" href="#/new">+ Add to the library</a></div>` : ''}
+            ${!r.entries.length ? `<div class="card"><p>You haven’t added anything yet.</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
             ${sec('Sent back to you', by(['rejected']), 'A reviewer left a note. Open the entry, make the changes and resend it.')}
             ${sec('Waiting for review', by(['pending']))}
             ${sec('In the library', by(['published']))}

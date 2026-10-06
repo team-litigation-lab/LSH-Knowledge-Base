@@ -88,11 +88,12 @@ const SCHEMA = [
         id INTEGER PRIMARY KEY AUTOINCREMENT, term TEXT NOT NULL, definition TEXT NOT NULL, example TEXT, category TEXT NOT NULL DEFAULT 'General',
         source TEXT, ref TEXT UNIQUE, edited INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS lib_terms_term ON lib_terms (term COLLATE NOCASE)`,
+    `CREATE TABLE IF NOT EXISTS lib_term_gone (ref TEXT PRIMARY KEY)`,   // bundled terms an admin removed: a re-import must not bring them back
     // Glossary changes wait here for approval: a new term, an edit to one, or a request to remove one.
     `CREATE TABLE IF NOT EXISTS lib_term_changes (
         id INTEGER PRIMARY KEY AUTOINCREMENT, term_id INTEGER, action TEXT NOT NULL, term TEXT, definition TEXT, example TEXT, category TEXT,
         status TEXT NOT NULL DEFAULT 'pending', author_name TEXT NOT NULL, author_batch TEXT, author_key TEXT NOT NULL,
-        review_note TEXT, reviewed_by TEXT, reviewed_at TEXT, created_at TEXT NOT NULL)`,
+        review_note TEXT, reviewed_by TEXT, reviewed_at TEXT, created_at TEXT NOT NULL, base TEXT)`,
     `CREATE INDEX IF NOT EXISTS lib_term_changes_status ON lib_term_changes (status, id)`,
     `CREATE TABLE IF NOT EXISTS lib_roles (person_key TEXT PRIMARY KEY, name TEXT NOT NULL, batch TEXT, role TEXT NOT NULL, granted_by TEXT, granted_at TEXT)`,
     `CREATE VIRTUAL TABLE IF NOT EXISTS lib_fts USING fts5(title, summary, body, tags, files, tokenize = 'porter unicode61')`
@@ -154,11 +155,12 @@ export async function getReader(request, env) {
         const version = await getSetting(db, 'code_version');
         if (!version || p.v !== version) return null;   // the code changed since they signed in
     }
-    const key = personKey(p.name, p.batch);
-    const role = await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();
+    let key = personKey(p.name, p.batch);
+    if (key.startsWith('admin|')) key = 'user:' + key;   // only a real admin sign-in gets an 'admin|' key
+    const role = legacy ? null : await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();   // a team code proves nothing about who is typing, so it never carries a role
     const reviewer = !!(role && role.role === 'reviewer'), tenured = !!(role && role.role === 'tenured');
     // Someone who signed in from the Portal has Info Access (view only) unless an admin made them tenured or a reviewer.
-    const contributor = reviewer || tenured || legacy;
+    const contributor = reviewer || tenured;
     return { admin: false, reviewer, staff: reviewer, tenured, contributor, tier: reviewer ? 'reviewer' : (contributor ? 'tenured' : 'info'),
         adminUser: null, who: { name: p.name, batch: p.batch || '', key } };
 }
