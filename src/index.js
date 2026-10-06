@@ -259,7 +259,7 @@ async function getEntry({ db, reader }, id) {
             versions: counts.versions || 0, pendingEdits: reader.staff ? (counts.pending || 0) : undefined, myPendingEdit: myPending ? myPending.id : null },
         stats: { views: st ? st.views : 0, helpful: st ? st.helpful : 0 }, voted,
         comments: (cm || []).map(c => ({ id: c.id, body: c.body, author: c.author_name, batch: c.author_batch || '', staff: !!c.by_admin, status: c.status, createdAt: c.created_at, kind: c.kind || 'comment', done: c.review_note === 'done' })),
-        can: { edit: e.status !== 'archived' && reader.contributor, staff: reader.staff, admin: reader.admin } });
+        can: { edit: e.status !== 'archived' && reader.contributor && (!!e.live_rev || e.author_key === reader.who.key || reader.admin), staff: reader.staff, admin: reader.admin } });
 }
 
 const shapeRev = (r, withData) => ({ id: r.id, entryId: r.entry_id, status: r.status, note: r.note || '', author: r.author_name, batch: r.author_batch || '',
@@ -387,7 +387,7 @@ async function entryAction({ request, db, reader, env }, id) {
         }
         // Anyone else's edit is a suggestion: it waits for approval and replaces their own earlier suggestion.
         await db.prepare(`UPDATE lib_revisions SET status = 'withdrawn' WHERE entry_id = ? AND author_key = ? AND status = 'pending'`).bind(id, reader.who.key).run();
-        await addRevision(db, id, f.data, f.note, reader, 'pending');
+        await addRevision(db, id, { ...f.data, base: e.live_rev || null }, f.note, reader, 'pending');   // base: the live version this was written against
         if (!e.live_rev) {   // their own new entry, fixed after it was sent back
             await db.prepare(`UPDATE lib_entries SET status = 'pending', collection = ?, section = ?, type = ?, title = ?, summary = ?, tags = ?, updated_at = ? WHERE id = ?`)
                 .bind(f.data.collection, f.data.section, f.data.type, f.data.title, f.data.summary, f.data.tags.join(','), now, id).run();
@@ -429,6 +429,7 @@ async function entryAction({ request, db, reader, env }, id) {
         return json({ success: true });
     }
     if (body.action === 'unarchive') {
+        if (!reader.admin) return fail('Only admins can bring an archived entry back.', 403);
         if (!e.live_rev) return fail('This entry was never published, so there is nothing to restore.');
         await db.prepare(`UPDATE lib_entries SET status = 'published', updated_at = ? WHERE id = ?`).bind(now, id).run();
         await reindex(db, id);
@@ -444,9 +445,11 @@ async function entryAction({ request, db, reader, env }, id) {
         return json({ success: true });
     }
     if (body.action === 'restore') {
+        if (!e.live_rev && !reader.admin) return fail('This entry is not live yet. Approve it or send it back from the review queue.', 403);
         const old = await db.prepare(`SELECT * FROM lib_revisions WHERE id = ? AND entry_id = ?`).bind(Number(body.revision), id).first();
         if (!old) return fail('That version no longer exists.', 404);
         const d = JSON.parse(old.data);
+        d.title = fixTitle(d.title); d.base = e.live_rev || null;
         if (!reader.admin) d.official = !!e.official;
         const revId = await addRevision(db, id, d, `Restored the version from ${old.created_at.slice(0, 10)} by ${old.author_name}`, reader, 'pending');
         if (!reader.admin) return json({ success: true, status: 'pending' });   // a restore changes the page, so it needs approval like any other edit
@@ -485,7 +488,12 @@ async function revisionAction({ request, db, reader }, revId) {
     const reviewer = reader.adminUser || reader.who.name, now = nowIso();
     const note = oneLine(body.note, 600);
     if (body.decision === 'approve') {
-        await db.prepare(`UPDATE lib_revisions SET review_note = ? WHERE id = ?`).bind(note || null, revId).run();
+        const d = JSON.parse(r.data);
+        const base = d.base === undefined ? undefined : d.base;
+        if (!reader.admin && base !== undefined && (base || null) !== (e.live_rev || null)) return fail('The page changed after this was suggested. Send it back so the author can redo it on the current version.', 409);
+        d.official = !!e.official;   // an approval never changes Official; only the Official action and admins' own edits do
+        d.title = fixTitle(d.title); delete d.base;
+        await db.prepare(`UPDATE lib_revisions SET review_note = ?, data = ? WHERE id = ?`).bind(note || null, JSON.stringify(d), revId).run();
         await makeLive(db, r.entry_id, revId, { publish: e.status !== 'archived', reviewer });
         await db.prepare(`UPDATE lib_entries SET review_note = NULL, reviewed_by = ?, reviewed_at = ? WHERE id = ?`).bind(reviewer, now, r.entry_id).run();
         return json({ success: true });
@@ -513,7 +521,7 @@ async function comments({ request, db, reader }) {
         if (!e || e.status !== 'published') return fail('Replies are open on published entries only.');
         const text = clean(body.body, 5000);
         if (text.length < 5) return fail('Write a little more before sending.');
-        const status = reader.staff ? 'approved' : 'pending';
+        const status = reader.admin ? 'approved' : 'pending';   // a reviewer's own note waits for another reviewer or an admin
         await db.prepare(`INSERT INTO kb_comments (article_ref, body, author_name, author_batch, author_key, by_admin, status, created_at, ip, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
             .bind(refOf(Number(body.entryId)), text, reader.who.name, reader.who.batch, reader.who.key, reader.staff ? 1 : 0, status, nowIso(), request.headers.get('CF-Connecting-IP') || null, kind).run();
         return json({ success: true, status });
@@ -522,6 +530,11 @@ async function comments({ request, db, reader }) {
         if (!reader.staff) return fail('Reviewer access required.', 403);
         const status = { approve: 'approved', reject: 'rejected', delete: 'deleted', done: 'approved' }[body.decision];
         if (!status) return fail('Unknown decision.');
+        const c = await db.prepare(`SELECT status, author_key FROM kb_comments WHERE id = ?`).bind(Number(body.id)).first();
+        if (!c || c.status === 'deleted') return fail('That note is gone.', 404);
+        if (['approve', 'reject'].includes(body.decision) && c.status !== 'pending') return fail('That note is no longer waiting for review.', 409);
+        if (body.decision === 'done' && c.status !== 'approved') return fail('Approve the note first.', 409);
+        if (body.decision === 'approve' && !reader.admin && c.author_key === reader.who.key) return fail('You can’t approve your own note. Another reviewer or an admin needs to.', 403);
         // 'done': the page has been updated for this comment (it stays shown, marked as done)
         await db.prepare(`UPDATE kb_comments SET status = ?, reviewed_by = ?, reviewed_at = ?, review_note = CASE WHEN ? = 'done' THEN 'done' ELSE review_note END WHERE id = ?`)
             .bind(status, reader.adminUser || reader.who.name, nowIso(), body.decision, Number(body.id)).run();
@@ -690,6 +703,8 @@ async function glossaryAction({ request, db, reader }) {
     const fieldsOf = () => ({ term: oneLine(body.term, 120), definition: clean(body.definition, 4000), example: clean(body.example, 1000), category: oneLine(body.category, 40) || 'General' });
     const apply = async (c) => {   // c: { action, term_id, term, definition, example, category }
         if (c.action === 'delete') {
+            const t = await db.prepare(`SELECT ref FROM lib_terms WHERE id = ?`).bind(c.term_id).first();
+            if (t && t.ref) await db.prepare(`INSERT OR IGNORE INTO lib_term_gone (ref) VALUES (?)`).bind(t.ref).run();
             const r = await db.prepare(`DELETE FROM lib_terms WHERE id = ?`).bind(c.term_id).run();
             return !!r.meta.changes;
         }
@@ -697,6 +712,7 @@ async function glossaryAction({ request, db, reader }) {
             const r = await db.prepare(`UPDATE lib_terms SET term = ?, definition = ?, example = ?, category = ?, edited = 1, updated_at = ? WHERE id = ?`).bind(c.term, c.definition, c.example || '', c.category, now, c.term_id).run();
             return !!r.meta.changes;
         }
+        if (await db.prepare(`SELECT 1 AS x FROM lib_terms WHERE term = ? COLLATE NOCASE AND definition = ?`).bind(c.term, c.definition).first()) return true;   // already there
         await db.prepare(`INSERT INTO lib_terms (term, definition, example, category, source, edited, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)`)
             .bind(c.term, c.definition, c.example || '', c.category, 'Added by ' + (c.author_name || reviewer), now, now).run();
         return true;
@@ -718,11 +734,11 @@ async function glossaryAction({ request, db, reader }) {
         if (!reader.admin && await overLimit(request, db, 'term', 20)) return fail('You’ve sent a lot in a short time. Wait a few minutes and try again.', 429);
         const action = ['add', 'edit', 'delete'].includes(body.change) ? body.change : null;
         if (!action) return fail('Unknown change.');
-        let termId = null, f = { term: '', definition: '', example: '', category: '' };
+        let termId = null, base = null, f = { term: '', definition: '', example: '', category: '' };
         if (action !== 'add') {
             const t = await db.prepare(`SELECT * FROM lib_terms WHERE id = ?`).bind(Number(body.id)).first();
             if (!t) return fail('That term is no longer in the Glossary.', 404);
-            termId = t.id;
+            termId = t.id; base = t.updated_at;
             f = action === 'delete' ? { term: t.term, definition: t.definition, example: t.example || '', category: t.category } : fieldsOf();
         } else f = fieldsOf();
         if (action !== 'delete' && (!f.term || f.definition.length < 3)) return fail('Give the term and its meaning.');
@@ -733,8 +749,8 @@ async function glossaryAction({ request, db, reader }) {
         const mineCount = (await db.prepare(`SELECT COUNT(*) AS n FROM lib_term_changes WHERE author_key = ? AND status = 'pending'`).bind(reader.who.key).first()).n;
         if (mineCount >= 50) return fail('You have 50 suggestions waiting. Wait for them to be reviewed first.', 429);
         const note = oneLine(body.note, 300);
-        await db.prepare(`INSERT INTO lib_term_changes (term_id, action, term, definition, example, category, status, author_name, author_batch, author_key, review_note, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`).bind(termId, action, f.term, f.definition, f.example, f.category, reader.who.name, reader.who.batch, reader.who.key, action === 'delete' ? note : null, now).run();
+        await db.prepare(`INSERT INTO lib_term_changes (term_id, action, term, definition, example, category, status, author_name, author_batch, author_key, review_note, created_at, base)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`).bind(termId, action, f.term, f.definition, f.example, f.category, reader.who.name, reader.who.batch, reader.who.key, action === 'delete' ? note : null, now, base).run();
         return json({ success: true, status: 'pending' });
     }
 
@@ -750,6 +766,10 @@ async function glossaryAction({ request, db, reader }) {
         const note = oneLine(body.note, 600);
         if (body.decision === 'approve') {
             if (!reader.admin && c.author_key === reader.who.key) return fail('You can’t approve your own change. Another reviewer or an admin needs to.', 403);
+            if (c.term_id && !reader.admin) {   // the term changed after this was suggested: the author redoes it on the current wording
+                const cur = await db.prepare(`SELECT updated_at FROM lib_terms WHERE id = ?`).bind(c.term_id).first();
+                if (cur && c.base && cur.updated_at !== c.base) return fail('That term changed after this was suggested. Send it back so the author can redo it.', 409);
+            }
             // Claim it first, so two reviewers can't both apply it.
             const claim = await db.prepare(`UPDATE lib_term_changes SET status = 'approved', review_note = COALESCE(?, review_note), reviewed_by = ?, reviewed_at = ? WHERE id = ? AND status = 'pending'`).bind(note || null, reviewer, now, c.id).run();
             if (!claim.meta.changes) return fail('That suggestion is no longer waiting for review.', 409);
@@ -774,8 +794,10 @@ async function importGlossary(request, env, db) {
     if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no glossary terms to import.' });
     const { terms } = await res.json();
     const now = nowIso();
+    const { results: gone } = await db.prepare(`SELECT ref FROM lib_term_gone`).all();
+    const skip = new Set((gone || []).map(g => g.ref));
     for (let i = 0; i < terms.length; i += 40) {
-        await db.batch(terms.slice(i, i + 40).map(t => db.prepare(`INSERT INTO lib_terms (term, definition, example, category, source, ref, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        await db.batch(terms.slice(i, i + 40).filter(t => !skip.has(t.ref)).map(t => db.prepare(`INSERT INTO lib_terms (term, definition, example, category, source, ref, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(ref) DO UPDATE SET term = excluded.term, definition = excluded.definition, example = excluded.example, category = excluded.category, source = excluded.source, updated_at = excluded.updated_at
             WHERE lib_terms.edited = 0`).bind(t.term, t.definition, t.example || '', t.category, t.source || '', t.ref, now, now)));
     }

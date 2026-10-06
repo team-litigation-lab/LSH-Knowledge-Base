@@ -19,6 +19,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
   - **Only tenured VAs, reviewers and admins can edit.** Info Access readers can read and search, and nothing else (no entries, edits, Glossary changes or notes).
   - **Every edit waits for approval.** A new entry, an edit (to anyone's entry, your own included), a restore of an earlier version, a Glossary term and an "update current info" note are all held until approved. The current version stays up until then.
   - **Only an admin's own edits go live at once.** A reviewer's edits wait too, and nobody can approve their own change: another reviewer or an admin does (the server refuses it; admins are the final authority).
+  - An approval never changes Official, and an edit written against an older version is refused (409) once the page has changed, so it can't overwrite a newer edit or bring back a removed file; the author redoes it. A reviewer's own notes wait too, nobody approves their own note, only admins bring an archived entry back, and a file's search text can't be changed once it is on a page. The old team-code sign-in (`KB_CODE_LOGIN=on`) is Info Access only. A Glossary term an admin removed stays removed when the Glossary is imported again.
   - A reviewer who wants to fix someone else's new entry that isn't live yet approves it or sends it back with a note; only its author or an admin edits it.
   - Admins can make trusted VAs **reviewers**, so admins aren't the bottleneck.
   - Only admins mark entries **Official**, change settings or delete permanently.

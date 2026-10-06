@@ -20,10 +20,10 @@ const ACRONYMS = new Set(('SOP SOPS SOL PI VA VAS LSH TAM HIPAA ERISA MRI CT DUI
     'RFP PDF CPT ICD HMO PPO SSI SSDI CPA IRS DOB SSN PHI POA ASAP ETA OCR EHR EMR ICU DME PT OT PCP OB GYN ENT NP PA MD DC RN LPN EA AI FL CA TX NY NJ GA').split(' '));
 const PROPER = { medicare: 'Medicare', medicaid: 'Medicaid', tricare: 'Tricare', florida: 'Florida', california: 'California', texas: 'Texas', chartswap: 'Chartswap',
     compex: 'Compex', filevine: 'Filevine', clio: 'Clio', american: 'American', americans: 'Americans' };
-const lettersOf = (t) => t.replace(/[^A-Za-z]/g, '');
+const lettersOf = (t) => t.replace(/[^\p{L}]/gu, '');
 export function isAllCaps(t) {
     const L = lettersOf(String(t).replace(/\b[A-Z]{1,3}\b(?=\s*[.)])/g, ''));
-    return L.length >= 4 && (L.replace(/[^A-Z]/g, '').length / L.length) > 0.8;
+    return L.length >= 4 && (L.replace(/[^\p{Lu}]/gu, '').length / L.length) > 0.8;
 }
 export function sentenceCase(t) {
     t = String(t).replace(/\b(I{1,3}|IV|VI{0,3}|IX|X{1,3})\.(?=[A-Za-z])/g, '$1. ');
@@ -40,7 +40,7 @@ export function sentenceCase(t) {
         else if (/^(?:I{1,3}|IV|VI{0,3}|IX|X{1,3})$/.test(core) && core.length > 1 && !first) next = up;
         else { next = core.toLowerCase(); if (first) next = next[0].toUpperCase() + next.slice(1); }
         first = false;
-        return w.replace(core, next);
+        return w.replace(core, () => next);
     }).join(' ');
     return out.replace(/\bunited states\b/gi, 'United States').replace(/\bsocial security\b/gi, 'Social Security');
 }

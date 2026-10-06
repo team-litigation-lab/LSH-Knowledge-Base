@@ -102,6 +102,8 @@ export async function abortUpload(ctx, body) {
 export async function saveFileText(ctx, body) {
     const { f, error } = await ownFile(ctx, body.id);
     if (error) return error;
+    const shown = await ctx.db.prepare(`SELECT 1 AS x FROM lib_entry_files WHERE file_id = ? LIMIT 1`).bind(f.id).first();
+    if (shown && !ctx.reader.admin) return fail('This file is already on a page. Its text changes only through an approved edit.', 403);
     await ctx.db.prepare(`UPDATE lib_files SET text = ? WHERE id = ?`).bind(clean(body.text, 300000), f.id).run();
     // Entries already showing this file pick up the new text in search.
     const { results } = await ctx.db.prepare(`SELECT entry_id FROM lib_entry_files WHERE file_id = ?`).bind(f.id).all();
