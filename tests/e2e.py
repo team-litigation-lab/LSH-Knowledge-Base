@@ -107,7 +107,8 @@ with sync_playwright() as p:
 
     # add an entry with a video, a PDF and a 25 MB file
     v.goto(B + '/#/new?collection=lien'); v.wait_for_selector('#ed')
-    v.select_option('#ed-type', 'Training video')
+    check('lien' in (v.input_value('#ed-col') or '').lower(), 'the editor prefills the collection by name')
+    v.fill('#ed-type', 'Training video')
     v.fill('#ed-sec', 'Day 17 · Lien Negotiator Training')
     v.fill('#ed-title', 'Walkthrough: negotiating a hospital lien')
     v.fill('#ed-sum', 'A recorded session on reducing a hospital lien with the pro rata formula.')
@@ -200,6 +201,20 @@ with sync_playwright() as p:
     check(fetchinfo(v, B + f"/files/{files['video']['id']}/v")['status'] == 200, 'the uploader can still open their own file')
     jpost(a, B + f'/api/entries/{new_id}', {'action': 'unarchive'})
     check(any(x['id'] == new_id for x in jget(v, B + '/api/entries?q=hospital')['entries']), 'restored entry is searchable again')
+
+    # a typed-in collection and type make a new shelf and a new kind
+    r = jpost(a, B + '/api/entries', {'collection': 'Settlement Negotiation', 'type': 'Playbook', 'title': 'Opening settlement talks',
+        'summary': '', 'body': 'How to open settlement talks with an adjuster after the demand goes out.', 'tags': '', 'credits': '', 'files': []})
+    check(r['ok'], 'an entry can be filed under a typed-in collection and type')
+    lib2 = jget(a, B + '/api/library')
+    cnew = next((c for c in lib2['collections'] if c['name'] == 'Settlement Negotiation'), None)
+    check(bool(cnew) and cnew['slug'] == 'settlement-negotiation' and cnew['count'] == 1, 'the typed collection becomes a real shelf')
+    check('Playbook' in lib2['types'], 'the typed type is listed with the usual kinds')
+    r2 = jpost(a, B + '/api/entries', {'collection': 'settlement negotiation', 'type': 'Playbook', 'title': 'Countering a lowball offer',
+        'summary': '', 'body': 'What to send back when the first offer comes in far below the demand.', 'tags': '', 'credits': '', 'files': []})
+    check(r2['ok'], 'the same collection name, in any case, is accepted')
+    shelves = [c for c in jget(a, B + '/api/library')['collections'] if c['slug'] == 'settlement-negotiation']
+    check(len(shelves) == 1 and shelves[0]['count'] == 2, 'no duplicate shelf; both entries file into it')
 
     # screenshots: home, collection, mobile
     a.goto(B + '/'); a.wait_for_selector('.hero'); a.screenshot(path=D + 'kb-home.png', full_page=True)

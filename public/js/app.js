@@ -539,9 +539,9 @@
                 : 'New entries need approval before they appear in the library. You’ll see the status under My contributions.'}${!direct && staff ? ' Another reviewer or an admin has to approve your changes.' : ''}</p>
             <form class="editor card" id="ed" novalidate>
                 <div class="grid2">
-                    <label class="f">Collection<select class="i" id="ed-col" required><option value="">Choose…</option>${S.lib.collections.map(c => `<option value="${c.slug}"${d.collection === c.slug ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+                    <label class="f">Collection <small>(pick one, or type a new one)</small><input class="i" id="ed-col" list="ed-cols" required maxlength="80" placeholder="Choose or type a new collection" value="${esc(d.collection ? colName(d.collection) : '')}"><datalist id="ed-cols">${S.lib.collections.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist></label>
                     <label class="f">Section <small>(optional, e.g. “Day 17 · Lien Negotiator Training”)</small><input class="i" id="ed-sec" list="ed-secs" value="${esc(d.section)}" maxlength="120"><datalist id="ed-secs"></datalist></label>
-                    <label class="f">Type<select class="i" id="ed-type" required><option value="">Choose…</option>${S.lib.types.map(t => `<option${d.type === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+                    <label class="f">Type <small>(pick one, or type your own)</small><input class="i" id="ed-type" list="ed-types" required maxlength="40" placeholder="SOP, Guide, Checklist…" value="${esc(d.type)}"><datalist id="ed-types">${S.lib.types.map(t => `<option value="${esc(t)}">`).join('')}</datalist></label>
                     <label class="f">Tags <small>(comma-separated)</small><input class="i" id="ed-tags" value="${esc(d.tags.join(', '))}" placeholder="medicare, reduction letter"></label>
                 </div>
                 <label class="f">Title<input class="i" id="ed-title" value="${esc(d.title)}" maxlength="200" required placeholder="Say what someone will be able to do"></label>
@@ -601,9 +601,15 @@
         drop.ondrop = (ev) => { ev.preventDefault(); drop.classList.remove('over'); add([...ev.dataTransfer.files]); };
 
         const colSel = document.getElementById('ed-col');
+        // The typed collection: an existing one's slug (matched by name or slug, any case), or '' when it's new.
+        const colSlug = () => {
+            const v = colSel.value.trim().toLowerCase();
+            const c = S.lib.collections.find(x => x.slug === v || x.name.toLowerCase() === v);
+            return c ? c.slug : '';
+        };
         const fillSections = async () => {
-            const dl = document.getElementById('ed-secs');
-            dl.innerHTML = colSel.value ? (await sectionsFor(colSel.value).catch(() => [])).map(x => `<option value="${esc(x)}">`).join('') : '';
+            const dl = document.getElementById('ed-secs'), slug = colSlug();
+            dl.innerHTML = slug ? (await sectionsFor(slug).catch(() => [])).map(x => `<option value="${esc(x)}">`).join('') : '';
         };
         colSel.onchange = fillSections; fillSections();
 
@@ -626,7 +632,8 @@
             save.disabled = true;
             try {
                 const r = e ? await post(`/api/entries/${id}`, { action: 'edit', ...body }) : await post('/api/entries', body);
-                leaveGuard = null; S.lib = null; delete S.sections[body.collection];
+                const slug = colSlug();
+                leaveGuard = null; S.lib = null; delete S.sections[slug || body.collection];
                 toast(r.status === 'pending' ? 'Sent for review. Thanks for adding to the library.' : 'Saved.');
                 location.hash = `#/e/${e ? id : r.id}`;
             } catch (x) { err.textContent = x.message; save.disabled = false; }
