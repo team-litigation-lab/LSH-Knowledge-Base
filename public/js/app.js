@@ -205,7 +205,8 @@
             // Opened from the LSH Training Portal: it hands over a short-lived signed ticket, which signs the trainee in.
             const tk = new URLSearchParams(location.search).get('ticket');
             if (tk) {
-                history.replaceState(null, '', location.pathname + location.hash);
+                // window.history: the plain name is shadowed by the history(id) view below
+                window.history.replaceState(null, '', location.pathname + location.hash);
                 try { await post('/api/session', { action: 'portal-ticket', ticket: tk }); S.session = null; } catch (e) { gateMsg = e.message; }
             }
             if (!S.session) await loadSession();
@@ -249,7 +250,7 @@
     function confirmLeave() {
         // Uploads still running: stay on the editor (the browser's own prompt covers closing the tab).
         toast('Wait for the uploads to finish, or remove them, before leaving this page.', true);
-        history.replaceState(null, '', leaveGuard);
+        window.history.replaceState(null, '', leaveGuard);
         return false;
     }
     window.addEventListener('beforeunload', (e) => { if (leaveGuard) { e.preventDefault(); e.returnValue = ''; } });
