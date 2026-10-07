@@ -87,10 +87,10 @@
         const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
         const here = location.hash.split('?')[0];
         const link = (href, label, extra = '') => `<a href="${href}"${here === href || (href !== '#/' && here.startsWith(href)) ? ' class="on"' : ''}${extra}>${label}</a>`;
-        // Back to the LSH Training Portal's Training Directory, where each program is opened from (same address as the other LSH sites).
-        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/programs.html';
+        // Home: back to the LSH Training Portal's main screen (same address as the other LSH sites).
+        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/';
         nav.innerHTML = [
-            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">🏠 Main Portal</a>`,
+            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal's main screen">🏠 Home</a>`,
             link('#/', 'Library'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
