@@ -76,31 +76,65 @@
     const listHTML = (items, opts) => items.length ? `<div class="list">${items.map(e => itemHTML(e, opts)).join('')}</div>` : '';
 
     /* ---------- session / chrome ---------- */
-    async function loadSession() { S.session = await api('/api/session'); }
+    // "Switch view": an admin can see the Knowledge Base exactly as a trainee (Info Access) sees it.
+    // The real session stays in S.real; the pages read S.session, which is the masked copy while the switch is on.
+    const maskedSession = () => ({ ...S.real, admin: false, reviewer: false, contributor: false, tier: 'info' });
+    async function loadSession() {
+        S.real = await api('/api/session');
+        try { S.vaView = !!S.real.admin && sessionStorage.getItem('kb-va-view') === '1'; } catch (e) { S.vaView = false; }
+        S.session = S.vaView ? maskedSession() : S.real;
+    }
 
     function chrome(on) {
         document.getElementById('top-search').hidden = !on;
-        const nav = document.getElementById('top-nav');
-        nav.hidden = !on;
-        if (!on) return;
-        const s = S.session, q = S.lib && S.lib.queue;
+        const nav = document.getElementById('top-nav'), side = document.getElementById('side');
+        nav.hidden = !on; side.hidden = !on;
+        if (!on) { side.innerHTML = ''; return; }
+        const s = S.session, real = S.real || s, q = S.lib && S.lib.queue;
         const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
-        const here = location.hash.split('?')[0];
-        const link = (href, label, extra = '') => `<a href="${href}"${here === href || (href !== '#/' && here.startsWith(href)) ? ' class="on"' : ''}${extra}>${label}</a>`;
+        const here = location.hash.split('?')[0] || '#/';
         // Back to the LSH Training Portal's Training Directory, where each program is opened from (same address as the other LSH sites).
         const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/programs.html';
         nav.innerHTML = [
-            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">🏠 Main Portal</a>`,
-            link('#/', 'Library'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
-            (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
-            s.admin ? link('#/admin', 'Admin') : '',
-            s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
-            `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Sign out</button>`
+            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">Main Portal</a>`,
+            '<span id="lbp-slot" hidden></span>',   // the 🧭 Blueprint button mounts here
+            (s.admin || s.reviewer) ? `<a href="#/review"${here === '#/review' ? ' class="on"' : ''}>Review${waiting ? `<span class="count">${waiting}</span>` : ''}</a>` : '',
+            s.admin ? `<a href="#/admin"${here === '#/admin' ? ' class="on"' : ''}>Admin</a>` : '',
+            real.admin ? `<button type="button" id="switch-view" aria-pressed="${!!S.vaView}" title="${S.vaView ? 'Back to the admin view' : 'See the Knowledge Base as a trainee sees it'}">${S.vaView ? 'Admin view' : 'Switch view'}</button>` : '',
+            `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Logout</button>`
         ].join('');
-        if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
+        const sideOn = (href) => here === href.split('?')[0] && (!href.includes('?') ? !location.hash.includes('?') : location.hash === href);
+        const sideLink = (href, label) => `<a class="side-btn${sideOn(href) ? ' on' : ''}" href="${href}">${label}</a>`;
+        const tier = real.admin && !S.vaView ? 'Administrator' : s.reviewer ? 'Reviewer' : s.contributor ? 'Tenured contributor' : 'Info Access';
+        const initials = (s.who.name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase();
+        side.innerHTML = [
+            sideLink('#/search', 'Search'),
+            sideLink('#/featured', 'Featured'),
+            sideLink('#/', 'Library'),
+            sideLink('#/glossary', 'Glossary'),
+            sideLink('#/search?type=SOP', 'SOPs'),
+            sideLink('#/videos', 'Videos'),
+            sideLink('#/new', 'Contribute'),
+            `<div class="profile">
+                <b>Contributors Profile</b>
+                <div class="who"><span class="avatar" aria-hidden="true">${esc(initials)}</span>
+                    <span><strong>${esc(s.who.name)}</strong>${s.who.batch ? `<br><small>${esc(s.who.batch)}</small>` : ''}<br><small>${tier}</small></span></div>
+                <a href="#/mine">My contributions</a>
+                <a href="#/people">All contributors</a>
+            </div>`
+        ].join('');
+        if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, into #lbp-slot
+        const sw = document.getElementById('switch-view');
+        if (sw) sw.onclick = () => {
+            S.vaView = !S.vaView;
+            try { S.vaView ? sessionStorage.setItem('kb-va-view', '1') : sessionStorage.removeItem('kb-va-view'); } catch (e) { /* private window */ }
+            S.session = S.vaView ? maskedSession() : S.real;
+            route();
+        };
         document.getElementById('signout').onclick = async () => {
-            await post('/api/session', { action: s.admin ? 'admin-logout' : 'signout' }).catch(() => {});
-            S.session = null; S.lib = null; location.hash = '#/'; route();
+            await post('/api/session', { action: real.admin ? 'admin-logout' : 'signout' }).catch(() => {});
+            try { sessionStorage.removeItem('kb-va-view'); } catch (e) { /* private window */ }
+            S.session = null; S.real = null; S.vaView = false; S.lib = null; location.hash = '#/'; route();
         };
     }
 
@@ -171,7 +205,8 @@
             // Opened from the LSH Training Portal: it hands over a short-lived signed ticket, which signs the trainee in.
             const tk = new URLSearchParams(location.search).get('ticket');
             if (tk) {
-                history.replaceState(null, '', location.pathname + location.hash);
+                // window.history: the plain name is shadowed by the history(id) view below
+                window.history.replaceState(null, '', location.pathname + location.hash);
                 try { await post('/api/session', { action: 'portal-ticket', ticket: tk }); S.session = null; } catch (e) { gateMsg = e.message; }
             }
             if (!S.session) await loadSession();
@@ -196,6 +231,7 @@
                     const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
                     return location.replace('#/e/' + r.id);
                 }
+                case 'featured': return await featuredView();
                 case 'glossary': return await glossaryView(q);
                 case 'v': return await version(id);
                 case 'new': return await editor(null, q);
@@ -214,7 +250,7 @@
     function confirmLeave() {
         // Uploads still running: stay on the editor (the browser's own prompt covers closing the tab).
         toast('Wait for the uploads to finish, or remove them, before leaving this page.', true);
-        history.replaceState(null, '', leaveGuard);
+        window.history.replaceState(null, '', leaveGuard);
         return false;
     }
     window.addEventListener('beforeunload', (e) => { if (leaveGuard) { e.preventDefault(); e.returnValue = ''; } });
@@ -241,7 +277,7 @@
         </section>
         ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
-        ${L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
+        ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
         ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2>
             <span class="row"><label class="sr" for="az-cat">Category</label><select class="i" id="az-cat" style="width:auto;max-width:280px"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
@@ -332,6 +368,14 @@
         sel('s-col', 'collection'); sel('s-type', 'type'); sel('s-sort', 'sort');
     }
 
+    /* ---------- featured ---------- */
+    async function featuredView() {
+        const L = await ensureLib(true);
+        chrome(true); setTitle('Featured');
+        view(`<h1>Featured</h1><p class="muted" style="margin-top:0">The articles the team has starred as front-page reading.</p>
+            ${L.featured.length ? listHTML(L.featured) : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
+    }
+
     /* ---------- glossary (a dictionary of terms) ---------- */
     async function glossaryView(q) {
         const direct = !!S.session.admin, canSuggest = !!S.session.contributor && !direct;   // admins change terms at once; tenured VAs and reviewers suggest changes; Info Access reads
@@ -416,7 +460,8 @@
         const r = await api(`/api/entries/${id}`);
         const e = r.entry, s = S.session, own = e.authorKey === s.who.key;
         setTitle(e.title);
-        const staff = r.can.staff, adminUser = r.can.admin;
+        // In "Switch view" (an admin previewing the trainee view) the staff tools stay hidden.
+        const staff = r.can.staff && (s.admin || s.reviewer), adminUser = r.can.admin && s.admin;
         let banner = '';
         if (e.status === 'pending') banner = `<p class="note">This entry is waiting for review. Until a reviewer approves it, only you and the reviewers can see it.</p>`;
         if (e.status === 'rejected') banner = `<p class="note bad"><b>Sent back:</b> ${esc(e.reviewNote)}${own ? ` <a href="#/e/${id}/edit">Edit and resend</a>` : ''}</p>`;
@@ -457,9 +502,9 @@
                         <dt>Collection</dt><dd><a href="#/c/${e.collection}">${esc(colName(e.collection))}</a></dd>
                         ${e.section ? `<dt>Section</dt><dd>${esc(e.section)}</dd>` : ''}
                         <dt>Added by</dt><dd><a href="#/people/${encodeURIComponent(e.authorKey)}">${esc(e.author)}</a>${e.batch ? ` · ${esc(e.batch)}` : ''}</dd>
-                        <dt>Added</dt><dd>${fmtDate(e.createdAt)}</dd>
-                        <dt>Updated</dt><dd>${fmtDate(e.version.at)} by ${esc(e.version.by)}</dd>
-                        <dt>Versions</dt><dd><a href="#/e/${id}/history">${plural(e.versions, 'version')}</a></dd>
+                        <dt>Date published</dt><dd>${fmtDate(e.publishedAt || e.createdAt)}</dd>
+                        <dt>Last updated</dt><dd>${fmtDate(e.version.at)} by ${esc(e.version.by)}</dd>
+                        <dt>Version</dt><dd><a href="#/e/${id}/history">v${e.versions} · ${plural(e.versions, 'version')}</a></dd>
                     </dl></div>
                     <div class="card row">
                         ${r.can.edit && s.contributor ? `<a class="btn primary" href="#/e/${id}/edit">${editLabel}</a>` : ''}
@@ -467,9 +512,9 @@
                         ${own && e.status === 'pending' && !e.publishedAt ? `<button class="btn danger" data-act="withdraw">Withdraw</button>` : ''}
                     </div>
                     ${staff ? `<div class="card"><h3>Reviewer tools</h3><div class="row">
-                        ${e.status === 'published' ? `<button class="btn small" data-act="${e.featured ? 'unfeature' : 'feature'}">${e.featured ? 'Unfeature' : '★ Feature'}</button>` : ''}
+                        ${e.status === 'published' ? `<button class="btn small" data-act="${e.featured ? 'unfeature' : 'feature'}">${e.featured ? 'Unfeature' : '★ Feature Article'}</button>` : ''}
                         ${adminUser && e.publishedAt ? `<button class="btn small" data-act="official" data-v="${e.official ? '0' : '1'}">${e.official ? 'Remove Official' : '✓ Mark Official'}</button>` : ''}
-                        ${e.status === 'archived' ? (adminUser ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : '') : e.publishedAt ? `<button class="btn small" data-act="archive">Remove from library (archive)</button>` : ''}
+                        ${e.status === 'archived' ? (adminUser ? `<button class="btn small" data-act="unarchive">Restore to the library</button>` : '') : e.publishedAt ? `<button class="btn small" data-act="archive">Mark obsolete (archive)</button>` : ''}
                     </div>
                     ${adminUser ? `<div style="margin-top:12px"><b>Delete this article</b>
                         <p class="muted" style="font-size:13px">Removes the article, every version and its files for good. Use Archive instead if you might need it again.</p>
@@ -541,15 +586,15 @@
                 : 'New entries need approval before they appear in the library. You’ll see the status under My contributions.'}${!direct && staff ? ' Another reviewer or an admin has to approve your changes.' : ''}</p>
             <form class="editor card" id="ed" novalidate>
                 <div class="grid2">
-                    <label class="f">Collection<select class="i" id="ed-col" required><option value="">Choose…</option>${S.lib.collections.map(c => `<option value="${c.slug}"${d.collection === c.slug ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+                    <label class="f">Collection <small>(pick one, or type a new one)</small><input class="i" id="ed-col" list="ed-cols" required maxlength="80" placeholder="Choose or type a new collection" value="${esc(d.collection ? colName(d.collection) : '')}"><datalist id="ed-cols">${S.lib.collections.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist></label>
                     <label class="f">Section <small>(optional, e.g. “Day 17 · Lien Negotiator Training”)</small><input class="i" id="ed-sec" list="ed-secs" value="${esc(d.section)}" maxlength="120"><datalist id="ed-secs"></datalist></label>
-                    <label class="f">Type<select class="i" id="ed-type" required><option value="">Choose…</option>${S.lib.types.map(t => `<option${d.type === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+                    <label class="f">Type <small>(pick one, or type your own)</small><input class="i" id="ed-type" list="ed-types" required maxlength="40" placeholder="SOP, Guide, Checklist…" value="${esc(d.type)}"><datalist id="ed-types">${S.lib.types.map(t => `<option value="${esc(t)}">`).join('')}</datalist></label>
                     <label class="f">Tags <small>(comma-separated)</small><input class="i" id="ed-tags" value="${esc(d.tags.join(', '))}" placeholder="medicare, reduction letter"></label>
                 </div>
                 <label class="f">Title<input class="i" id="ed-title" value="${esc(d.title)}" maxlength="200" required placeholder="Say what someone will be able to do"></label>
                 <label class="f">Summary <small>(one or two sentences shown in lists and search)</small><input class="i" id="ed-sum" value="${esc(d.summary)}" maxlength="500"></label>
                 <div class="f" style="display:grid;gap:5px">
-                    <span style="font-size:13px;font-weight:600;color:var(--navy)">Files and videos <small style="font-weight:400;color:var(--muted)">(PDF, Word, Excel, PowerPoint, images, videos; up to 5 GB each)</small></span>
+                    <span style="font-size:13px;font-weight:600;color:var(--ink)">Files and videos <small style="font-weight:400;color:var(--muted)">(PDF, Word, Excel, PowerPoint, images, videos; up to 5 GB each)</small></span>
                     <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add files">Drop files here, or <u>choose files</u><input type="file" id="ed-file" multiple hidden></div>
                     <div class="up" id="up"></div>
                 </div>
@@ -561,10 +606,10 @@
                         <button type="button" data-f="italic" title="Italic"><i>I</i></button>
                         <button type="button" data-f="underline" title="Underline"><u>U</u></button>
                         <span class="mdbar-sep" aria-hidden="true"></span>
-                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#C0392B;font-weight:700">A</span> Color</button>
+                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#F2A196;font-weight:700">A</span> Color</button>
                         <span class="pal" id="mdbar-pal" hidden>
-                            ${['#C0392B', '#D97706', '#1E8449', '#1D4ED8', '#6D28D9', '#DB2777', '#6B7280', '#000000'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
-                            <input type="color" id="mdbar-custom" value="#C0392B" title="Pick any color">
+                            ${['#F2A196', '#E8913F', '#F3D34A', '#7FC79A', '#7EB3FF', '#C9A2F5', '#A9B1CD', '#FFFFFF'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
+                            <input type="color" id="mdbar-custom" value="#F2A196" title="Pick any color">
                         </span>
                         <span class="mdbar-sep" aria-hidden="true"></span>
                         <button type="button" data-f="link" title="Link to a page or site">🔗 Link</button>
@@ -660,9 +705,15 @@
         };
 
         const colSel = document.getElementById('ed-col');
+        // The typed collection: an existing one's slug (matched by name or slug, any case), or '' when it's new.
+        const colSlug = () => {
+            const v = colSel.value.trim().toLowerCase();
+            const c = S.lib.collections.find(x => x.slug === v || x.name.toLowerCase() === v);
+            return c ? c.slug : '';
+        };
         const fillSections = async () => {
-            const dl = document.getElementById('ed-secs');
-            dl.innerHTML = colSel.value ? (await sectionsFor(colSel.value).catch(() => [])).map(x => `<option value="${esc(x)}">`).join('') : '';
+            const dl = document.getElementById('ed-secs'), slug = colSlug();
+            dl.innerHTML = slug ? (await sectionsFor(slug).catch(() => [])).map(x => `<option value="${esc(x)}">`).join('') : '';
         };
         colSel.onchange = fillSections; fillSections();
 
@@ -686,7 +737,8 @@
             save.disabled = true;
             try {
                 const r = e ? await post(`/api/entries/${id}`, { action: 'edit', ...body }) : await post('/api/entries', body);
-                leaveGuard = null; S.lib = null; delete S.sections[body.collection];
+                const slug = colSlug();
+                leaveGuard = null; S.lib = null; delete S.sections[slug || body.collection];
                 toast(r.status === 'pending' ? 'Sent for review. Thanks for adding to the library.' : 'Saved.');
                 location.hash = `#/e/${e ? id : r.id}`;
             } catch (x) { err.textContent = x.message; save.disabled = false; }

@@ -182,7 +182,10 @@ async function library({ db, reader }) {
         const t = await db.prepare(`SELECT COUNT(*) AS n FROM lib_term_changes WHERE status = 'pending'`).first();
         queue = { revisions: a.n, comments: c.n, terms: t.n };
     }
-    return json({ success: true, types: TYPES,
+    // The usual kinds first, then any type someone wrote themselves, so the filters list them all.
+    const { results: tps } = await db.prepare(`SELECT DISTINCT type FROM lib_entries WHERE status = 'published' AND type != ''`).all();
+    const extraTypes = (tps || []).map(t => t.type).filter(t => !TYPES.some(k => k.toLowerCase() === String(t).toLowerCase())).sort();
+    return json({ success: true, types: [...TYPES, ...extraTypes],
         collections: (cols || []).map(c => ({ slug: c.slug, name: c.name, blurb: c.blurb || '', count: c.n || 0, videos: c.videos || 0 })),
         featured, recent, videos, popular,
         totals: { entries: totals.entries || 0, videos: totals.videos || 0, files: totals.files || 0, people: totals.people || 0 },
@@ -312,10 +315,24 @@ async function people({ db }) {
    WRITING ENTRIES
    ===================================================================== */
 async function fields(db, body, reader, current) {
-    const col = await db.prepare(`SELECT slug FROM lib_collections WHERE slug = ? AND archived = 0`).bind(String(body.collection || '')).first();
-    if (!col) return { error: 'Choose where this belongs in the library.' };
-    const type = TYPES.includes(body.type) ? body.type : null;
-    if (!type) return { error: 'Choose what kind of entry this is.' };
+    // The collection, by slug or name (the editor sends what was typed); a name no shelf has yet makes a new one.
+    const colIn = oneLine(body.collection, 80);
+    if (colIn.length < 2) return { error: 'Choose where this belongs in the library, or type a new collection.' };
+    let col = await db.prepare(`SELECT slug, archived FROM lib_collections WHERE slug = ? OR slug = ? OR lower(name) = lower(?)`)
+        .bind(colIn, slugOf(colIn), colIn).first();
+    if (!col) {
+        const slug = slugOf(colIn);
+        const top = await db.prepare(`SELECT COALESCE(MAX(sort), 0) + 10 AS s FROM lib_collections`).first();
+        await db.prepare(`INSERT INTO lib_collections (slug, name, blurb, sort, archived, created_at) VALUES (?, ?, '', ?, 0, ?)
+            ON CONFLICT(slug) DO NOTHING`).bind(slug, colIn, top.s, nowIso()).run();
+        col = { slug, archived: 0 };
+    } else if (col.archived) {   // writing into an archived shelf brings it back
+        await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug = ?`).bind(col.slug).run();
+    }
+    // The type: one of the usual kinds (any case), or whatever was typed.
+    const typeIn = oneLine(body.type, 40);
+    if (typeIn.length < 2) return { error: 'Say what kind of entry this is (SOP, Guide, Checklist…), or type your own.' };
+    const type = TYPES.find(t => t.toLowerCase() === typeIn.toLowerCase()) || typeIn;
     const title = fixTitle(oneLine(body.title, 200));   // an ALL-CAPS title is saved in sentence case
     if (title.length < 5) return { error: 'Give it a title of at least 5 characters.' };
     const text = clean(body.body, 100000);
