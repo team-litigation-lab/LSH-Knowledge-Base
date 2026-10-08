@@ -86,7 +86,6 @@
     }
 
     function chrome(on) {
-        document.getElementById('top-search').hidden = !on;
         const nav = document.getElementById('top-nav'), side = document.getElementById('side');
         nav.hidden = !on; side.hidden = !on;
         if (!on) { side.innerHTML = ''; return; }
@@ -216,7 +215,6 @@
         try {
             await ensureLib();
             chrome(true);
-            document.getElementById('top-q').value = parts[0] === 'search' ? (q.get('q') || '') : '';
             const id = Number(parts[1]);
             switch (parts[0]) {
                 case undefined: return await home();
@@ -254,11 +252,6 @@
         return false;
     }
     window.addEventListener('beforeunload', (e) => { if (leaveGuard) { e.preventDefault(); e.returnValue = ''; } });
-    document.getElementById('top-search').onsubmit = (ev) => {
-        ev.preventDefault();
-        const v = document.getElementById('top-q').value.trim();
-        location.hash = '#/search?q=' + encodeURIComponent(v);
-    };
 
     /* ---------- home ---------- */
     async function home() {
@@ -350,6 +343,9 @@
         const pages = Math.ceil(r.total / r.pageSize);
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><span>${videos ? 'Videos' : 'Search'}</span></div>
             <h1>${esc(title)}</h1>
+            <form class="page-search" id="s-form" role="search"><label class="sr" for="s-q">Search the library</label>
+                <input class="i" id="s-q" type="search" placeholder="${videos ? 'Search the training videos…' : 'Search SOPs, videos, guides…'}" value="${esc(q.get('q') || '')}" autocomplete="off">
+                <button class="btn primary" type="submit">Search</button></form>
             ${gloss.length ? `<section class="card" style="margin-bottom:14px"><b>In the glossary</b>${gloss.map(t => `<p style="margin:6px 0 0"><a href="#/glossary?q=${encodeURIComponent(t.term)}"><b>${esc(t.term)}</b></a> · ${esc(t.definition.length > 160 ? t.definition.slice(0, 157) + '…' : t.definition)}</p>`).join('')}</section>` : ''}
             <div class="filters">
                 ${videos ? '' : `<a class="chip" aria-pressed="${q.get('video') === '1'}" href="${link('video', '1')}">Videos</a>`}
@@ -366,6 +362,10 @@
             ${pages > 1 ? `<div class="pager">${r.page > 1 ? `<a class="btn small" href="${link('page', String(r.page - 1))}">← Previous</a>` : ''}<span class="muted">Page ${r.page} of ${pages}</span>${r.page < pages ? `<a class="btn small" href="${link('page', String(r.page + 1))}">Next →</a>` : ''}</div>` : ''}`);
         const sel = (id, k) => { const el = document.getElementById(id); if (el) el.onchange = () => { location.hash = link(k, el.value || null); }; };
         sel('s-col', 'collection'); sel('s-type', 'type'); sel('s-sort', 'sort');
+        document.getElementById('s-form').onsubmit = (ev) => {
+            ev.preventDefault();
+            location.hash = link('q', document.getElementById('s-q').value.trim() || null);
+        };
     }
 
     /* ---------- featured ---------- */
