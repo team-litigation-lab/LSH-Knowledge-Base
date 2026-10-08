@@ -15,8 +15,8 @@
 <header class="top">
   <div class="top-in">
     <a class="brand" href="#/">
-      <img src="/favicon.png" alt="" width="36" height="36">
-      <span><b>LSH Knowledge Base</b><small>LSH Community Library</small></span>
+      <img src="/favicon.png" alt="" width="40" height="40">
+      <span><b>Legal Support Help Knowledge Base</b><small>LSH Community Library</small></span>
     </a>
     <form class="top-search" id="top-search" role="search" hidden>
       <label class="sr" for="top-q">Search the library</label>
@@ -25,9 +25,12 @@
     <nav class="top-nav" id="top-nav" hidden></nav>
   </div>
 </header>
-<main id="app" class="wrap" aria-live="polite">
-  <p class="muted pad">Loading the library…</p>
-</main>
+<div class="shell">
+  <aside class="side-nav" id="side" aria-label="Knowledge Base sections" hidden></aside>
+  <main id="app" aria-live="polite">
+    <p class="muted pad">Loading the library…</p>
+  </main>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="/js/md.js"></script>
 <script src="/js/upload.js"></script>

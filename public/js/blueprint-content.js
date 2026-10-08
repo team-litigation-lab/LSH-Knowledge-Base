@@ -133,7 +133,7 @@
     // admins get both decks; everyone signed in (VAs and reviewers) the VA deck
     role: () => { const s = window.KB_SESSION && window.KB_SESSION(); return !s || !s.unlocked ? null : s.admin ? 'trainer' : 'trainee'; },
     version,
-    // in the top bar, before Sign out (app.js draws the bar again on every page and calls LSHBlueprint.refresh())
-    mount: (html) => { const out = document.getElementById('signout'); if (out) out.insertAdjacentHTML('beforebegin', html); }
+    // in the top bar, at the #lbp-slot marker after Main Portal (app.js draws the bar again on every page and calls LSHBlueprint.refresh())
+    mount: (html) => { const out = document.getElementById('lbp-slot') || document.getElementById('signout'); if (out) out.insertAdjacentHTML('beforebegin', html); }
   };
 })();

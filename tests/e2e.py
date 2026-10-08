@@ -1,13 +1,35 @@
-import base64, hashlib, json, re, sys
+import base64, hashlib, json, re, sys, threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
 
 import os, tempfile
 # End-to-end test against `npm run dev` with the seeds in tests/ (see README).
+# The Worker must be started with PORTAL_URL=http://127.0.0.1:8789 (and KB_CODE_LOGIN:on): VAs sign in
+# through the Portal (single sign-on), and the mock Portal below answers /api/verify-ticket for them.
 #   pip install playwright; npm pack pdfjs-dist@3.11.174 and unpack it to tests/.cache/pdfjs (for PDF text)
 HERE = os.path.dirname(os.path.abspath(__file__)) + '/'
 D = tempfile.mkdtemp() + '/'
 CHROME = os.environ.get('CHROME')  # optional path to a Chromium binary
 B = 'http://127.0.0.1:8787'
+
+# ---- a mock LSH Training Portal: a ticket is base64 JSON {first, last, batch}, and verify-ticket trusts it ----
+class MockPortal(BaseHTTPRequestHandler):
+    def do_POST(self):
+        body = {}
+        try: body = json.loads(self.rfile.read(int(self.headers.get('content-length') or 0)) or b'{}')
+        except Exception: pass
+        if self.path == '/api/verify-ticket':
+            try: out, code = {'ok': True, **json.loads(base64.urlsafe_b64decode(body.get('ticket', '')))}, 200
+            except Exception: out, code = {'ok': False, 'code': 'signature'}, 401
+        else:
+            out, code = {}, 404
+        data = json.dumps(out).encode()
+        self.send_response(code); self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(data))); self.end_headers(); self.wfile.write(data)
+    def log_message(self, *a): pass
+threading.Thread(target=HTTPServer(('127.0.0.1', 8789), MockPortal).serve_forever, daemon=True).start()
+def ticket(first, last, batch=''):
+    return base64.urlsafe_b64encode(json.dumps({'first': first, 'last': last, 'batch': batch}).encode()).decode()
 ok = []
 def check(cond, label):
     ok.append((bool(cond), label))
@@ -78,6 +100,8 @@ with sync_playwright() as p:
     a.fill('#code', 'lsh-team-2026'); a.click('#code-form button'); a.wait_for_timeout(700)
     a.fill('#rev-name', 'Kim Lee'); a.fill('#rev-batch', 'Batch 10'); a.select_option('#rev-role', 'reviewer'); a.click('#rev-form button'); a.wait_for_timeout(700)
     check('Kim Lee' in a.inner_text('#app'), 'reviewer added')
+    a.fill('#rev-name', 'Jo Cruz'); a.fill('#rev-batch', 'Batch 11'); a.select_option('#rev-role', 'tenured'); a.click('#rev-form button'); a.wait_for_timeout(700)
+    check('Jo Cruz' in a.inner_text('#app'), 'tenured access given to Jo Cruz')
     a.click('#import'); a.wait_for_function("document.getElementById('import-status').textContent.includes('Done')", timeout=20000)
     check('Imported 3' in a.inner_text('#import-status'), 'old Knowledge Base posts imported (3)')
     a.click('#import'); a.wait_for_timeout(1200)
@@ -105,9 +129,15 @@ with sync_playwright() as p:
     check('Review' not in v.inner_text('#top-nav'), 'a VA has no review tab')
     check('waiting for review' in v.inner_text('#app'), 'VA sees their imported pending post on the home page')
 
+    # the team code gives Info Access only; Jo's tenured access applies once she signs in through the Portal
+    v.goto(B + '/#/new'); v.wait_for_timeout(600)
+    check('Info Access is view-only' in v.inner_text('#app'), 'a team-code session has Info Access only')
+    v.goto(B + '/?ticket=' + ticket('Jo', 'Cruz', 'Batch 11')); v.wait_for_selector('.hero')
+
     # add an entry with a video, a PDF and a 25 MB file
     v.goto(B + '/#/new?collection=lien'); v.wait_for_selector('#ed')
-    v.select_option('#ed-type', 'Training video')
+    check('lien' in (v.input_value('#ed-col') or '').lower(), 'the editor prefills the collection by name')
+    v.fill('#ed-type', 'Training video')
     v.fill('#ed-sec', 'Day 17 · Lien Negotiator Training')
     v.fill('#ed-title', 'Walkthrough: negotiating a hospital lien')
     v.fill('#ed-sum', 'A recorded session on reducing a hospital lien with the pro rata formula.')
@@ -123,9 +153,9 @@ with sync_playwright() as p:
     new_id = int(re.search(r'#/e/(\d+)', v.url).group(1))
     check(v.evaluate("document.querySelector('video') && document.querySelector('video').src.includes('/files/')"), 'the author can play their own pending video')
 
-    # other VA can't see it yet
-    O = br.new_context(); o = O.new_page(); o.goto(B + '/'); o.wait_for_selector('#f-va')
-    o.fill('#g-name', 'Kim Lee'); o.fill('#g-batch', 'Batch 10'); o.fill('#g-code', 'lsh-team-2026'); o.click('#f-va button[type=submit]'); o.wait_for_selector('.hero')
+    # other VA can't see it yet (Kim signs in through the Portal, so her reviewer role applies)
+    O = br.new_context(); o = O.new_page()
+    o.goto(B + '/?ticket=' + ticket('Kim', 'Lee', 'Batch 10')); o.wait_for_selector('.hero')
     check('Review' in o.inner_text('#top-nav'), 'the reviewer VA sees the review tab')
 
     # suggest an edit on the imported Medicare post
@@ -200,6 +230,20 @@ with sync_playwright() as p:
     check(fetchinfo(v, B + f"/files/{files['video']['id']}/v")['status'] == 200, 'the uploader can still open their own file')
     jpost(a, B + f'/api/entries/{new_id}', {'action': 'unarchive'})
     check(any(x['id'] == new_id for x in jget(v, B + '/api/entries?q=hospital')['entries']), 'restored entry is searchable again')
+
+    # a typed-in collection and type make a new shelf and a new kind
+    r = jpost(a, B + '/api/entries', {'collection': 'Settlement Negotiation', 'type': 'Playbook', 'title': 'Opening settlement talks',
+        'summary': '', 'body': 'How to open settlement talks with an adjuster after the demand goes out.', 'tags': '', 'credits': '', 'files': []})
+    check(r['ok'], 'an entry can be filed under a typed-in collection and type')
+    lib2 = jget(a, B + '/api/library')
+    cnew = next((c for c in lib2['collections'] if c['name'] == 'Settlement Negotiation'), None)
+    check(bool(cnew) and cnew['slug'] == 'settlement-negotiation' and cnew['count'] == 1, 'the typed collection becomes a real shelf')
+    check('Playbook' in lib2['types'], 'the typed type is listed with the usual kinds')
+    r2 = jpost(a, B + '/api/entries', {'collection': 'settlement negotiation', 'type': 'Playbook', 'title': 'Countering a lowball offer',
+        'summary': '', 'body': 'What to send back when the first offer comes in far below the demand.', 'tags': '', 'credits': '', 'files': []})
+    check(r2['ok'], 'the same collection name, in any case, is accepted')
+    shelves = [c for c in jget(a, B + '/api/library')['collections'] if c['slug'] == 'settlement-negotiation']
+    check(len(shelves) == 1 and shelves[0]['count'] == 2, 'no duplicate shelf; both entries file into it')
 
     # screenshots: home, collection, mobile
     a.goto(B + '/'); a.wait_for_selector('.hero'); a.screenshot(path=D + 'kb-home.png', full_page=True)
