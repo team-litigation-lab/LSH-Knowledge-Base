@@ -94,7 +94,7 @@
         const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
         const here = location.hash.split('?')[0] || '#/';
         // Home: back to the LSH Training Portal's main screen (same address as the other LSH sites).
-        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/';
+        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/index.html?stay=1';
         nav.innerHTML = [
             `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal's main screen">🏠 Home</a>`,
             '<span id="lbp-slot" hidden></span>',   // the 🧭 Blueprint button mounts here
