@@ -32,7 +32,9 @@ h3{font-size:16px;margin:0 0 6px;}
 .top{background:var(--navy-deep);color:#fff;position:sticky;top:0;z-index:20;box-shadow:0 1px 0 rgba(255,255,255,.06);}
 .top-in{max-width:1600px;margin:0 auto;padding-inline:20px;padding-block:10px;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;flex:0 0 auto;}
-.brand img{border-radius:0;background:#fff;padding:3px;object-fit:contain;}
+/* the standard LSH logo, the full mark with its wordmark; the white tile keeps the
+   navy wordmark legible on the navy bar */
+.brand img{height:40px;width:auto;background:#fff;padding:4px 8px;border-radius:8px;object-fit:contain;flex:none;}
 .brand b{display:block;font-size:16px;letter-spacing:.01em;}
 .brand small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#aab6cf;}
 .page-search{display:flex;gap:8px;margin:4px 0 12px;max-width:560px;}
