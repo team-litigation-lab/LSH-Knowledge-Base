@@ -1,8 +1,11 @@
 // Safe Markdown for the Knowledge Base (entries, replies and version previews).
 // Everything is HTML-escaped first; only this small set of formatting is turned
 // back into markup, so nothing a VA types can run as code on the page:
-//   # / ## / ### headings, **bold**, *italic* / _italic_, `code`, [text](https://…),
-//   ```fenced code```, ![image](/img/<id>) (only images the library has copied), - / * / 1. lists, - [ ] / - [x] checklists, > quotes, --- rules, | pipe | tables |
+//   # / ## / ### headings, **bold**, *italic* / _italic_, ++underline++,
+//   {color:#D33}colored text{/color} (a #hex code or a CSS color name), `code`, [text](https://…),
+//   ```fenced code```, ![image](/img/<id>) (images the library has copied) and
+//   ![photo](/files/<id>/<name>) (photos uploaded to the library), - / * / 1. lists,
+//   - [ ] / - [x] checklists, > quotes, --- rules, | pipe | tables |
 (function () {
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -11,9 +14,15 @@
         const code = [];
         s = s.replace(/`([^`\n]+)`/g, (_, c) => { code.push(c); return `\u0000${code.length - 1}\u0000`; });
         s = s.replace(/!\[([^\]\n]*)\]\((\/img\/[0-9a-f]{16})\)/g, (_, t, u) => `<img class="md-img" loading="lazy" src="${u}" alt="${t}">`);
+        // Photos uploaded to the library: the editor's 🖼️ Photo button writes ![name](/files/<id>/<name>).
+        s = s.replace(/!\[([^\]\n]*)\]\((\/files\/[0-9a-f-]{36}\/[^\s)]+)\)/g, (_, t, u) => `<img class="md-img" loading="lazy" src="${u}" alt="${t}">`);
         s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+|\/[^\s)]*)\)/g, (_, t, u) =>
             `<a href="${u}"${/^https?:/.test(u) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t}</a>`);
         s = s.replace(/(^|[\s(])(https:\/\/[^\s<)]*[^\s<).,;:!?'&])/g, (_, p, u) => `${p}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+        // Colored text: {color:#D33}…{/color} with a 3- or 6-digit hex code, or a plain color name (letters only,
+        // so nothing can escape the style attribute). An unknown name simply isn't colored by the browser.
+        s = s.replace(/\{color:(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})|[a-zA-Z]{3,20})\}([^\n{]+)\{\/color\}/g, '<span style="color:$1">$2</span>');
+        s = s.replace(/\+\+([^+\n]+)\+\+/g, '<u>$1</u>');
         s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
         s = s.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<em>$2</em>');
         s = s.replace(/(^|[^\w])_([^_\n]+)_(?!\w)/g, '$1<em>$2</em>');
@@ -85,7 +94,8 @@
 
     // Plain text for search and snippets.
     function plain(md) {
-        return String(md || '').replace(/`/g, '').replace(/\[( |x|X)\]\s*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^[#>\s-]+|\*\*|__|\|/gm, ' ').replace(/\s+/g, ' ').trim();
+        return String(md || '').replace(/`/g, '').replace(/\{color:[^}\n]{1,24}\}/g, '').replace(/\{\/color\}/g, '')
+            .replace(/\+\+/g, '').replace(/\[( |x|X)\]\s*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^[#>\s-]+|\*\*|__|\|/gm, ' ').replace(/\s+/g, ' ').trim();
     }
 
     window.KBmd = { render, plain, esc };

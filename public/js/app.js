@@ -440,9 +440,11 @@
     }
 
     /* ---------- entry ---------- */
-    function mediaHTML(files) {
+    function mediaHTML(files, body) {
         if (!files.length) return '';
-        const videos = files.filter(f => f.kind === 'video'), pdfs = files.filter(f => f.kind === 'pdf'), images = files.filter(f => f.kind === 'image');
+        // A photo placed in the text with the editor's 🖼️ Photo button shows where it was placed, not again up here.
+        const inBody = (f) => String(body || '').includes(`/files/${f.id}/`);
+        const videos = files.filter(f => f.kind === 'video'), pdfs = files.filter(f => f.kind === 'pdf'), images = files.filter(f => f.kind === 'image' && !inBody(f));
         const rest = files.filter(f => !['video', 'pdf', 'image'].includes(f.kind));
         return `<div class="media">
             ${videos.map(f => `<figure class="player" style="margin:0"><video controls preload="metadata" playsinline src="${fileUrl(f)}"></video>
@@ -477,7 +479,7 @@
                         <h1>${esc(e.title)}</h1>
                         ${e.summary ? `<p class="lead">${esc(e.summary)}</p>` : ''}
                     </header>
-                    ${mediaHTML(e.files)}
+                    ${mediaHTML(e.files, e.body)}
                     <div class="md">${window.KBmd.render(e.body)}</div>
                     ${e.tags.filter(t => t !== 'from-tettra').length ? `<div class="tags" style="margin-top:18px">${e.tags.filter(t => t !== 'from-tettra').map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
@@ -599,7 +601,22 @@
                 <div>
                     <div class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-t="write">Write</button><button type="button" role="tab" aria-selected="false" data-t="preview">Preview</button></div>
                     <label class="sr" for="ed-body">Content</label>
-                    <textarea class="i" id="ed-body" rows="16" placeholder="Steps, examples and the pitfalls you ran into. Formatting: # heading, **bold**, - list, - [ ] checklist, | table |">${esc(d.body)}</textarea>
+                    <div class="mdbar" id="mdbar" role="toolbar" aria-label="Formatting">
+                        <button type="button" data-f="bold" title="Bold (select text first)"><b>B</b></button>
+                        <button type="button" data-f="italic" title="Italic"><i>I</i></button>
+                        <button type="button" data-f="underline" title="Underline"><u>U</u></button>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#F2A196;font-weight:700">A</span> Color</button>
+                        <span class="pal" id="mdbar-pal" hidden>
+                            ${['#F2A196', '#E8913F', '#F3D34A', '#7FC79A', '#7EB3FF', '#C9A2F5', '#A9B1CD', '#FFFFFF'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
+                            <input type="color" id="mdbar-custom" value="#F2A196" title="Pick any color">
+                        </span>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" data-f="link" title="Link to a page or site">🔗 Link</button>
+                        <button type="button" data-f="photo" title="Put a photo here in the text">🖼️ Photo</button>
+                        <input type="file" id="mdbar-photo" accept="image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp" hidden>
+                    </div>
+                    <textarea class="i" id="ed-body" rows="16" placeholder="Steps, examples and the pitfalls you ran into. Use the buttons above, or type: # heading, **bold**, *italic*, ++underline++, - list, - [ ] checklist, | table |">${esc(d.body)}</textarea>
                     <div class="preview md" id="ed-prev" hidden></div>
                 </div>
                 <label class="f">Credits <small>(teammates who helped, comma-separated)</small><input class="i" id="ed-cred" value="${esc(d.credits.join(', '))}"></label>
@@ -627,13 +644,13 @@
             leaveGuard = busy ? here : null;
         }
         paint();
-        async function add(list) {
+        async function add(list, onReady) {
             for (const file of list) {
                 const kind = guessKind(file.name);
                 const f = { name: file.name, size: file.size, kind, state: 'uploading', progress: 0, ctl: new AbortController() };
                 files.push(f); paint();
                 window.KBUpload.upload(file, { signal: f.ctl.signal, onProgress: (p) => { f.progress = p; paint(); } })
-                    .then(meta => { Object.assign(f, meta, { state: 'ready' }); delete f.ctl; paint(); })
+                    .then(meta => { Object.assign(f, meta, { state: 'ready' }); delete f.ctl; paint(); if (onReady && files.includes(f)) onReady(f); })
                     .catch(err => { if (files.includes(f)) { f.state = 'error'; f.error = err.message; paint(); } });
             }
         }
@@ -644,6 +661,48 @@
         drop.ondragover = (ev) => { ev.preventDefault(); drop.classList.add('over'); };
         drop.ondragleave = () => drop.classList.remove('over');
         drop.ondrop = (ev) => { ev.preventDefault(); drop.classList.remove('over'); add([...ev.dataTransfer.files]); };
+
+        // The formatting toolbar: it writes the markup around whatever is selected, so the Preview shows exactly what readers get.
+        const ta = document.getElementById('ed-body');
+        function wrapSel(before, after, fallback) {
+            const s = ta.selectionStart || 0, e2 = ta.selectionEnd || 0;
+            const sel = ta.value.slice(s, e2) || fallback;
+            ta.setRangeText(before + sel + after, s, e2);
+            ta.focus();
+            ta.setSelectionRange(s + before.length, s + before.length + sel.length);
+        }
+        const insertAt = (text) => { const s = ta.selectionStart || ta.value.length; ta.setRangeText(text, s, ta.selectionEnd || s, 'end'); ta.focus(); };
+        const pal = document.getElementById('mdbar-pal'), colorBtn = document.getElementById('mdbar-color');
+        colorBtn.onclick = () => { pal.hidden = !pal.hidden; colorBtn.setAttribute('aria-expanded', String(!pal.hidden)); };
+        const applyColor = (c) => { pal.hidden = true; colorBtn.setAttribute('aria-expanded', 'false'); wrapSel(`{color:${c}}`, '{/color}', 'colored text'); };
+        pal.querySelectorAll('[data-c]').forEach(b => b.onclick = () => applyColor(b.dataset.c));
+        document.getElementById('mdbar-custom').onchange = (ev) => applyColor(ev.target.value);
+        const photoInput = document.getElementById('mdbar-photo');
+        document.getElementById('mdbar').addEventListener('click', (ev) => {
+            const b = ev.target.closest('[data-f]');
+            if (!b) return;
+            if (b.dataset.f === 'bold') wrapSel('**', '**', 'bold text');
+            if (b.dataset.f === 'italic') wrapSel('*', '*', 'italic text');
+            if (b.dataset.f === 'underline') wrapSel('++', '++', 'underlined text');
+            if (b.dataset.f === 'link') {
+                const url = (prompt('Where should the link go? (https://… , or a path like /files/…)') || '').trim();
+                if (!url) return;
+                if (!/^(https?:\/\/|mailto:|\/)/i.test(url)) { toast('A link has to start with https://, mailto: or /.', true); return; }
+                wrapSel('[', `](${url})`, 'link text');
+            }
+            if (b.dataset.f === 'photo') photoInput.click();
+        });
+        photoInput.onchange = () => {
+            const picked = [...photoInput.files];
+            photoInput.value = '';
+            if (!picked.length) return;
+            if (picked.some(f => guessKind(f.name) !== 'image')) { toast('Photos only here: PNG, JPG, GIF or WebP. Other files go in the Files box above.', true); return; }
+            toast('Uploading the photo… it drops into the text when it’s done.');
+            add(picked, (f) => {
+                const src = encodeURIComponent(f.name).replace(/\(/g, '%28').replace(/\)/g, '%29');   // parens would end the markdown link early
+                insertAt(`\n![${f.name.replace(/[\[\]]/g, '')}](/files/${f.id}/${src})\n`); toast('Photo added to the text.');
+            });
+        };
 
         const colSel = document.getElementById('ed-col');
         // The typed collection: an existing one's slug (matched by name or slug, any case), or '' when it's new.
@@ -662,6 +721,7 @@
             app.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
             const prev = b.dataset.t === 'preview';
             document.getElementById('ed-body').hidden = prev;
+            document.getElementById('mdbar').hidden = prev;
             const pv = document.getElementById('ed-prev');
             pv.hidden = !prev;
             if (prev) pv.innerHTML = window.KBmd.render(val('ed-body')) || '<p class="muted">Nothing to preview yet.</p>';
@@ -718,10 +778,90 @@
         while (j < m) out.push({ t: 'add', s: B[j++] });
         return out;
     }
+    // The exact words that changed inside a line: the old line with the removed words struck,
+    // the new line with the added words highlighted. Null when the two lines share too little
+    // (then the plain removed/added lines read better than a sea of marks).
+    function diffWordsHTML(a, b) {
+        const A = String(a).split(/(\s+)/).filter(Boolean), B = String(b).split(/(\s+)/).filter(Boolean);
+        if (!A.length || !B.length || A.length * B.length > 250000) return null;
+        const n = A.length, m = B.length, dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+        for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        const delM = new Array(n).fill(false), addM = new Array(m).fill(false);
+        let i = 0, j = 0;
+        while (i < n && j < m) {
+            if (A[i] === B[j]) { i++; j++; }
+            else if (dp[i + 1][j] >= dp[i][j + 1]) delM[i++] = true;
+            else addM[j++] = true;
+        }
+        while (i < n) delM[i++] = true;
+        while (j < m) addM[j++] = true;
+        if (delM.filter(Boolean).length + addM.filter(Boolean).length > (n + m) * 0.6) return null;
+        const mark = (toks, marks, tag) => {
+            let html = '', run = [], on = null;
+            const flush = () => { if (run.length) { const t = esc(run.join('')); html += on ? `<${tag}>${t}</${tag}>` : t; run = []; } };
+            toks.forEach((tk, k) => { if (marks[k] !== on) { flush(); on = marks[k]; } run.push(tk); });
+            flush();
+            return html;
+        };
+        return { del: mark(A, delM, 'del'), add: mark(B, addM, 'ins') };
+    }
+
+    // The content diff, line by line, with three things on top of the raw lines:
+    //   · a removed line followed by its replacement is compared word by word, so the exact edit shows;
+    //   · nothing is struck through whole — only the words that actually went away;
+    //   · long unchanged stretches fold away behind a "show" line, so the edits stand out.
+    function diffHTML(a, b) {
+        const lines = diffLines(a, b);
+        const blocks = [];
+        let k = 0;
+        while (k < lines.length) {
+            if (lines[k].t === 'same') {
+                const run = [];
+                while (k < lines.length && lines[k].t === 'same') run.push(lines[k++].s);
+                blocks.push({ same: run });
+            } else {
+                const dels = [], adds = [];
+                while (k < lines.length && lines[k].t === 'del') dels.push(lines[k++].s);
+                while (k < lines.length && lines[k].t === 'add') adds.push(lines[k++].s);
+                blocks.push({ dels, adds });
+            }
+        }
+        const row = (cls, prefix, html) => `<div${cls ? ` class="${cls}"` : ''}>${prefix}${html || '&nbsp;'}</div>`;
+        const out = [];
+        blocks.forEach((blk, idx) => {
+            if (blk.same) {
+                const L = blk.same;
+                const keepTop = idx === 0 ? 0 : 2, keepEnd = idx === blocks.length - 1 ? 0 : 2;
+                if (blocks.length > 1 && L.length > keepTop + keepEnd + 4) {
+                    L.slice(0, keepTop).forEach(s => out.push(row('', '  ', esc(s))));
+                    const mid = L.slice(keepTop, L.length - keepEnd);
+                    out.push(`<button type="button" class="fold" data-fold>⋯ ${plural(mid.length, 'unchanged line')} — show</button>`);
+                    out.push(`<div hidden>${mid.map(s => row('', '  ', esc(s))).join('')}</div>`);
+                    if (keepEnd) L.slice(-keepEnd).forEach(s => out.push(row('', '  ', esc(s))));
+                } else L.forEach(s => out.push(row('', '  ', esc(s))));
+            } else {
+                const pairs = Math.min(blk.dels.length, blk.adds.length);
+                for (let p = 0; p < pairs; p++) {
+                    const w = diffWordsHTML(blk.dels[p], blk.adds[p]);
+                    out.push(row('del', '− ', w ? w.del : esc(blk.dels[p])));
+                    out.push(row('add', '+ ', w ? w.add : esc(blk.adds[p])));
+                }
+                blk.dels.slice(pairs).forEach(s => out.push(row('del', '− ', esc(s))));
+                blk.adds.slice(pairs).forEach(s => out.push(row('add', '+ ', esc(s))));
+            }
+        });
+        return `<div class="diff">${out.join('')}</div>`;
+    }
+
     function changesHTML(from, to) {
         if (!from) return '<p class="muted">This is the first version.</p>';
         const rows = [];
-        const field = (label, a, b) => { if ((a || '') !== (b || '')) rows.push(`<div><b>${label}:</b> <span style="text-decoration:line-through;color:var(--muted)">${esc(a || '(empty)')}</span> → ${esc(b || '(empty)')}</div>`); };
+        const field = (label, a, b) => {
+            if ((a || '') === (b || '')) return;
+            const w = a && b ? diffWordsHTML(a, b) : null;
+            rows.push(w ? `<div><b>${label}:</b> <span class="wdiff">${w.del}</span> → <span class="wdiff">${w.add}</span></div>`
+                : `<div><b>${label}:</b> <span style="text-decoration:line-through;color:var(--muted)">${esc(a || '(empty)')}</span> → ${esc(b || '(empty)')}</div>`);
+        };
         field('Title', from.title, to.title); field('Summary', from.summary, to.summary); field('Collection', colName(from.collection), colName(to.collection));
         field('Section', from.section, to.section); field('Type', from.type, to.type); field('Tags', (from.tags || []).join(', '), (to.tags || []).join(', '));
         if (!!from.official !== !!to.official) rows.push(`<div><b>Official:</b> ${to.official ? 'marked official' : 'no longer official'}</div>`);
@@ -730,7 +870,7 @@
         (from.files || []).filter(f => !fb.has(f.id)).forEach(f => rows.push(`<div><b>File removed:</b> ${esc(f.name)}</div>`));
         const bodyChanged = (from.body || '') !== (to.body || '');
         return `<div class="changes">${rows.join('') || (bodyChanged ? '' : '<div class="muted">No changes to the details.</div>')}</div>
-            ${bodyChanged ? `<h3>Content</h3><div class="diff">${diffLines(from.body, to.body).map(l => `<div class="${l.t === 'same' ? '' : l.t}">${l.t === 'add' ? '+ ' : l.t === 'del' ? '− ' : '  '}${esc(l.s) || '&nbsp;'}</div>`).join('')}</div>` : ''}`;
+            ${bodyChanged ? `<h3>Content</h3><p class="muted" style="margin:4px 0 8px;font-size:13px"><span class="key del-key">struck out</span> was removed, <span class="key add-key">highlighted</span> was added — word for word, nothing is cut short.</p>${diffHTML(from.body, to.body)}` : ''}`;
     }
 
     async function version(revId) {
@@ -749,7 +889,8 @@
                 </div></div>
             <section class="section card"><h2>${compareTo ? 'Changes compared with the current version' : v.status === 'pending' && !live ? 'New entry' : 'Details'}</h2>
                 ${compareTo ? changesHTML(compareTo.data, v.data) : `<div class="changes"><div><b>Collection:</b> ${esc(colName(v.data.collection))}${v.data.section ? ' › ' + esc(v.data.section) : ''}</div><div><b>Type:</b> ${esc(v.data.type)}</div>${v.data.tags.length ? `<div><b>Tags:</b> ${esc(v.data.tags.join(', '))}</div>` : ''}</div>`}</section>
-            <section class="section"><h2>This version</h2>${v.data.summary ? `<p class="lead">${esc(v.data.summary)}</p>` : ''}${mediaHTML(v.data.files || [])}<div class="md">${window.KBmd.render(v.data.body)}</div></section>`);
+            <section class="section"><h2>This version</h2>${v.data.summary ? `<p class="lead">${esc(v.data.summary)}</p>` : ''}${mediaHTML(v.data.files || [], v.data.body)}<div class="md">${window.KBmd.render(v.data.body)}</div></section>`);
+        app.querySelectorAll('[data-fold]').forEach(b => b.onclick = () => { b.nextElementSibling.hidden = false; b.remove(); });
         app.querySelectorAll('[data-d]').forEach(b => b.onclick = async () => {
             try {
                 await post(`/api/revisions/${revId}`, { decision: b.dataset.d, note: val('v-note') });
