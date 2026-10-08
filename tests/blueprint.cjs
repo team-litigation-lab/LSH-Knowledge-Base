@@ -111,7 +111,7 @@ async function walk(page, label) {
   if (!numbered(pdf, tn)) fail(`the VA PDF's page numbers don't match the slides (expected "Cover", then 1 / ${tn} to ${tn} / ${tn}, never ${tn + 1} / ${tn + 1})`);
   await v.keyboard.press('Escape');
   if (await v.evaluate(() => LSHBlueprint.isOpen())) fail('Esc didn\'t close the Blueprint');
-  await v.click('#side a[href="#/videos"]'); await v.waitForTimeout(400);
+  await v.click('#top-nav a[href="#/videos"]'); await v.waitForTimeout(400);
   if (!(await v.isVisible('#lbp-open-btn'))) fail('the 🧭 Blueprint button went missing on another page');
   await v.setViewportSize({ width: 390, height: 844 }); await v.evaluate(() => LSHBlueprint.open()); await v.waitForTimeout(300);
   (await walk(v, 'VA 390px')).out.forEach(fail);
