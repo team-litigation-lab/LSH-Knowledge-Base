@@ -138,9 +138,9 @@ The tables are created automatically on the first request.
 npm install
 npm run seed:local                          # a test admin (trainer1 / admin-pass) and three old-style posts
 echo "SESSION_SECRET=dev-secret" > .dev.vars
-npm run dev                                 # http://127.0.0.1:8787
+npx wrangler dev --var KB_CODE_LOGIN:on --var PORTAL_URL:http://127.0.0.1:8789   # http://127.0.0.1:8787; the end-to-end test runs a mock Portal on 8789
 pip install playwright && npm pack pdfjs-dist@3.11.174 && mkdir -p tests/.cache/pdfjs && tar xzf pdfjs-dist-3.11.174.tgz -C tests/.cache/pdfjs
-npm test                                    # 43 end-to-end checks; start from fresh local data (rm -rf .wrangler/state, seed again)
+npm test                                    # end-to-end checks; start from fresh local data (rm -rf .wrangler/state, seed again)
 npm run test:blueprint                      # the 🧭 Blueprint; needs Node Playwright and jsPDF (npm install --no-save playwright jspdf@4.2.1, npx playwright install chromium)
 ```
 
