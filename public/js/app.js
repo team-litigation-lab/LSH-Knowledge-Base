@@ -86,43 +86,25 @@
     }
 
     function chrome(on) {
-        const nav = document.getElementById('top-nav'), side = document.getElementById('side');
-        nav.hidden = !on; side.hidden = !on;
-        if (!on) { side.innerHTML = ''; return; }
+        const nav = document.getElementById('top-nav');
+        nav.hidden = !on;
+        if (!on) return;
         const s = S.session, real = S.real || s, q = S.lib && S.lib.queue;
         const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
-        const here = location.hash.split('?')[0] || '#/';
+        const here = location.hash.split('?')[0];
+        const link = (href, label, extra = '') => `<a href="${href}"${here === href || (href !== '#/' && here.startsWith(href)) ? ' class="on"' : ''}${extra}>${label}</a>`;
         // Home: back to the LSH Training Portal's main screen (same address as the other LSH sites).
         const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/index.html?stay=1';
         nav.innerHTML = [
             `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal's main screen">🏠 Home</a>`,
-            '<span id="lbp-slot" hidden></span>',   // the 🧭 Blueprint button mounts here
-            (s.admin || s.reviewer) ? `<a href="#/review"${here === '#/review' ? ' class="on"' : ''}>Review${waiting ? `<span class="count">${waiting}</span>` : ''}</a>` : '',
-            s.admin ? `<a href="#/admin"${here === '#/admin' ? ' class="on"' : ''}>Admin</a>` : '',
+            link('#/', 'Library'), link('#/featured', 'Featured'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
+            (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
+            s.admin ? link('#/admin', 'Admin') : '',
+            s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
             real.admin ? `<button type="button" id="switch-view" aria-pressed="${!!S.vaView}" title="${S.vaView ? 'Back to the admin view' : 'See the Knowledge Base as a trainee sees it'}">${S.vaView ? 'Admin view' : 'Switch view'}</button>` : '',
-            `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Logout</button>`
+            `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Sign out</button>`
         ].join('');
-        const sideOn = (href) => here === href.split('?')[0] && (!href.includes('?') ? !location.hash.includes('?') : location.hash === href);
-        const sideLink = (href, label) => `<a class="side-btn${sideOn(href) ? ' on' : ''}" href="${href}">${label}</a>`;
-        const tier = real.admin && !S.vaView ? 'Administrator' : s.reviewer ? 'Reviewer' : s.contributor ? 'Tenured contributor' : 'Info Access';
-        const initials = (s.who.name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase();
-        side.innerHTML = [
-            sideLink('#/search', 'Search'),
-            sideLink('#/featured', 'Featured'),
-            sideLink('#/', 'Library'),
-            sideLink('#/glossary', 'Glossary'),
-            sideLink('#/search?type=SOP', 'SOPs'),
-            sideLink('#/videos', 'Videos'),
-            sideLink('#/new', 'Contribute'),
-            `<div class="profile">
-                <b>Contributors Profile</b>
-                <div class="who"><span class="avatar" aria-hidden="true">${esc(initials)}</span>
-                    <span><strong>${esc(s.who.name)}</strong>${s.who.batch ? `<br><small>${esc(s.who.batch)}</small>` : ''}<br><small>${tier}</small></span></div>
-                <a href="#/mine">My contributions</a>
-                <a href="#/people">All contributors</a>
-            </div>`
-        ].join('');
-        if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, into #lbp-slot
+        if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
         const sw = document.getElementById('switch-view');
         if (sw) sw.onclick = () => {
             S.vaView = !S.vaView;
