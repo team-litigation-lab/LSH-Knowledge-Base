@@ -99,10 +99,15 @@ const SCHEMA = [
     `CREATE VIRTUAL TABLE IF NOT EXISTS lib_fts USING fts5(title, summary, body, tags, files, tokenize = 'porter unicode61')`
 ];
 
-let ready = false;   // once per Worker instance
-export async function ensureSchema(db) {
-    if (ready) return;
-    for (const s of SCHEMA) await db.prepare(s).run();
+let ready = null;   // the promise, so a cold instance's parallel requests all wait on one run, not one each
+export function ensureSchema(db) {
+    if (!ready) ready = buildSchema(db).catch((e) => { ready = null; throw e; });   // a failed run must not mark the schema ready
+    return ready;
+}
+async function buildSchema(db) {
+    // One batch, not one round trip per statement: on a cold Worker instance this is the first thing
+    // every request waits for, and there are two dozen statements.
+    await db.batch(SCHEMA.map((s) => db.prepare(s)));
     try { await db.prepare(`ALTER TABLE kb_comments ADD COLUMN kind TEXT`).run(); } catch (e) { /* the column is already there */ }   // 'update' = a note about out-of-date information
     const n = await db.prepare(`SELECT COUNT(*) AS n FROM lib_collections`).first();
     if (!n || !n.n) {
@@ -110,7 +115,6 @@ export async function ensureSchema(db) {
         await db.batch(DEFAULT_COLLECTIONS.map(([slug, name, blurb], i) =>
             db.prepare(`INSERT OR IGNORE INTO lib_collections (slug, name, blurb, sort, created_at) VALUES (?, ?, ?, ?, ?)`).bind(slug, name, blurb, (i + 1) * 10, now)));
     }
-    ready = true;
 }
 
 export async function getSetting(db, key) {

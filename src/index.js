@@ -24,9 +24,10 @@ export default {
         if (path.startsWith('/seed/')) return new Response('Not found', { status: 404 });
         if (!path.startsWith('/api/') && !path.startsWith('/files/') && !path.startsWith('/img/') && !path.startsWith('/att/')) return env.ASSETS.fetch(request);
         try {
-            if (await siteLocked(env)) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             const db = env.TRAINING_DB;
-            await ensureSchema(db);
+            // The lock lives in the portal's database and the schema in this one: neither waits for the other.
+            const [locked] = await Promise.all([siteLocked(env), ensureSchema(db)]);
+            if (locked) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             if (path === '/api/session') return await session(request, env);
             const reader = await getReader(request, env);
             if (!reader) return fail('Enter the team access code to open the Knowledge Base.', 401, { code: 'KB_LOCKED' });
@@ -162,28 +163,37 @@ const STATS_JOIN = `LEFT JOIN kb_stats s ON s.article_ref = 'e:' || e.id
 const LIST_COLS = `e.*, COALESCE(s.views, 0) AS views, COALESCE(s.helpful, 0) AS helpful, COALESCE(c.n, 0) AS comments`;
 
 async function library({ db, reader }) {
-    const { results: cols } = await db.prepare(`SELECT c.*, COUNT(e.id) AS n, SUM(CASE WHEN e.has_video = 1 THEN 1 ELSE 0 END) AS videos
-        FROM lib_collections c LEFT JOIN lib_entries e ON e.collection = c.slug AND e.status = 'published'
-        WHERE c.archived = 0 GROUP BY c.slug ORDER BY c.sort, c.name`).all();
-    const q = (sql, ...b) => db.prepare(sql).bind(...b).all().then(r => (r.results || []).map(shapeRow));
-    const featured = await q(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.featured = 1 ORDER BY e.updated_at DESC LIMIT 6`);
-    const recent = await q(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY e.published_at DESC LIMIT 8`);
-    const videos = await q(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.has_video = 1 ORDER BY e.published_at DESC LIMIT 6`);
-    const popular = await q(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY (COALESCE(s.helpful, 0) * 5 + COALESCE(s.views, 0)) DESC LIMIT 6`);
-    const totals = await db.prepare(`SELECT COUNT(*) AS entries, SUM(has_video) AS videos, SUM(file_count) AS files, COUNT(DISTINCT author_key) AS people
-        FROM lib_entries WHERE status = 'published'`).first();
-    const mine = await db.prepare(`SELECT SUM(status = 'pending') AS pending, SUM(status = 'rejected') AS rejected FROM lib_entries WHERE author_key = ?`).bind(reader.who.key).first();
-    const mySuggestions = await db.prepare(`SELECT SUM(status = 'pending') AS pending, SUM(status = 'rejected') AS rejected FROM lib_revisions r
-        WHERE author_key = ? AND EXISTS (SELECT 1 FROM lib_entries e WHERE e.id = r.entry_id AND e.status != 'pending' AND e.status != 'rejected')`).bind(reader.who.key).first();
-    let queue;
-    if (reader.staff) {
-        const a = await db.prepare(`SELECT COUNT(*) AS n FROM lib_revisions WHERE status = 'pending'`).first();
-        const c = await db.prepare(`SELECT COUNT(*) AS n FROM kb_comments WHERE status = 'pending' AND article_ref LIKE 'e:%'`).first();
-        const t = await db.prepare(`SELECT COUNT(*) AS n FROM lib_term_changes WHERE status = 'pending'`).first();
-        queue = { revisions: a.n, comments: c.n, terms: t.n };
-    }
-    // The usual kinds first, then any type someone wrote themselves, so the filters list them all.
-    const { results: tps } = await db.prepare(`SELECT DISTINCT type FROM lib_entries WHERE status = 'published' AND type != ''`).all();
+    // Every one of these is independent, and this runs on the first screen of every visit, so they go
+    // to the database as one batch rather than a dozen round trips one after another.
+    const stmts = [
+        db.prepare(`SELECT c.*, COUNT(e.id) AS n, SUM(CASE WHEN e.has_video = 1 THEN 1 ELSE 0 END) AS videos
+            FROM lib_collections c LEFT JOIN lib_entries e ON e.collection = c.slug AND e.status = 'published'
+            WHERE c.archived = 0 GROUP BY c.slug ORDER BY c.sort, c.name`),
+        db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.featured = 1 ORDER BY e.updated_at DESC LIMIT 6`),
+        db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY e.published_at DESC LIMIT 8`),
+        db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.has_video = 1 ORDER BY e.published_at DESC LIMIT 6`),
+        db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY (COALESCE(s.helpful, 0) * 5 + COALESCE(s.views, 0)) DESC LIMIT 6`),
+        db.prepare(`SELECT COUNT(*) AS entries, SUM(has_video) AS videos, SUM(file_count) AS files, COUNT(DISTINCT author_key) AS people
+            FROM lib_entries WHERE status = 'published'`),
+        db.prepare(`SELECT SUM(status = 'pending') AS pending, SUM(status = 'rejected') AS rejected FROM lib_entries WHERE author_key = ?`).bind(reader.who.key),
+        db.prepare(`SELECT SUM(status = 'pending') AS pending, SUM(status = 'rejected') AS rejected FROM lib_revisions r
+            WHERE author_key = ? AND EXISTS (SELECT 1 FROM lib_entries e WHERE e.id = r.entry_id AND e.status != 'pending' AND e.status != 'rejected')`).bind(reader.who.key),
+        // The usual kinds first, then any type someone wrote themselves, so the filters list them all.
+        db.prepare(`SELECT DISTINCT type FROM lib_entries WHERE status = 'published' AND type != ''`)
+    ];
+    if (reader.staff) stmts.push(
+        db.prepare(`SELECT COUNT(*) AS n FROM lib_revisions WHERE status = 'pending'`),
+        db.prepare(`SELECT COUNT(*) AS n FROM kb_comments WHERE status = 'pending' AND article_ref LIKE 'e:%'`),
+        db.prepare(`SELECT COUNT(*) AS n FROM lib_term_changes WHERE status = 'pending'`));
+    const res = await db.batch(stmts);
+    const rows = (i) => (res[i] && res[i].results) || [];
+    const one = (i) => rows(i)[0] || {};
+    const shaped = (i) => rows(i).map(shapeRow);
+    const cols = rows(0);
+    const featured = shaped(1), recent = shaped(2), videos = shaped(3), popular = shaped(4);
+    const totals = one(5), mine = one(6), mySuggestions = one(7);
+    const tps = rows(8);
+    const queue = reader.staff ? { revisions: one(9).n, comments: one(10).n, terms: one(11).n } : undefined;
     const extraTypes = (tps || []).map(t => t.type).filter(t => !TYPES.some(k => k.toLowerCase() === String(t).toLowerCase())).sort();
     return json({ success: true, types: [...TYPES, ...extraTypes],
         collections: (cols || []).map(c => ({ slug: c.slug, name: c.name, blurb: c.blurb || '', count: c.n || 0, videos: c.videos || 0 })),
