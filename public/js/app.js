@@ -93,10 +93,10 @@
         const s = S.session, real = S.real || s, q = S.lib && S.lib.queue;
         const waiting = q ? q.revisions + q.comments + (q.terms || 0) : 0;
         const here = location.hash.split('?')[0] || '#/';
-        // Back to the LSH Training Portal's Training Directory, where each program is opened from (same address as the other LSH sites).
-        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/programs.html';
+        // Home: back to the LSH Training Portal's main screen (same address as the other LSH sites).
+        const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/';
         nav.innerHTML = [
-            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal (Training Directory)">Main Portal</a>`,
+            `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal's main screen">🏠 Home</a>`,
             '<span id="lbp-slot" hidden></span>',   // the 🧭 Blueprint button mounts here
             (s.admin || s.reviewer) ? `<a href="#/review"${here === '#/review' ? ' class="on"' : ''}>Review${waiting ? `<span class="count">${waiting}</span>` : ''}</a>` : '',
             s.admin ? `<a href="#/admin"${here === '#/admin' ? ' class="on"' : ''}>Admin</a>` : '',
