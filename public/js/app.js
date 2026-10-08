@@ -49,8 +49,9 @@
     const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
     const errorView = (e) => view(`<div class="card"><h2>That didn’t load</h2><p>${esc(e.message)}</p><a class="btn" href="#/">Back to the library</a></div>`);
 
+    let libAt = 0;   // when the library last came back, so one visit doesn't read it twice
     async function ensureLib(force) {
-        if (!S.lib || force) S.lib = await api('/api/library');
+        if (!S.lib || (force && Date.now() - libAt > 1500)) { S.lib = await api('/api/library'); libAt = Date.now(); }
         return S.lib;
     }
 
@@ -237,11 +238,11 @@
 
     /* ---------- home ---------- */
     async function home() {
-        const L = await ensureLib(true);
+        // Every published entry, A to Z by title, read each time the home page opens so new uploads slot
+        // into place on their own. It doesn't depend on the library, so the two are asked for together.
+        const [L, all] = await Promise.all([ensureLib(true), api('/api/entries?all=1&sort=az')]);
         chrome(true); setTitle('');
         const t = L.totals;
-        // Every published entry, A to Z by title. It's read from the library each time the home page opens, so new uploads slot into place on their own.
-        const all = t.entries ? await api('/api/entries?all=1&sort=az') : { entries: [], total: 0 };
         view(`
         <section class="hero">
             <h1>LSH Community Library</h1>
