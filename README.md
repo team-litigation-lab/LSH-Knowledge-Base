@@ -8,9 +8,10 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 - **Real uploads.** Anyone in the community can upload PDFs, Word, Excel and PowerPoint files, images, audio and **training videos**, up to 5 GB each.
   - Files go to Cloudflare R2 in 10 MB parts, three at a time, and each part is retried if it fails.
   - Videos play in the page and can seek. PDFs open inline, and everything can be downloaded.
+- **Writing that looks the way you want.** The editor has a formatting toolbar: **bold**, *italic*, underline, colored text, links and photos placed right in the text (the 🖼️ Photo button uploads the image and drops it where the cursor is). The same markup can be typed by hand (`**bold**`, `*italic*`, `++underline++`, `{color:#D33}…{/color}`, `[text](https://…)`), and the Preview tab shows the page as readers will see it. Everything stays safe Markdown (`js/md.js`): the text is HTML-escaped first, so nothing a VA types can run as code.
 - **Nothing is lost.**
   - Every save adds a version. Nothing is overwritten.
-  - The history shows every version and compares any version with the current one.
+  - The history shows every version and compares any version with the current one. The comparison is word for word: only the words that were removed are struck out and only the words that were added are highlighted — whole sentences are never crossed out over a one-word change — and long unchanged stretches fold away so the exact edit stands out.
   - Admins can restore any earlier version at once; a reviewer's restore waits for approval like any other edit.
   - Removing an entry archives it. Only an admin can delete permanently, by typing DELETE.
   - Admin → **Download a backup** exports every entry and version as JSON.

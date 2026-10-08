@@ -216,6 +216,18 @@ textarea.i{resize:vertical;line-height:1.55;}
 .bar{height:6px;border-radius:999px;background:var(--line-soft);overflow:hidden;width:160px;max-width:100%;}
 .bar i{display:block;height:100%;background:var(--orange);width:0;transition:width .2s;}
 .preview{border:1.5px solid var(--line);border-radius:12px;padding:14px;background:var(--navy-deep);min-height:120px;}
+/* The formatting toolbar above the content box: bold, italic, underline, color, link, photo. */
+.mdbar{display:flex;flex-wrap:wrap;align-items:center;gap:3px;border:1.5px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;background:var(--card-2);padding:5px 8px;}
+.mdbar[hidden]{display:none;}
+.mdbar button{border:1px solid transparent;background:none;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:14px;line-height:1.2;min-width:30px;color:var(--ink);}
+.mdbar button:hover{background:var(--navy-soft);border-color:var(--line);}
+.mdbar .mdbar-sep{width:1px;height:18px;background:var(--line);margin:0 4px;}
+.mdbar .pal{display:flex;align-items:center;gap:4px;padding:2px 4px;background:var(--navy-deep);border:1px solid var(--line);border-radius:8px;}
+.mdbar .pal[hidden]{display:none;}
+.mdbar .sw{width:20px;height:20px;min-width:20px;padding:0;border-radius:5px;border:1px solid rgba(255,255,255,.35);}
+.mdbar .sw:hover{transform:scale(1.15);}
+.mdbar input[type=color]{width:28px;height:24px;border:1px solid var(--line);border-radius:6px;padding:1px;background:var(--navy-deep);cursor:pointer;}
+.mdbar+textarea.i{border-top-left-radius:0;border-top-right-radius:0;}
 
 /* ---------- history / diff ---------- */
 .versions{display:grid;gap:8px;}
@@ -223,7 +235,14 @@ textarea.i{resize:vertical;line-height:1.55;}
 .diff{font-family:var(--mono);font-size:13px;line-height:1.5;border:1.5px solid var(--line);border-radius:12px;background:var(--navy-deep);overflow-x:auto;}
 .diff div{padding:1px 10px;white-space:pre-wrap;overflow-wrap:anywhere;}
 .diff .add{background:var(--good-bg);}
-.diff .del{background:var(--bad-bg);text-decoration:line-through;text-decoration-color:rgba(242,161,150,.6);}
+.diff .del{background:var(--bad-bg);}
+/* Only the words that actually changed are marked, so the exact edit shows and whole sentences are never struck out. */
+.diff del,.changes del,.del-key{background:rgba(181,74,63,.55);text-decoration:line-through;text-decoration-color:rgba(242,161,150,.75);border-radius:3px;padding:0 1px;color:inherit;}
+.diff ins,.changes ins,.add-key{background:rgba(63,125,88,.6);text-decoration:none;border-radius:3px;padding:0 1px;}
+.changes .wdiff del{color:var(--muted);}
+.key{font-family:var(--mono);font-size:12px;}
+.diff .fold{display:block;width:100%;border:0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);background:var(--card-2);color:var(--muted);font:inherit;font-size:12.5px;padding:4px 10px;text-align:left;cursor:pointer;}
+.diff .fold:hover{background:var(--navy-soft);color:var(--ink);}
 .changes{display:grid;gap:4px;font-size:14px;margin-bottom:10px;}
 
 /* ---------- review / admin ---------- */
