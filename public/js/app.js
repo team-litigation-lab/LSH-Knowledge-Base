@@ -171,7 +171,7 @@
             // Opened from the LSH Training Portal: it hands over a short-lived signed ticket, which signs the trainee in.
             const tk = new URLSearchParams(location.search).get('ticket');
             if (tk) {
-                history.replaceState(null, '', location.pathname + location.hash);
+                window.history.replaceState(null, '', location.pathname + location.hash);
                 try { await post('/api/session', { action: 'portal-ticket', ticket: tk }); S.session = null; } catch (e) { gateMsg = e.message; }
             }
             if (!S.session) await loadSession();
@@ -190,7 +190,7 @@
                 case 'videos': q.set('video', '1'); return await search(q, true);
                 case 'e':
                     if (parts[2] === 'edit') return await editor(id);
-                    if (parts[2] === 'history') return await history(id);
+                    if (parts[2] === 'history') return await historyView(id);
                     return await entry(id);
                 case 'go': {   // a link from an imported Tettra page to another one
                     const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
@@ -214,7 +214,7 @@
     function confirmLeave() {
         // Uploads still running: stay on the editor (the browser's own prompt covers closing the tab).
         toast('Wait for the uploads to finish, or remove them, before leaving this page.', true);
-        history.replaceState(null, '', leaveGuard);
+        window.history.replaceState(null, '', leaveGuard);
         return false;
     }
     window.addEventListener('beforeunload', (e) => { if (leaveGuard) { e.preventDefault(); e.returnValue = ''; } });
@@ -640,7 +640,7 @@
 
     /* ---------- history & versions ---------- */
     const REV_LABEL = { live: ['Current', 'official'], superseded: ['Earlier', ''], pending: ['Waiting for review', 'pending'], rejected: ['Sent back', 'rejected'], withdrawn: ['Withdrawn', 'archived'] };
-    async function history(id) {
+    async function historyView(id) {
         const r = await api(`/api/entries/${id}/history`);
         setTitle('History: ' + r.entry.title);
         view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><a href="#/e/${id}">${esc(r.entry.title)}</a><span>›</span><span>History</span></div>
