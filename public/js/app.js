@@ -606,10 +606,10 @@
                         <button type="button" data-f="italic" title="Italic"><i>I</i></button>
                         <button type="button" data-f="underline" title="Underline"><u>U</u></button>
                         <span class="mdbar-sep" aria-hidden="true"></span>
-                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#F2A196;font-weight:700">A</span> Color</button>
+                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#C0392B;font-weight:700">A</span> Color</button>
                         <span class="pal" id="mdbar-pal" hidden>
-                            ${['#F2A196', '#E8913F', '#F3D34A', '#7FC79A', '#7EB3FF', '#C9A2F5', '#A9B1CD', '#FFFFFF'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
-                            <input type="color" id="mdbar-custom" value="#F2A196" title="Pick any color">
+                            ${['#C0392B', '#D97706', '#1E8449', '#1D4ED8', '#6D28D9', '#DB2777', '#6B7280', '#000000'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
+                            <input type="color" id="mdbar-custom" value="#C0392B" title="Pick any color">
                         </span>
                         <span class="mdbar-sep" aria-hidden="true"></span>
                         <button type="button" data-f="link" title="Link to a page or site">🔗 Link</button>
