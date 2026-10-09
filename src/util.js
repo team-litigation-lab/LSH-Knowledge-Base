@@ -50,6 +50,53 @@ export function fixTitle(t) {
     return isAllCaps(t) && !(t.split(/\s+/).length === 1 && ACRONYMS.has(one)) ? sentenceCase(t) : t;
 }
 
+// Autoformats an existing entry's body the same way a rich paste does (public/js/paste-format.js): a run of
+// plain-text lines that line up in the same number of columns (by tab, by a bare "|", or by two or more spaces)
+// becomes a markdown pipe table, and a short "Label:" at the very start of a line is bolded — the house style
+// already used by hand elsewhere in the library ("**Operational Note:**"). A heading, list, quote, code fence,
+// or a table js/md.js already renders is left exactly as it is, and running this twice changes nothing the
+// second time (the admin action that uses this keeps going until an entry needs no further change).
+export function autoformatBody(md) {
+    const lines = String(md || '').replace(/\r\n?/g, '\n').split('\n');
+    const isTableRow = (l) => /^\s*\|.*\|\s*$/.test(l);
+    const isBlockStart = (l) => /^(#{1,4}\s|\s*([-*]|\d+[.)])\s+|\s*>|\s*(---|\*\*\*|___)\s*$|\s*```)/.test(l);
+    const splitRow = (l) => (l.includes('\t') ? l.split('\t') : l.includes('|') ? l.split('|') : l.split(/ {2,}/))
+        .map(c => c.trim()).filter(Boolean);
+
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+
+        if (!isBlockStart(line) && !isTableRow(line) && line.trim()) {
+            const cols = splitRow(line);
+            if (cols.length >= 2) {
+                const block = [cols]; let j = i + 1;
+                while (j < lines.length && lines[j].trim() && !isBlockStart(lines[j]) && !isTableRow(lines[j])) {
+                    const next = splitRow(lines[j]);
+                    if (next.length !== cols.length) break;
+                    block.push(next); j++;
+                }
+                if (block.length >= 2) {
+                    const cell = (c) => c.replace(/\|/g, '/');
+                    out.push('| ' + block[0].map(cell).join(' | ') + ' |');
+                    out.push('|' + block[0].map(() => ' --- ').join('|') + '|');
+                    for (const row of block.slice(1)) out.push('| ' + row.map(cell).join(' | ') + ' |');
+                    i = j; continue;
+                }
+            }
+        }
+
+        if (!isBlockStart(line) && !isTableRow(line)) {
+            const m = line.match(/^([A-Z][A-Za-z0-9 /&'-]{1,28}:)(?=\s)/);
+            if (m) { out.push(`**${m[1]}**${line.slice(m[1].length)}`); i++; continue; }
+        }
+
+        out.push(line); i++;
+    }
+    return out.join('\n');
+}
+
 export const personKey = (name, batch) => (oneLine(name, 80) + '|' + oneLine(batch, 40)).toLowerCase();
 
 /* ---------- base64url ---------- */
