@@ -93,7 +93,7 @@ with sync_playwright() as p:
     a.click('#f-admin button[type=submit]'); a.wait_for_function("document.getElementById('g-err2').textContent.length > 0", timeout=8000)
     check('Incorrect' in a.inner_text('#g-err2'), 'wrong admin password is refused')
     a.fill('#g-pass', 'admin-pass'); a.click('#f-admin button[type=submit]')
-    a.wait_for_selector('.lib-bar')
+    a.wait_for_selector('.hero')
     check('Admin' in a.inner_text('#top-nav'), 'admin signs in with portal credentials')
 
     a.goto(B + '/#/admin'); a.wait_for_selector('#code-form')
@@ -125,14 +125,14 @@ with sync_playwright() as p:
     v.fill('#g-name', 'Jo Cruz'); v.fill('#g-batch', 'Batch 11'); v.fill('#g-code', 'nope')
     v.click('#f-va button[type=submit]'); v.wait_for_timeout(600)
     check('isn’t right' in v.inner_text('#g-err'), 'wrong team code is refused')
-    v.fill('#g-code', 'lsh-team-2026'); v.click('#f-va button[type=submit]'); v.wait_for_selector('.lib-bar')
+    v.fill('#g-code', 'lsh-team-2026'); v.click('#f-va button[type=submit]'); v.wait_for_selector('.hero')
     check('Review' not in v.inner_text('#top-nav'), 'a VA has no review tab')
     check('waiting for review' in v.inner_text('#app'), 'VA sees their imported pending post on the home page')
 
     # the team code gives Info Access only; Jo's tenured access applies once she signs in through the Portal
     v.goto(B + '/#/new'); v.wait_for_timeout(600)
     check('Info Access is view-only' in v.inner_text('#app'), 'a team-code session has Info Access only')
-    v.goto(B + '/?ticket=' + ticket('Jo', 'Cruz', 'Batch 11')); v.wait_for_selector('.lib-bar')
+    v.goto(B + '/?ticket=' + ticket('Jo', 'Cruz', 'Batch 11')); v.wait_for_selector('.hero')
 
     # add an entry with a video, a PDF and a 25 MB file
     v.goto(B + '/#/new?collection=lien'); v.wait_for_selector('#ed')
@@ -155,7 +155,7 @@ with sync_playwright() as p:
 
     # other VA can't see it yet (Kim signs in through the Portal, so her reviewer role applies)
     O = br.new_context(); o = O.new_page()
-    o.goto(B + '/?ticket=' + ticket('Kim', 'Lee', 'Batch 10')); o.wait_for_selector('.lib-bar')
+    o.goto(B + '/?ticket=' + ticket('Kim', 'Lee', 'Batch 10')); o.wait_for_selector('.hero')
     check('Review' in o.inner_text('#top-nav'), 'the reviewer VA sees the review tab')
 
     # suggest an edit on the imported Medicare post
@@ -225,7 +225,7 @@ with sync_playwright() as p:
     jpost(a, B + f'/api/entries/{new_id}', {'action': 'archive'})
     check(not any(x['id'] == new_id for x in jget(v, B + '/api/entries?q=hospital')['entries']), 'archived entry drops out of search')
     X = br.new_context(); x = X.new_page(); x.goto(B + '/'); x.wait_for_selector('#f-va')
-    x.fill('#g-name', 'Sam Tan'); x.fill('#g-code', 'lsh-team-2026'); x.click('#f-va button[type=submit]'); x.wait_for_selector('.lib-bar')
+    x.fill('#g-name', 'Sam Tan'); x.fill('#g-code', 'lsh-team-2026'); x.click('#f-va button[type=submit]'); x.wait_for_selector('.hero')
     check(fetchinfo(x, B + f"/files/{files['video']['id']}/v")['status'] == 404, 'an archived entry’s video is hidden from other VAs')
     check(fetchinfo(v, B + f"/files/{files['video']['id']}/v")['status'] == 200, 'the uploader can still open their own file')
     jpost(a, B + f'/api/entries/{new_id}', {'action': 'unarchive'})
@@ -246,10 +246,10 @@ with sync_playwright() as p:
     check(len(shelves) == 1 and shelves[0]['count'] == 2, 'no duplicate shelf; both entries file into it')
 
     # screenshots: home, collection, mobile
-    a.goto(B + '/'); a.wait_for_selector('.lib-bar'); a.screenshot(path=D + 'kb-home.png', full_page=True)
+    a.goto(B + '/'); a.wait_for_selector('.hero'); a.screenshot(path=D + 'kb-home.png', full_page=True)
     a.goto(B + '/#/c/lien'); a.wait_for_selector('.toc'); a.screenshot(path=D + 'kb-collection.png', full_page=True)
     M = br.new_context(viewport={'width': 390, 'height': 844}); m = M.new_page()
-    m.goto(B + '/'); m.wait_for_selector('#f-va'); m.fill('#g-name', 'Jo Cruz'); m.fill('#g-batch', 'Batch 11'); m.fill('#g-code', 'lsh-team-2026'); m.click('#f-va button[type=submit]'); m.wait_for_selector('.lib-bar')
+    m.goto(B + '/'); m.wait_for_selector('#f-va'); m.fill('#g-name', 'Jo Cruz'); m.fill('#g-batch', 'Batch 11'); m.fill('#g-code', 'lsh-team-2026'); m.click('#f-va button[type=submit]'); m.wait_for_selector('.hero')
     check(m.evaluate('document.documentElement.scrollWidth') <= 390, 'no sideways scroll on a phone')
     m.goto(B + f'/#/e/{new_id}'); m.wait_for_selector('video'); m.screenshot(path=D + 'kb-mobile.png', full_page=False)
 

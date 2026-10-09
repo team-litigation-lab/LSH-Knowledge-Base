@@ -72,7 +72,7 @@ async function walk(page, label) {
   const a = await mk({ width: 1366, height: 768 });
   await a.goto(B + '/'); await a.waitForSelector('#f-va');
   await a.click('[data-tab="admin"]'); await a.fill('#g-user', 'trainer1'); await a.fill('#g-pass', 'admin-pass');
-  await a.click('#f-admin button[type=submit]'); await a.waitForSelector('.lib-bar');
+  await a.click('#f-admin button[type=submit]'); await a.waitForSelector('.hero');
   await a.evaluate(async (code) => fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set-code', code }) }), CODE);
   await a.waitForSelector('#lbp-open-btn', { timeout: 5000 }).catch(() => fail('an admin has no 🧭 Blueprint button'));
   await a.click('#lbp-open-btn'); await a.waitForTimeout(300);
@@ -92,7 +92,7 @@ async function walk(page, label) {
   const v = await mk({ width: 1366, height: 768 });
   await v.goto(B + '/'); await v.waitForSelector('#f-va');
   await v.fill('#g-name', 'Blue Print'); await v.fill('#g-batch', 'Batch 9'); await v.fill('#g-code', CODE);
-  await v.click('#f-va button[type=submit]'); await v.waitForSelector('.lib-bar');
+  await v.click('#f-va button[type=submit]'); await v.waitForSelector('.hero');
   await v.waitForSelector('#lbp-open-btn', { timeout: 5000 }).catch(() => fail('a VA has no 🧭 Blueprint button'));
   await v.click('#lbp-open-btn'); await v.waitForTimeout(300);
   const t = await v.evaluate(() => ({ deck: document.getElementById('lbp-slide').dataset.deck, tabs: !!document.getElementById('lbp-tabs').offsetParent }));
