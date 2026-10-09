@@ -1013,6 +1013,9 @@
                     <td><button class="btn small" data-save="${c.slug}">Save</button></td></tr>`).join('')}
                 <tr data-col=""><td><input class="i" data-k="name" placeholder="New collection"></td><td><input class="i" data-k="blurb" placeholder="What goes in it"></td><td><input class="i" data-k="sort" type="number" value="${(r.collections.length + 1) * 10}" style="width:80px"></td><td></td><td></td><td><button class="btn small primary" data-save="">Add</button></td></tr>
                 </tbody></table></div></section>
+            <section class="section card"><h2>Library maintenance</h2>
+                <p class="muted" style="margin-top:0">Autoformat every existing entry the way a rich paste is autoformatted now: a plain-text table (lined up by tabs, a bare <code>|</code>, or two or more spaces) becomes a real table, and a short “Label:” at the start of a line is bolded. Only entries that actually need a change get a new version (held for review like any other edit, unless you're the one making it).</p>
+                <div class="row"><button class="btn" id="autoformat-body">Autoformat existing articles</button><span class="muted" id="autoformat-status"></span></div></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
@@ -1032,6 +1035,22 @@
         if (sa) sa.onchange = () => app.querySelectorAll('tr.arch').forEach(tr => { tr.hidden = !sa.checked; });
         document.getElementById('hide-empty').onclick = async () => {
             try { const x = await post('/api/admin', { action: 'archive-empty' }); toast(x.archived ? `Removed ${plural(x.archived, 'empty collection')}.` : 'There are no empty collections.'); S.lib = null; admin(); } catch (e) { toast(e.message, true); }
+        };
+        document.getElementById('autoformat-body').onclick = async (ev) => {
+            const btn = ev.target, status = document.getElementById('autoformat-status');
+            btn.disabled = true;
+            let total = 0;
+            try {
+                for (;;) {
+                    const x = await post('/api/admin', { action: 'autoformat-body' });
+                    total += x.fixed;
+                    status.textContent = total ? `Autoformatted ${plural(total, 'entry')} so far…` : '';
+                    if (x.remaining <= 0) break;
+                }
+                toast(total ? `Autoformatted ${plural(total, 'entry')}.` : 'Every entry already looks right; nothing to change.');
+                status.textContent = '';
+            } catch (e) { toast(e.message, true); status.textContent = ''; }
+            btn.disabled = false;
         };
         app.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
             const tr = b.closest('tr'), get = (k) => tr.querySelector(`[data-k="${k}"]`);
