@@ -1,4 +1,7 @@
 {
+  // A deploy must not wipe the plain-text vars set in the dashboard (PORTAL_URL, KB_CODE_LOGIN):
+  // without PORTAL_URL nobody can sign in from the portal, so nobody can contribute.
+  "keep_vars": true,
   "name": "lsh-knowledge-base",
   "main": "src/index.js",
   "compatibility_date": "2024-09-23",
