@@ -243,34 +243,38 @@
         const [L, all] = await Promise.all([ensureLib(true), api('/api/entries?all=1&sort=az')]);
         chrome(true); setTitle('');
         const t = L.totals;
+        // The search and the category picker are the two controls the page is for, so they lead it,
+        // side by side, in place of the old welcome band.
+        const libBar = `<div class="lib-bar">
+            <form id="lib-search-form" role="search" class="lib-search"><label class="sr" for="lib-q">Search the library</label>
+                <input id="lib-q" type="search" placeholder="Search the library: “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off">
+                <button class="btn primary" type="submit">Search</button></form>
+            <label class="sr" for="az-cat">Category</label>
+            <select class="i lib-cat" id="az-cat"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
+        </div>
+        <div class="stats lib-stats"><span><b>${t.entries}</b>entries</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>`;
         view(`
-        <section class="hero">
-            <h1>LSH Community Library</h1>
-            <p>Official SOPs, training videos, guides and hard-won know-how from across LSH, kept in one place and never lost.</p>
-            <form id="hero-search" role="search"><label class="sr" for="hero-q">Search the library</label>
-                <input id="hero-q" type="search" placeholder="Try “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off"></form>
-            <div class="stats"><span><b>${t.entries}</b>entries</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
-        </section>
+        ${libBar}
         ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
         ${t.entries ? `<section class="section"><div class="spread"><h2>The library, A to Z</h2>
-            <span class="row"><label class="sr" for="az-cat">Category</label><select class="i" id="az-cat" style="width:auto;max-width:280px"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
-            <span class="muted" id="az-count">${plural(all.total, 'entry', 'entries')}</span></span></div><div id="az-list">${listHTML(all.entries)}</div></section>` : ''}
+            <span class="muted" id="az-count">${plural(all.total, 'entry', 'entries')}</span></div><div id="az-list">${listHTML(all.entries)}</div></section>` : ''}
         ${L.featured.length ? `<section class="section"><h2>Featured</h2>${listHTML(L.featured)}</section>` : ''}
         ${L.videos.length ? `<section class="section"><div class="spread"><h2>Latest training videos</h2><a href="#/videos">All videos</a></div>${listHTML(L.videos)}</section>` : ''}
         ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);
         const azCat = document.getElementById('az-cat');
-        if (azCat) azCat.onchange = () => {
+        if (azCat && document.getElementById('az-list')) azCat.onchange = () => {
             const rows = azCat.value ? all.entries.filter(e => e.collection === azCat.value) : all.entries;
             document.getElementById('az-list').innerHTML = listHTML(rows);
             document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
         };
-        document.getElementById('hero-search').onsubmit = (ev) => {
+        document.getElementById('lib-search-form').onsubmit = (ev) => {
             ev.preventDefault();
-            location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('hero-q').value.trim());
+            location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('lib-q').value.trim());
         };
+
     }
 
     /* ---------- collection ---------- */
