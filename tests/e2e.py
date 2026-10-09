@@ -75,7 +75,8 @@ with sync_playwright() as p:
     x = len(pdf); pdf += f"xref\n0 {len(objs)+1}\n0000000000 65535 f \n".encode() + b"".join(f"{o:010d} 00000 n \n".encode() for o in offs)
     pdf += f"trailer\n<< /Size {len(objs)+1} /Root 1 0 R >>\nstartxref\n{x}\n%%EOF\n".encode()
     open(D + 'worksheet.pdf', 'wb').write(pdf)
-    big = os.urandom(25 * 1024 * 1024 + 12345); open(D + 'big-handouts.zip', 'wb').write(big)
+    big = os.urandom(25 * 1024 * 1024 + 12345); open(D + 'big-walkthrough.mp4', 'wb').write(big)   # a big file of a kind the library can show
+    open(D + 'handouts.zip', 'wb').write(b'PK\x05\x06' + bytes(18))                                   # a kind it cannot: the upload is refused
     BIG_SHA = hashlib.sha256(big).hexdigest()
     PJ = HERE + '.cache/pdfjs/package/build/'
     def cdn(route):
@@ -102,9 +103,17 @@ with sync_playwright() as p:
     check('Kim Lee' in a.inner_text('#app'), 'reviewer added')
     a.fill('#rev-name', 'Jo Cruz'); a.fill('#rev-batch', 'Batch 11'); a.select_option('#rev-role', 'tenured'); a.click('#rev-form button'); a.wait_for_timeout(700)
     check('Jo Cruz' in a.inner_text('#app'), 'tenured access given to Jo Cruz')
-    a.click('#import'); a.wait_for_function("document.getElementById('import-status').textContent.includes('Done')", timeout=20000)
-    check('Imported 3' in a.inner_text('#import-status'), 'old Knowledge Base posts imported (3)')
-    a.click('#import'); a.wait_for_timeout(1200)
+    # The imports have no buttons on the Admin screen any more; they stay as admin API actions, run deliberately.
+    def import_legacy():
+        total = 0
+        for _ in range(20):
+            r = jpost(a, B + '/api/admin', {'action': 'import-legacy'})['body']
+            total += r.get('imported', 0)
+            if not r.get('remaining') or not r.get('imported'):
+                break
+        return total
+    check(import_legacy() == 3, 'old Knowledge Base posts imported (3)')
+    import_legacy()
     lib = jget(a, B + '/api/library')
     check(lib['totals']['entries'] == 2, f"import is idempotent; 2 published entries (got {lib['totals']['entries']})")
 
@@ -143,7 +152,7 @@ with sync_playwright() as p:
     v.fill('#ed-sum', 'A recorded session on reducing a hospital lien with the pro rata formula.')
     v.fill('#ed-body', '## Steps\n\n1. Pull the itemized bill\n2. Apply the **pro rata** reduction\n\n- [ ] Send the reduction letter\n\n| Item | Amount |\n|---|---|\n| Bill | $12,000 |')
     v.fill('#ed-tags', 'hospital lien, reduction')
-    v.set_input_files('#ed-file', [D + 'demo.webm', D + 'worksheet.pdf', D + 'big-handouts.zip'])
+    v.set_input_files('#ed-file', [D + 'demo.webm', D + 'worksheet.pdf', D + 'big-walkthrough.mp4'])
     v.wait_for_function("[...document.querySelectorAll('#up .file')].length === 3 && ![...document.querySelectorAll('#up .file')].some(x => x.textContent.includes('%'))", timeout=120000)
     upText = v.inner_text('#up')
     check(upText.count('Ready') == 3, 'all three files uploaded (25 MB file in 3 parts)')
@@ -195,10 +204,12 @@ with sync_playwright() as p:
     check(ent['status'] == 'published' and len(ent['files']) == 3, 'new entry published with its 3 files')
 
     # file integrity and range requests (as a third person, Kim)
-    z = files['archive']
+    z = [f for f in ent['files'] if f['name'].endswith('.mp4')][0]
     full = fetchinfo(o, B + f"/files/{z['id']}/x?download=1")
     check(full['sha'] == BIG_SHA, '25 MB file comes back byte-for-byte')
-    check('attachment' in full['cd'], 'zip downloads as an attachment')
+    check('attachment' not in full['cd'], 'nothing is served as a download, even with ?download=1')
+    r = jpost(o, B + '/api/files', {'action': 'start', 'name': 'handouts.zip', 'size': 2048})
+    check(r['status'] >= 400 and 'page' in r['body'].get('error', ''), 'a .zip cannot be added to the library')
     rg = fetchinfo(o, B + f"/files/{files['video']['id']}/v", {'Range': 'bytes=0-99'})
     check(rg['status'] == 206 and rg['len'] == 100 and rg['cr'].startswith('bytes 0-99/'), 'video supports Range requests (206)')
     check(fetchinfo(o, B + f"/files/{files['pdf']['id']}/p")['ct'] == 'application/pdf', 'PDF served inline as application/pdf')
