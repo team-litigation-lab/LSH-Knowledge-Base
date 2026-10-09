@@ -55,6 +55,8 @@ export async function startUpload({ request, env, db, reader }, body) {
     const name = safeName(body.name), e = ext(name), size = Number(body.size) || 0;
     if (!e) return fail('The file needs an extension, like .pdf or .mp4.');
     if (BLOCKED.includes(e)) return fail(`.${e} files can’t be uploaded. Save it as a PDF, or zip it.`);
+    // Nothing in the library is a download: a file has to be one the library can show in the page.
+    if (!INLINE[e]) return fail(`.${e} files can’t be added: the library shows files in the page and never hands out a download. Add the content as a page, or attach it as a PDF, image, video or audio file.`);
     if (size <= 0) return fail('That file is empty.');
     if (size > MAX_SIZE) return fail('Files can be up to 5 GB. Compress the video or split it into parts.');
     const id = crypto.randomUUID(), d = new Date();
@@ -127,10 +129,12 @@ export async function serveFile({ request, env, db, url, reader }, id) {
     }
     const e = ext(f.name), total = f.size;
     const inlineType = INLINE[e];
-    const download = url.searchParams.get('download') === '1' || !inlineType;
+    // The library shows its files in the page; it never serves one as a download, and ?download=1 is ignored.
+    // A file of a type the page can't show (an older upload, from before this rule) is not handed out at all.
+    if (!inlineType) return fail('The library shows files in the page and has no download. Ask an admin to add this one as a page.', 403);
     const headers = new Headers({
-        'Content-Type': inlineType || DOWNLOAD[e] || 'application/octet-stream',
-        'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(f.name)}`,
+        'Content-Type': inlineType,
+        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(f.name)}`,
         'Accept-Ranges': 'bytes', 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff',
         'X-Robots-Tag': 'noindex'
     });
