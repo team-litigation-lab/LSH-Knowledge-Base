@@ -9,6 +9,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
   - Files go to Cloudflare R2 in 10 MB parts, three at a time, and each part is retried if it fails.
   - Videos play in the page and can seek. PDFs open inline, and everything can be downloaded.
 - **Writing that looks the way you want.** The editor has a formatting toolbar: **bold**, *italic*, underline, colored text, links and photos placed right in the text (the 🖼️ Photo button uploads the image and drops it where the cursor is). The same markup can be typed by hand (`**bold**`, `*italic*`, `++underline++`, `{color:#D33}…{/color}`, `[text](https://…)`), and the Preview tab shows the page as readers will see it. Everything stays safe Markdown (`js/md.js`): the text is HTML-escaped first, so nothing a VA types can run as code.
+- **Pasting keeps its formatting.** Paste a table, or bold, italic or underlined text, from Word, Google Docs or a spreadsheet straight into the Write box, and it turns into this library's own markdown instead of flattening to plain text: a pasted table becomes `| pipe | table |` rows, bold stays `**bold**` (Google Docs writes bold as a styled span, not a `<b>` tag, and that's read too), and a spreadsheet's plain tab-separated paste becomes a table the same way. A plain paste with no formatting to carry over pastes as plain text, same as before (`js/paste-format.js`; unit-tested in `tests/paste-format.cjs`).
 - **Nothing is lost.**
   - Every save adds a version. Nothing is overwritten.
   - The history shows every version and compares any version with the current one. The comparison is word for word: only the words that were removed are struck out and only the words that were added are highlighted — whole sentences are never crossed out over a one-word change — and long unchanged stretches fold away so the exact edit stands out.
@@ -52,7 +53,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 | `src/files.js` | Uploads (R2 multipart) and file streaming with Range support |
 | `src/db.js` | Tables, collections, making a version live, the search index |
 | `src/util.js` | Tokens, passwords and cookies, in the same formats as the portal |
-| `public/` | The site: `index.html`, `css/app.css`, `js/app.js` (all pages), `js/upload.js`, `js/md.js` (safe Markdown), `js/blueprint-content.js` and `js/lsh-blueprint.js` (the 🧭 Blueprint) |
+| `public/` | The site: `index.html`, `css/app.css`, `js/app.js` (all pages), `js/upload.js`, `js/md.js` (safe Markdown), `js/paste-format.js` (turns a pasted table or bold/italic/underlined text into that Markdown), `js/blueprint-content.js` and `js/lsh-blueprint.js` (the 🧭 Blueprint) |
 | `tests/` | End-to-end tests and local seed data |
 | `wrangler.json` | Worker config and bindings |
 | `.github/workflows/checks.yml` | The checks GitHub runs on every pull request and push |
@@ -142,6 +143,7 @@ npx wrangler dev --var KB_CODE_LOGIN:on --var PORTAL_URL:http://127.0.0.1:8789  
 pip install playwright && npm pack pdfjs-dist@3.11.174 && mkdir -p tests/.cache/pdfjs && tar xzf pdfjs-dist-3.11.174.tgz -C tests/.cache/pdfjs
 npm test                                    # end-to-end checks; start from fresh local data (rm -rf .wrangler/state, seed again)
 npm run test:blueprint                      # the 🧭 Blueprint; needs Node Playwright and jsPDF (npm install --no-save playwright jspdf@4.2.1, npx playwright install chromium)
+npm run test:paste-format                   # paste autoformatting; pure logic, no server or browser needed
 ```
 
 The tests cover:
@@ -152,5 +154,6 @@ The tests cover:
 - search inside a PDF
 - suggestions, review, history, restore, official, archive and purge
 - the 🧭 Blueprint (`tests/blueprint.cjs`): a VA gets the VA deck only and an admin both; every slide fits on a laptop and on a phone; both PDFs have a page per slide; the numbers match everywhere (Cover, then 1 to n, never n + 1)
+- paste autoformatting (`tests/paste-format.cjs`): a pasted table, bold/italic/underline (including Google Docs' styled-span bold), a link and a list convert to this library's markdown; plain text with nothing to convert is left alone; a spreadsheet's tab-separated paste becomes a table the same way
 
 **Checks on GitHub** (`.github/workflows/checks.yml`): every pull request and every push to the default branch builds the Worker without deploying (`wrangler deploy --dry-run`) and runs all of the tests above against a local `wrangler dev` with fresh, seeded data. A red **Checks** status means something broke; the log says which step.
