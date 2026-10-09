@@ -50,6 +50,8 @@ jobs:
           # a second copy, as the site runs (single sign-on only), pointed at a mock Portal for tests/portal.cjs
           npx wrangler dev --port 8790 --ip 127.0.0.1 --inspector-port 9331 --var PORTAL_URL:http://127.0.0.1:8788 > "$RUNNER_TEMP/dev2.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && curl -sf http://127.0.0.1:8790/ > /dev/null && break; sleep 1; done
+      - name: Paste autoformatting (tables and bold/italic/underline from a pasted Word, Docs or Sheets paste)
+        run: node tests/paste-format.cjs
       - name: End-to-end (sign-in, import, uploads, video, search, review, history)
         run: python tests/e2e.py || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
       - name: Blueprint (the VA and admin decks and their PDFs)

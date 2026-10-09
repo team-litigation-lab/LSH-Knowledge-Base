@@ -665,6 +665,21 @@
             ta.setSelectionRange(s + before.length, s + before.length + sel.length);
         }
         const insertAt = (text) => { const s = ta.selectionStart || ta.value.length; ta.setRangeText(text, s, ta.selectionEnd || s, 'end'); ta.focus(); };
+        // Autoformatting: pasting a table, or bold/italic/underlined text, from Word, Google Docs or a
+        // spreadsheet turns it into this library's own markdown instead of flattening it to plain text.
+        ta.addEventListener('paste', (ev) => {
+            const cd = ev.clipboardData;
+            const F = window.KBPasteFormat;
+            if (!cd || !F) return;
+            const html = cd.getData('text/html');
+            let converted = null;
+            if (html && F.hasRichFormatting(html)) converted = F.htmlToMarkdown(html);
+            else { const text = cd.getData('text/plain'); if (F.looksLikeTabTable(text)) converted = F.tabTextToMarkdown(text); }
+            if (converted == null) return;   // nothing to convert: let the browser paste plain text as usual
+            ev.preventDefault();
+            ta.setRangeText(converted, ta.selectionStart || 0, ta.selectionEnd || 0, 'end');
+            ta.focus();
+        });
         const pal = document.getElementById('mdbar-pal'), colorBtn = document.getElementById('mdbar-color');
         colorBtn.onclick = () => { pal.hidden = !pal.hidden; colorBtn.setAttribute('aria-expanded', String(!pal.hidden)); };
         const applyColor = (c) => { pal.hidden = true; colorBtn.setAttribute('aria-expanded', 'false'); wrapSel(`{color:${c}}`, '{/color}', 'colored text'); };
