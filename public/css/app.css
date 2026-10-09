@@ -160,8 +160,12 @@ textarea.i{resize:vertical;line-height:1.55;}
 /* ---------- entry ---------- */
 .entry-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;align-items:start;}
 @media (max-width:960px){.entry-layout{grid-template-columns:1fr;}}
+/* An article is for reading: it sits on its own near-solid sheet, not straight on the photo. */
+.entry-layout > article{background:rgba(255,255,255,.93);backdrop-filter:blur(3px);border:4px solid var(--card-frame);border-radius:18px;padding:22px clamp(18px,2.4vw,30px) 26px;
+  box-shadow:0 14px 30px -14px rgba(38,43,69,.34), 0 5px 12px -6px rgba(38,43,69,.14);}
+.entry-layout > article > *:first-child{margin-top:0;}
 .entry-head{display:grid;gap:8px;margin-bottom:14px;}
-.entry-head .lead{font-size:16.5px;color:#374151;margin:0;max-width:70ch;}
+.entry-head .lead{font-size:16.5px;color:#2A3047;margin:0;max-width:70ch;}
 .side{display:grid;gap:14px;}
 .side .card{padding:14px;}
 .side dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px;}

@@ -43,7 +43,7 @@
     const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
     const TYPE_ICON = { 'Training video': '▶', 'SOP': '📘', 'Guide': '🧭', 'Checklist': '☑️', 'Template': '🧩', 'Reference': '📚', 'Tip': '💡', 'Lesson learned': '🎓', 'Question': '❓' };
     const FILE_ICON = { video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️', doc: '📝', sheet: '📊', slides: '📽️', archive: '🗜️', other: '📎' };
-    const fileUrl = (f, dl) => `/files/${f.id}/${encodeURIComponent(f.name)}${dl ? '?download=1' : ''}`;
+    const fileUrl = (f) => `/files/${f.id}/${encodeURIComponent(f.name)}`;   // shown in the page; the library has no downloads
     const colName = (slug) => ((S.lib && S.lib.collections.find(c => c.slug === slug)) || {}).name || slug;
     const setTitle = (t) => { document.title = t ? `${t} · LSH Knowledge Base` : 'LSH Knowledge Base'; };
     const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
@@ -439,11 +439,13 @@
         const rest = files.filter(f => !['video', 'pdf', 'image'].includes(f.kind));
         return `<div class="media">
             ${videos.map(f => `<figure class="player" style="margin:0"><video controls preload="metadata" playsinline src="${fileUrl(f)}"></video>
-                <figcaption><span>${esc(f.name)} · ${fmtSize(f.size)}</span><a href="${fileUrl(f, true)}">Download</a></figcaption></figure>`).join('')}
+                <figcaption><span>${esc(f.name)} · ${fmtSize(f.size)}</span></figcaption></figure>`).join('')}
             ${pdfs.map((f, i) => i === 0 ? `<div><iframe class="pdf" title="${esc(f.name)}" src="${fileUrl(f)}#view=FitH" loading="lazy"></iframe></div>` : '').join('')}
             ${images.map(f => `<figure class="shot" style="margin:0"><a href="${fileUrl(f)}" target="_blank" rel="noopener"><img src="${fileUrl(f)}" alt="${esc(f.name)}" loading="lazy"></a></figure>`).join('')}
             <div class="files">${[...pdfs, ...rest].map(f => `<div class="file"><span class="nm"><span aria-hidden="true">${FILE_ICON[f.kind] || '📎'}</span><span>${esc(f.name)}</span> <small>${fmtSize(f.size)}</small></span>
-                <span class="row">${['pdf', 'image', 'audio'].includes(f.kind) || f.name.toLowerCase().endsWith('.txt') ? `<a class="btn small" href="${fileUrl(f)}" target="_blank" rel="noopener">Open</a>` : ''}<a class="btn small" href="${fileUrl(f, true)}">Download</a></span></div>`).join('')}</div>
+                <span class="row">${['pdf', 'image', 'audio', 'video'].includes(f.kind) || f.name.toLowerCase().endsWith('.txt')
+                    ? `<a class="btn small" href="${fileUrl(f)}" target="_blank" rel="noopener">Open</a>`
+                    : '<span class="muted">Shown in the page only</span>'}</span></div>`).join('')}</div>
         </div>`;
     }
 
@@ -996,15 +998,6 @@
                     <td><button class="btn small" data-save="${c.slug}">Save</button></td></tr>`).join('')}
                 <tr data-col=""><td><input class="i" data-k="name" placeholder="New collection"></td><td><input class="i" data-k="blurb" placeholder="What goes in it"></td><td><input class="i" data-k="sort" type="number" value="${(r.collections.length + 1) * 10}" style="width:80px"></td><td></td><td></td><td><button class="btn small primary" data-save="">Add</button></td></tr>
                 </tbody></table></div></section>
-            <section class="section card"><h2>Import from the old Knowledge Base</h2>
-                <p>${r.legacy.total ? `The Training Portal’s Knowledge Base has ${plural(r.legacy.total, 'post')}; ${r.legacy.imported} ${r.legacy.imported === 1 ? 'is' : 'are'} already here. Importing copies each post with its replies, votes and views. It’s safe to run again.` : 'The old Knowledge Base has no posts to import.'}</p>
-                ${r.legacy.total ? `<button class="btn primary" id="import">Import posts</button> <span class="muted" id="import-status"></span>` : ''}</section>
-            <section class="section card"><h2>Import Tettra pages</h2>
-                <p>Publishes the pages exported from Tettra (each Tettra category becomes a collection, each subcategory a section). Step 1 imports the pages, step 2 copies their images into the library so they stay if Tettra is closed. Both are safe to run again.</p>
-                <button class="btn primary" id="import-tettra">1. Import pages</button> <button class="btn" id="copy-images">2. Copy images</button> <button class="btn" id="refresh-search">3. Refresh the search</button> <span class="muted" id="tettra-status"></span></section>
-            <section class="section card"><h2>Import documents</h2>
-                <p>Publishes the handouts bundled with the site (the Demand Phase and Case Management manuals) as pages of the library, plus one page for each topic of the Foundational Training lessons, with their text searchable. Safe to run again; a handout imported earlier as a PDF is changed into a page.</p>
-                <button class="btn primary" id="import-docs">Import documents</button> <button class="btn" id="import-glossary">Import the Glossary only</button> <button class="btn" id="tidy-titles">Tidy ALL-CAPS titles</button> <span class="muted" id="import-docs-status"></span></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);
@@ -1032,112 +1025,6 @@
                 toast('Collection saved.'); S.lib = null; admin();
             } catch (e) { toast(e.message, true); }
         });
-        const refreshSearch = async (st) => {
-            let after = 0, n = 0;
-            for (;;) {
-                const x = await post('/api/admin', { action: 'reindex', after });
-                n += x.indexed; after = x.next;
-                st.textContent = `Search refreshed for ${plural(n, 'entry', 'entries')}${x.remaining ? '…' : '. Done.'}`;
-                if (!x.remaining || !x.indexed) break;
-            }
-        };
-        const rs = document.getElementById('refresh-search');
-        if (rs) rs.onclick = async () => {
-            rs.disabled = true;
-            try { await refreshSearch(document.getElementById('tettra-status')); } catch (e) { document.getElementById('tettra-status').textContent = e.message; }
-            rs.disabled = false;
-        };
-        const loop = (btnId, action, text) => {
-            const b = document.getElementById(btnId);
-            if (b) b.onclick = async () => {
-                b.disabled = true;
-                const st = document.getElementById('tettra-status');
-                let total = 0, last = Infinity;
-                try {
-                    for (;;) {
-                        const x = await post('/api/admin', { action });
-                        total += x.imported || x.copied || 0;
-                        st.textContent = text(total, x);
-                        if (!x.remaining || x.remaining >= last) break;   // done, or no progress
-                        last = x.remaining;
-                    }
-                    if (action === 'import-tettra') await refreshSearch(st);
-                    S.lib = null;
-                } catch (e) { st.textContent = e.message; }
-                b.disabled = false;
-            };
-        };
-        loop('import-tettra', 'import-tettra', (n, x) => x.note || `Imported ${n} ${n === 1 ? 'page' : 'pages'}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`);
-        const tt = document.getElementById('tidy-titles');
-        if (tt) tt.onclick = async () => {
-            tt.disabled = true;
-            const st = document.getElementById('import-docs-status');
-            let total = 0, last = Infinity;
-            try {
-                for (;;) {
-                    const x = await post('/api/admin', { action: 'tidy-titles' });
-                    total += x.fixed;
-                    st.textContent = total ? `Put ${plural(total, 'title')} in sentence case${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}` : 'No title is in ALL CAPS.';
-                    if (!x.remaining || x.remaining >= last) break;
-                    last = x.remaining;
-                }
-                S.lib = null;
-            } catch (e) { st.textContent = e.message; }
-            tt.disabled = false;
-        };
-        loop('copy-images', 'copy-images', (n, x) => `Copied ${n} images${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}${x.missing ? ` ${x.missing} no longer exist at Tettra.` : ''}`);
-        // Import documents: the Glossary first (so it shows even if a later step stops), then the handouts, procedures and lessons
-        // in batches of 10, then the training topics in batches of 12, then the search is refreshed. Each step reports on its own.
-        const batches = async (action, st, label) => {
-            let total = 0, last = Infinity;
-            for (;;) {
-                const x = await post('/api/admin', { action });
-                total += (x.imported || 0) + (x.updated || 0);
-                st.textContent = `${label}: ${total} done${x.remaining ? `, ${x.remaining} to go…` : '.'}`;
-                if (!x.remaining || x.remaining >= last) break;
-                last = x.remaining;
-            }
-            return total;
-        };
-        const impGl = document.getElementById('import-glossary');
-        if (impGl) impGl.onclick = async () => {
-            impGl.disabled = true;
-            const st = document.getElementById('import-docs-status');
-            try { const x = await post('/api/admin', { action: 'import-glossary' }); st.textContent = `Glossary: ${x.imported} terms loaded. Open Glossary in the top bar.`; S.lib = null; } catch (e) { st.textContent = 'Glossary: ' + e.message; }
-            impGl.disabled = false;
-        };
-        const impDocs = document.getElementById('import-docs');
-        if (impDocs) impDocs.onclick = async () => {
-            impDocs.disabled = true;
-            const st = document.getElementById('import-docs-status');
-            const done = [];
-            const step = async (name, fn) => { try { done.push(await fn()); } catch (e) { done.push(`${name} stopped: ${e.message}`); throw e; } };
-            try {
-                await step('Glossary', async () => { const g = await post('/api/admin', { action: 'import-glossary' }); return `Glossary ${g.imported} terms`; });
-                st.textContent = done.join('. ');
-                await step('Documents', async () => `Documents ${await batches('import-bundled', st, 'Documents')}`);
-                await step('Training topics', async () => `Training topics ${await batches('import-training', st, 'Training topics')}`);
-                await step('Search', async () => { await refreshSearch(document.getElementById('tettra-status') || st); return 'Search refreshed'; });
-                st.textContent = done.join('. ') + '.';
-                S.lib = null;
-            } catch (e) { st.textContent = done.join('. ') + ' (' + e.message + ')'; }
-            impDocs.disabled = false;
-        };
-        const imp = document.getElementById('import');
-        if (imp) imp.onclick = async () => {
-            imp.disabled = true;
-            const st = document.getElementById('import-status');
-            let total = 0;
-            try {
-                for (;;) {
-                    const x = await post('/api/admin', { action: 'import-legacy' });
-                    total += x.imported; st.textContent = `Imported ${total}${x.remaining ? `, ${x.remaining} to go…` : '. Done.'}`;
-                    if (!x.remaining || !x.imported) break;
-                }
-                S.lib = null;
-            } catch (e) { st.textContent = e.message; }
-            imp.disabled = false;
-        };
     }
 
 
