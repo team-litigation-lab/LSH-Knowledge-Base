@@ -1,4 +1,4 @@
-import { json, fail, nowIso, clean, oneLine, fixTitle, personKey, signToken, hashPassword, verifyPassword, setCookie, sameOrigin, readJson } from './util.js';
+import { json, fail, nowIso, clean, oneLine, fixTitle, autoformatBody, personKey, signToken, hashPassword, verifyPassword, setCookie, sameOrigin, readJson } from './util.js';
 import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf,
     READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
@@ -658,6 +658,24 @@ async function adminAction({ request, env, db, reader }) {
             const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
                 VALUES (?, ?, 'pending', 'Title put in sentence case', ?, ?, ?, 1, ?)`).bind(e.id, JSON.stringify(d), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
             await makeLive(db, e.id, rev.meta.last_row_id, { publish: e.status === 'published', reviewer: reader.adminUser });
+            fixed++;
+        }
+        return json({ success: true, fixed, remaining: todo.length - fixed });
+    }
+    if (body.action === 'autoformat-body') {   // a plain-text table or an unbolded "Label:" line in an entry's body gets this library's own markdown (12 per call; run again until none remain)
+        const { results } = await db.prepare(`SELECT e.id, e.status, r.data FROM lib_entries e JOIN lib_revisions r ON r.id = e.live_rev WHERE e.live_rev IS NOT NULL`).all();
+        const todo = [];
+        for (const row of results || []) {
+            const d = JSON.parse(row.data);
+            const formatted = autoformatBody(d.body);
+            if (formatted !== d.body) todo.push({ id: row.id, status: row.status, data: d, formatted });
+        }
+        let fixed = 0;
+        for (const t of todo.slice(0, 12)) {
+            t.data.body = t.formatted;
+            const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
+                VALUES (?, ?, 'pending', 'Autoformatted: tables and bold labels', ?, ?, ?, 1, ?)`).bind(t.id, JSON.stringify(t.data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
+            await makeLive(db, t.id, rev.meta.last_row_id, { publish: t.status === 'published', reviewer: reader.adminUser });
             fixed++;
         }
         return json({ success: true, fixed, remaining: todo.length - fixed });
