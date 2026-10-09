@@ -2,7 +2,7 @@
   color-scheme: light;
   --navy:#262B45; --navy-deep:#161829; --navy-soft:#3C4268;
   --orange:#DB8437; --orange-deep:#B5651F; --orange-soft:#FBEFE0;
-  --ink:#1B1E2E; --muted:#5B6178; --line:#DED6C6; --line-soft:#EFE8DA;
+  --ink:#141729; --muted:#3B4157; --line:#DED6C6; --line-soft:#EFE8DA;
   --paper:#FAF4E8; --card:#ffffff;
   /* The cards sit over the photo backdrop, so they are not quite opaque; the frame and the thin
      gridline are the lesson cards' (js/lsh-card-frame.js in the course repos). */
@@ -87,6 +87,10 @@ textarea.i{resize:vertical;line-height:1.55;}
 
 /* ---------- home ---------- */
 /* The welcome band is kept compact: it introduces the library, the library itself is the page. */
+.hero{background:var(--navy);color:#fff;border-radius:14px;padding:16px clamp(16px,2.4vw,24px);display:grid;gap:9px;position:relative;overflow:hidden;}
+.hero::after{content:"";position:absolute;right:-34px;top:-34px;width:168px;height:168px;border-radius:50%;border:26px solid rgba(249,115,22,.16);}
+.hero h1{color:#fff;margin:0;font-size:clamp(21px,2.3vw,26px);}
+.hero p{margin:0;color:#c9d3e8;max-width:60ch;font-size:14px;}
 /* The search and the category picker lead the library: one row, both as plain to see as the page's title. */
 .lib-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:10px;}
 .lib-search{flex:1 1 360px;display:flex;gap:8px;min-width:0;}
@@ -94,6 +98,7 @@ textarea.i{resize:vertical;line-height:1.55;}
 .lib-search input:focus{outline:2px solid var(--orange);outline-offset:1px;}
 .lib-search .btn{flex:none;border-radius:12px;padding:11px 22px;font-size:15px;}
 .lib-cat{flex:0 1 260px;border:2px solid var(--navy);border-radius:12px;padding:11px 14px;font-size:15px;font-weight:600;color:var(--navy);background:#fff;box-shadow:0 10px 24px -16px rgba(38,43,69,.6);}
+.lib-count{flex:none;align-self:center;font-weight:600;}
 .lib-stats{margin:0 0 18px;}
 /* the stat line reads on the cream page now, not on the navy band it used to sit in */
 .stats.lib-stats span{color:var(--muted);}
@@ -117,13 +122,13 @@ textarea.i{resize:vertical;line-height:1.55;}
   box-shadow:0 14px 30px -14px rgba(38,43,69,.34), 0 5px 12px -6px rgba(38,43,69,.14);transition:border-color .15s, box-shadow .15s;}
 .item:hover{border-color:#CCD1DE;box-shadow:0 20px 38px -16px rgba(38,43,69,.4), 0 8px 16px -8px rgba(38,43,69,.16);}
 .item h3{margin:0 0 2px;color:var(--navy);font-size:15.5px;}
-.item p{margin:0;font-size:13.5px;color:var(--muted);}
+.item p{margin:0;font-size:13.5px;color:#2A3047;}
 .item .snip{color:var(--ink);font-size:13.5px;}
 .item mark{background:#ffe3c7;color:inherit;padding:0 1px;border-radius:2px;}
 .ic{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px;background:var(--line-soft);}
 .ic.video{background:#1f2a44;color:#fff;}
 .ic.official{background:var(--official-bg);}
-.meta-line{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--card-gridline);}
+.meta-line{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px;color:#3B4157;font-weight:500;margin-top:6px;padding-top:6px;border-top:1px solid var(--card-gridline);}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--line-soft);color:var(--navy);white-space:nowrap;}
 .badge.official{background:var(--official-bg);color:var(--official);}
 .badge.video{background:#1f2a44;color:#fff;}
