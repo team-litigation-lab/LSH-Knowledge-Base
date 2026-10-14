@@ -220,6 +220,11 @@
                 case 'people': return parts[1] ? await person(decodeURIComponent(parts[1])) : await people();
                 case 'review': return await review();
                 case 'admin': return await admin();
+                case 'blueprint': {   // the Main Portal's 🧭 Blueprint page links here; nothing in the library does
+                    await home();
+                    if (window.LSHBlueprint) LSHBlueprint.open();
+                    return;
+                }
             }
             view(`<div class="card"><h2>Page not found</h2><a class="btn" href="#/">Back to the library</a></div>`);
         } catch (e) { errorView(e); }
