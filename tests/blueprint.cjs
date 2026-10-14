@@ -1,8 +1,9 @@
 // The 🧭 Blueprint (public/js/lsh-blueprint.js with public/js/blueprint-content.js), against `npm run dev` like
 // e2e.py; run it after e2e.py. jsPDF is served from node_modules in place of cdnjs.
-// Checks: a VA has 🧭 Blueprint in the top bar and gets the VA (trainee) deck only, with no admin words; an admin gets
+// Checks: no 🧭 Blueprint button anywhere in the library (the Main Portal's Blueprint page is where blueprints live);
+// #/blueprint, that page's link, opens it: a VA gets the VA (trainee) deck only, with no admin words; an admin gets
 // both decks as tabs; ◀ ▶ and the keys go through every slide; every slide fits its frame on a laptop and on a phone;
-// ⬇ Download PDF saves each deck with a page per slide and the deploy stamp; the button survives a page change.
+// ⬇ Download PDF saves each deck with a page per slide and the deploy stamp; no page grows a Blueprint button.
 // Numbering: the cover is "Cover" (★), the slides 1 to n on the contents buttons, the counter, the slide's heading and
 // footer, and the PDF's page footers; the last slide is "n / n", as its button, and nothing ever says n + 1.
 // Usage: node tests/blueprint.cjs   (needs Node Playwright and jsPDF: npm install --no-save playwright jspdf@4.2.1)
@@ -74,8 +75,9 @@ async function walk(page, label) {
   await a.click('[data-tab="admin"]'); await a.fill('#g-user', 'trainer1'); await a.fill('#g-pass', 'admin-pass');
   await a.click('#f-admin button[type=submit]'); await a.waitForSelector('.hero');
   await a.evaluate(async (code) => fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set-code', code }) }), CODE);
-  await a.waitForSelector('#lbp-open-btn', { timeout: 5000 }).catch(() => fail('an admin has no 🧭 Blueprint button'));
-  await a.click('#lbp-open-btn'); await a.waitForTimeout(300);
+  await a.waitForTimeout(800);
+  if (await a.$('#lbp-open-btn')) fail('an admin still has a 🧭 Blueprint button: the blueprints live on the Main Portal');
+  await a.evaluate(() => { location.hash = '#/blueprint'; }); await a.waitForSelector('#lbp-slide', { timeout: 5000 }).catch(() => fail('#/blueprint did not open the Blueprint for an admin')); await a.waitForTimeout(300);
   const at = await a.evaluate(() => ({ deck: document.getElementById('lbp-slide').dataset.deck, tabs: [...document.querySelectorAll('#lbp-tabs button')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }));
   if (at.deck !== 'trainer' || at.tabs.join() !== 'Trainer blueprint,Trainee blueprint') fail(`an admin should get both decks: ${JSON.stringify(at)}`);
   const aw = await walk(a, 'admin 1366px'); aw.out.forEach(fail);
@@ -93,8 +95,9 @@ async function walk(page, label) {
   await v.goto(B + '/'); await v.waitForSelector('#f-va');
   await v.fill('#g-name', 'Blue Print'); await v.fill('#g-batch', 'Batch 9'); await v.fill('#g-code', CODE);
   await v.click('#f-va button[type=submit]'); await v.waitForSelector('.hero');
-  await v.waitForSelector('#lbp-open-btn', { timeout: 5000 }).catch(() => fail('a VA has no 🧭 Blueprint button'));
-  await v.click('#lbp-open-btn'); await v.waitForTimeout(300);
+  await v.waitForTimeout(800);
+  if (await v.$('#lbp-open-btn')) fail('a VA still has a 🧭 Blueprint button: the blueprints live on the Main Portal');
+  await v.evaluate(() => { location.hash = '#/blueprint'; }); await v.waitForSelector('#lbp-slide', { timeout: 5000 }).catch(() => fail('#/blueprint did not open the Blueprint for a VA')); await v.waitForTimeout(300);
   const t = await v.evaluate(() => ({ deck: document.getElementById('lbp-slide').dataset.deck, tabs: !!document.getElementById('lbp-tabs').offsetParent }));
   if (t.deck !== 'trainee' || t.tabs) fail(`a VA should get the VA deck only: ${JSON.stringify(t)}`);
   if (await v.evaluate(() => { LSHBlueprint.deck('trainer'); return document.getElementById('lbp-slide').dataset.deck; }) !== 'trainee') fail('a VA could switch to the admin deck');
@@ -112,7 +115,7 @@ async function walk(page, label) {
   await v.keyboard.press('Escape');
   if (await v.evaluate(() => LSHBlueprint.isOpen())) fail('Esc didn\'t close the Blueprint');
   await v.click('#top-nav a[href="#/videos"]'); await v.waitForTimeout(400);
-  if (!(await v.isVisible('#lbp-open-btn'))) fail('the 🧭 Blueprint button went missing on another page');
+  if (await v.$('#lbp-open-btn')) fail('another page grew a 🧭 Blueprint button');
   await v.setViewportSize({ width: 390, height: 844 }); await v.evaluate(() => LSHBlueprint.open()); await v.waitForTimeout(300);
   (await walk(v, 'VA 390px')).out.forEach(fail);
   await v.context().close();
