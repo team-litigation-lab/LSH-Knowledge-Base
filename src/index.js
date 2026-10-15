@@ -101,8 +101,21 @@ async function session(request, env) {
             v = await r.json();
         } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check your sign-in. Try again in a moment.', 502); }
         if (!v || !v.ok) return fail('That sign-in link has expired. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'TICKET' });
-        // Administrators type the admin password here, like on every platform: a ticket never signs one in.
-        if (v.admin || v.system) return fail('Administrators sign in here with the admin password.', 403, { code: 'ADMIN_PASSWORD_REQUIRED' });
+        if (v.system) return fail('This link can’t sign anyone in.', 403, { code: 'SYSTEM_TICKET' });
+        // A trainer signed in to the Portal with their own admin account: an admin here, as themselves, no password.
+        // An admin ticket works once (its signature is noted for 10 minutes, longer than a ticket lives).
+        if (v.admin) {
+            const sig = String(body.ticket || '').split('.').pop().slice(0, 43);
+            try {
+                await db.prepare(`CREATE TABLE IF NOT EXISTS kb_sso_used (sig TEXT PRIMARY KEY, at INTEGER NOT NULL)`).run();
+                await db.prepare(`DELETE FROM kb_sso_used WHERE at < ?`).bind(Date.now() - 600000).run();
+                await db.prepare(`INSERT INTO kb_sso_used (sig, at) VALUES (?, ?)`).bind(sig, Date.now()).run();
+            } catch (e) { return fail('This sign-in link was already used. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'used' }); }
+            const name = oneLine(v.name, 80);
+            const username = name ? 'admin:' + name.toLowerCase() : MASTER_USERNAME;
+            const token = await signToken({ adm: 1, username, name: name || 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
+            return json({ success: true, admin: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
+        }
         const name = oneLine(`${v.first} ${v.last}`, 80), batch = oneLine(v.batch, 40);
         const token = await signToken({ kb: 1, sso: 1, name, batch }, env.SESSION_SECRET, PORTAL_READER_HOURS * 3600);
         return json({ success: true }, 200, { 'Set-Cookie': setCookie(READER_COOKIE, token, PORTAL_READER_HOURS * 3600) });
