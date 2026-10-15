@@ -76,6 +76,51 @@
     }
     const listHTML = (items, opts) => items.length ? `<div class="list">${items.map(e => itemHTML(e, opts)).join('')}</div>` : '';
 
+    /* ---------- the card wall ----------
+       The library and Featured show their entries as a wall of cards: five across, four rows
+       down, one screenful at a time. fitTiles() ends the last row at the bottom of the window,
+       so the wall never runs past the screen; the rest of the entries are a page away. */
+    const WALL_PAGE = 20;   // 5 cards across × 4 rows down
+    function fitTiles() {
+        document.querySelectorAll('.tiles').forEach(g => {
+            g.style.height = '';
+            if (window.innerWidth <= 560) return;   // one column: let it scroll
+            const top = g.getBoundingClientRect().top;
+            const pager = g.parentElement && g.parentElement.querySelector('.pager');
+            const app = document.getElementById('app');
+            // what sits under the wall: the pager, and the page's own bottom padding
+            const below = (pager ? pager.offsetHeight + 12 : 0)
+                + (app ? parseFloat(getComputedStyle(app).paddingBottom) || 0 : 24)
+                + 8;   // a little slack, so rounding in the row heights can't start a scrollbar
+            const h = window.innerHeight - top - below;
+            if (h > 280) g.style.height = h + 'px';
+        });
+    }
+    window.addEventListener('resize', fitTiles);
+    // Draws `items` into the element with that id as a paged wall of cards. Call it again with a
+    // new list (the category picker does) and the wall starts over at the first page.
+    function wall(id, items, opts) {
+        const host = document.getElementById(id);
+        if (!host) return;
+        const pages = Math.max(1, Math.ceil(items.length / WALL_PAGE));
+        let page = 0;
+        function draw() {
+            if (!items.length) { host.innerHTML = '<p class="muted">Nothing here yet.</p>'; return; }
+            const slice = items.slice(page * WALL_PAGE, (page + 1) * WALL_PAGE);
+            host.innerHTML = `<div class="tiles">${slice.map(e => itemHTML(e, opts)).join('')}</div>`
+                + (pages > 1 ? `<div class="pager">
+                    <button class="btn" type="button" data-pg="-1"${page === 0 ? ' disabled' : ''}>← Previous</button>
+                    <span>Page ${page + 1} of ${pages} · ${plural(items.length, 'entry', 'entries')}</span>
+                    <button class="btn" type="button" data-pg="1"${page >= pages - 1 ? ' disabled' : ''}>Next →</button></div>` : '');
+            host.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => {
+                page = Math.min(pages - 1, Math.max(0, page + Number(b.dataset.pg)));
+                draw();
+            });
+            fitTiles();
+        }
+        draw();
+    }
+
     /* ---------- session / chrome ---------- */
     // "Switch view": an admin can see the Knowledge Base exactly as a trainee (Info Access) sees it.
     // The real session stays in S.real; the pages read S.session, which is the masked copy while the switch is on.
@@ -268,14 +313,15 @@
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
-        ${t.entries ? `<section class="section">${libBar}<div id="az-list">${listHTML(all.entries)}</div></section>` : ''}
-        ${L.featured.length ? `<section class="section"><h2>Featured</h2>${listHTML(L.featured)}</section>` : ''}
-        ${L.videos.length ? `<section class="section"><div class="spread"><h2>Latest training videos</h2><a href="#/videos">All videos</a></div>${listHTML(L.videos)}</section>` : ''}
-        ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);
+        ${t.entries ? `<section class="section">${libBar}<div id="az-list"></div></section>` : ''}`);
+        // The whole library as a wall of cards, a screenful at a time. Featured, the videos and the
+        // recent and most-helpful lists each have their own page on the top bar, so the home screen
+        // stays one screen: the search, the category picker and the cards.
+        if (t.entries) wall('az-list', all.entries);
         const azCat = document.getElementById('az-cat');
         if (azCat && document.getElementById('az-list')) azCat.onchange = () => {
             const rows = azCat.value ? all.entries.filter(e => e.collection === azCat.value) : all.entries;
-            document.getElementById('az-list').innerHTML = listHTML(rows);
+            wall('az-list', rows);
             document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
         };
         const libForm = document.getElementById('lib-search-form');   // not drawn while the library is empty
@@ -369,7 +415,10 @@
         const L = await ensureLib(true);
         chrome(true); setTitle('Featured');
         view(`<h1>Featured</h1><p class="muted" style="margin-top:0">The articles the team has starred as front-page reading.</p>
-            ${L.featured.length ? listHTML(L.featured) : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
+            ${L.featured.length ? '<div id="featured-wall"></div>' : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
+        // Featured is the screen the program opens on, so it is laid out like the library: the same
+        // wall of cards, five across and four down, one screenful at a time.
+        if (L.featured.length) wall('featured-wall', L.featured);
     }
 
     /* ---------- glossary (a dictionary of terms) ---------- */
@@ -1067,5 +1116,11 @@
     }
 
 
-    route();
+    // Opening the Knowledge Base lands on Featured. Only the first load is sent there: "Library"
+    // on the top bar still goes to #/ and the whole library.
+    if (!location.hash || location.hash === '#' || location.hash === '#/') {
+        location.replace('#/featured');   // the hashchange this fires does the routing
+    } else {
+        route();
+    }
 })();
