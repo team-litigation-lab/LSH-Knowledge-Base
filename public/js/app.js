@@ -88,9 +88,14 @@
             const top = g.getBoundingClientRect().top;
             const pager = g.parentElement && g.parentElement.querySelector('.pager');
             const app = document.getElementById('app');
-            // what sits under the wall: the pager, and the page's own bottom padding
-            const below = (pager ? pager.offsetHeight + 12 : 0)
-                + (app ? parseFloat(getComputedStyle(app).paddingBottom) || 0 : 24)
+            const section = g.closest('.section');
+            // What sits under the wall: the pager, and — when the wall is the last thing on the
+            // page — the page's own bottom padding. When more sections follow (Recently added and
+            // Most helpful do, on the library page) the wall still ends at the fold and they
+            // begin a scroll below it.
+            const tail = section && section.nextElementSibling
+                ? 16 : (app ? parseFloat(getComputedStyle(app).paddingBottom) || 0 : 24);
+            const below = (pager ? pager.offsetHeight + 12 : 0) + tail
                 + 8;   // a little slack, so rounding in the row heights can't start a scrollbar
             const h = window.innerHeight - top - below;
             if (h > 280) g.style.height = h + 'px';
@@ -313,10 +318,11 @@
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
-        ${t.entries ? `<section class="section">${libBar}<div id="az-list"></div></section>` : ''}`);
-        // The whole library as a wall of cards, a screenful at a time. Featured, the videos and the
-        // recent and most-helpful lists each have their own page on the top bar, so the home screen
-        // stays one screen: the search, the category picker and the cards.
+        ${t.entries ? `<section class="section">${libBar}<div id="az-list"></div></section>` : ''}
+        ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);
+        // The whole library as a wall of cards: the first screen is the search, the category picker
+        // and one screenful of cards. Recently added and Most helpful keep their place as rows under
+        // the wall, a scroll down from it.
         if (t.entries) wall('az-list', all.entries);
         const azCat = document.getElementById('az-cat');
         if (azCat && document.getElementById('az-list')) azCat.onchange = () => {
