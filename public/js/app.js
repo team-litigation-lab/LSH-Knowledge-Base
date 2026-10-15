@@ -423,7 +423,7 @@
         view(`<h1>Featured</h1><p class="muted" style="margin-top:0">The articles the team has starred as front-page reading.</p>
             ${L.featured.length ? '<div id="featured-wall"></div>' : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
         // Featured is the screen the program opens on, so it is laid out like the library: the same
-        // wall of cards, five across, so the ten featured articles read as two rows.
+        // wall of cards, five across, so the fifteen featured articles read as three rows.
         if (L.featured.length) wall('featured-wall', L.featured);
     }
 
