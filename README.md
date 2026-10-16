@@ -56,7 +56,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 | `src/util.js` | Tokens, passwords and cookies, in the same formats as the portal; `autoformatBody` for the **Autoformat existing articles** admin action |
 | `public/` | The site: `index.html`, `css/app.css`, `js/app.js` (all pages), `js/upload.js`, `js/md.js` (safe Markdown), `js/paste-format.js` (turns a pasted table or bold/italic/underlined text into that Markdown), `js/blueprint-content.js` and `js/lsh-blueprint.js` (the 🧭 Blueprint) |
 | `tests/` | End-to-end tests and local seed data |
-| `wrangler.json` | Worker config and bindings |
+| `wrangler.jsonc` | Worker config and bindings |
 | `.github/workflows/checks.yml` | The checks GitHub runs on every pull request and push |
 
 ## Comments · update current info

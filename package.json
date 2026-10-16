@@ -13,7 +13,7 @@
     "test:rich": "node tests/rich-editor.cjs"
   },
   "dependencies": {
-    "wrangler": "^3.114.17"
+    "wrangler": "4.151.1"
   },
   "private": true
 }

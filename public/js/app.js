@@ -99,9 +99,10 @@
             const below = (pager ? pager.offsetHeight + 12 : 0) + tail
                 + 8;   // a little slack, so rounding in the row heights can't start a scrollbar
             const h = window.innerHeight - top - below;
-            // A floor, not a ceiling: the wall still reaches the fold, but a card that needs
-            // more room for its summary grows past it instead of clipping the text.
-            if (h > 280) g.style.minHeight = h + 'px';
+            // The wall fills the screen and stops there: summaries are clipped to three lines
+            // (see .tiles .item p in app.css), so the rows divide the height evenly and the
+            // whole page fits without a scrollbar.
+            if (h > 280) { g.style.height = h + 'px'; g.style.minHeight = h + 'px'; }
         });
     }
     window.addEventListener('resize', fitTiles);

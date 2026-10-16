@@ -30,7 +30,7 @@ and never run `playwright install`.
 ## team-litigation-lab/LSH-Knowledge-Base
 
 LSH Knowledge Base — a Cloudflare Worker: `src/index.js` (routes), `src/db.js` (D1), `src/files.js`
-(R2), `src/util.js`. Tests in `tests/`, maintenance scripts in `scripts/`. Config in `wrangler.json`,
+(R2), `src/util.js`. Tests in `tests/`, maintenance scripts in `scripts/`. Config in `wrangler.jsonc`,
 scripts in `package.json`. Default branch `claude/brave-newton-xors2t` (per `.github/workflows/checks.yml`;
 confirm with `git remote show origin` before branching). Designated work branch
 `claude/great-ptolemy-3tezc3`.
