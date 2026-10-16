@@ -152,15 +152,18 @@ textarea.i{resize:vertical;line-height:1.55;}
 @media (max-width:560px){.tiles{grid-template-columns:1fr;height:auto!important;}}
 /* A tile is the same card as a row, stood on end: icon and badges at the top, then the title,
    the summary (clipped to what fits), and the meta line along the bottom edge. */
-.tiles .item{grid-template-columns:auto minmax(0,1fr);align-items:stretch;gap:10px;padding:14px 16px;min-height:0;}
-.tiles .item > span:last-child{display:flex;flex-direction:column;min-height:0;}
+.tiles .item{grid-template-columns:auto minmax(0,1fr);align-items:stretch;gap:10px;padding:14px 16px;min-height:0;overflow:hidden;}
+.tiles .item > span:last-child{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
 .tiles .item .ic{width:32px;height:32px;font-size:16px;align-self:start;}
 .tiles .item .badge{font-size:12.5px;}
 /* The title is centred over the card and divided from the summary by its own rule. */
-.tiles .item h3{flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.28;text-align:center;margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--card-gridline);}
+.tiles .item h3{flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.28;text-align:center;margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--card-gridline);
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden;}
 /* The summary is a one-liner: clipped to three lines so every card is the same height and the
-   whole wall lands on one screen. The full summary is a click away, on the article itself. */
-.tiles .item p,.tiles .item .snip{flex:0 0 auto;font-size:16px;line-height:1.45;min-height:0;margin:0 0 4px;
+   whole wall lands on one screen. The full summary is a click away, on the article itself.
+   It is also the part that gives way (flex-shrink:1): when a card's meta line wraps to an
+   extra row, the summary loses that height instead of the meta line spilling past the frame. */
+.tiles .item p,.tiles .item .snip{flex:0 1 auto;font-size:16px;line-height:1.45;min-height:0;margin:0 0 4px;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden;}
 /* The meta line sits on the bottom edge of the tile, under its rule, as it does on a row card. */
 .tiles .item .meta-line{flex:0 0 auto;margin-top:auto;padding-top:7px;font-size:13.5px;font-weight:600;color:var(--ink);gap:3px 8px;}
