@@ -268,6 +268,11 @@ async function getEntry({ db, reader }, id) {
     const rev = e.live_rev
         ? await db.prepare(`SELECT * FROM lib_revisions WHERE id = ?`).bind(e.live_rev).first()
         : await db.prepare(`SELECT * FROM lib_revisions WHERE entry_id = ? ORDER BY id DESC LIMIT 1`).bind(id).first();
+    // createEntry writes the entry row and its first revision as two statements, so a
+    // failure between them leaves an entry with no revision. Its author still sees the
+    // card under ?status=mine, and opening it threw a TypeError here — a 500 on their
+    // own contribution. Treat it as unavailable instead.
+    if (!rev) return fail('That entry isn’t available.', 404);
     const d = JSON.parse(rev.data);
     const ref = refOf(id);
     if (e.status === 'published') await db.prepare(`INSERT INTO kb_stats (article_ref, views) VALUES (?, 1) ON CONFLICT(article_ref) DO UPDATE SET views = views + 1`).bind(ref).run();

@@ -63,16 +63,31 @@ export function autoformatBody(md) {
     const splitRow = (l) => (l.includes('\t') ? l.split('\t') : l.includes('|') ? l.split('|') : l.split(/ {2,}/))
         .map(c => c.trim()).filter(Boolean);
 
+    // A fenced code block is verbatim: the fence line itself is a block start, but
+    // the lines between fences were not, so aligned text inside one ("Name:  value")
+    // was rewritten into a pipe table — and the admin autoformat action publishes
+    // that straight to a live revision, so every entry with a code fence was being
+    // corrupted for readers.
+    const isFence = (l) => /^\s*```/.test(l);
+    // Only a line starting in column 0 may open a table. An indented line is a
+    // continuation — of a list item, most often — and js/md.js folds it into that
+    // item's text, so converting it split one list into list / table / list.
+    const canOpenTable = (l) => /^\S/.test(l);
+
     const out = [];
     let i = 0;
+    let inFence = false;
     while (i < lines.length) {
         const line = lines[i];
 
-        if (!isBlockStart(line) && !isTableRow(line) && line.trim()) {
+        if (isFence(line)) { inFence = !inFence; out.push(line); i++; continue; }
+        if (inFence) { out.push(line); i++; continue; }
+
+        if (!isBlockStart(line) && !isTableRow(line) && line.trim() && canOpenTable(line)) {
             const cols = splitRow(line);
             if (cols.length >= 2) {
                 const block = [cols]; let j = i + 1;
-                while (j < lines.length && lines[j].trim() && !isBlockStart(lines[j]) && !isTableRow(lines[j])) {
+                while (j < lines.length && lines[j].trim() && !isBlockStart(lines[j]) && !isTableRow(lines[j]) && !isFence(lines[j])) {
                     const next = splitRow(lines[j]);
                     if (next.length !== cols.length) break;
                     block.push(next); j++;

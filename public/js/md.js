@@ -16,7 +16,10 @@
         s = s.replace(/!\[([^\]\n]*)\]\((\/img\/[0-9a-f]{16})\)/g, (_, t, u) => `<img class="md-img" loading="lazy" src="${u}" alt="${t}">`);
         // Photos uploaded to the library: the editor's 🖼️ Photo button writes ![name](/files/<id>/<name>).
         s = s.replace(/!\[([^\]\n]*)\]\((\/files\/[0-9a-f-]{36}\/[^\s)]+)\)/g, (_, t, u) => `<img class="md-img" loading="lazy" src="${u}" alt="${t}">`);
-        s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+|\/[^\s)]*)\)/g, (_, t, u) =>
+        // The internal-link branch requires a single leading slash: //host/path is a
+        // protocol-relative URL, i.e. off-site, and used to pass as internal — so it
+        // was rendered without rel="noopener noreferrer" and skipped the https? check.
+        s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+|\/(?!\/)[^\s)]*)\)/g, (_, t, u) =>
             `<a href="${u}"${/^https?:/.test(u) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t}</a>`);
         s = s.replace(/(^|[\s(])(https:\/\/[^\s<)]*[^\s<).,;:!?'&])/g, (_, p, u) => `${p}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
         // Colored text: {color:#D33}…{/color} with a 3- or 6-digit hex code, or a plain color name (letters only,
