@@ -651,26 +651,45 @@
                     <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add files">Drop files here, or <u>choose files</u><input type="file" id="ed-file" multiple hidden></div>
                     <div class="up" id="up"></div>
                 </div>
-                <div>
-                    <div class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-t="write">Write</button><button type="button" role="tab" aria-selected="false" data-t="preview">Preview</button></div>
-                    <label class="sr" for="ed-body">Content</label>
+                <div class="writer">
+                    <div class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-t="write">Write</button><button type="button" role="tab" aria-selected="false" data-t="markdown" title="The same content as the library stores it">Markdown</button><button type="button" role="tab" aria-selected="false" data-t="preview">Preview</button></div>
                     <div class="mdbar" id="mdbar" role="toolbar" aria-label="Formatting">
-                        <button type="button" data-f="bold" title="Bold (select text first)"><b>B</b></button>
-                        <button type="button" data-f="italic" title="Italic"><i>I</i></button>
-                        <button type="button" data-f="underline" title="Underline"><u>U</u></button>
+                        <select id="mdbar-block" class="mdbar-block" aria-label="Paragraph style" title="Paragraph style">
+                            <option value="p">Normal text</option><option value="h2">Heading</option><option value="h3">Subheading</option><option value="h4">Minor heading</option>
+                        </select>
                         <span class="mdbar-sep" aria-hidden="true"></span>
-                        <button type="button" id="mdbar-color" title="Colored text" aria-expanded="false"><span style="color:#C0392B;font-weight:700">A</span> Color</button>
+                        <button type="button" data-f="bold" title="Bold (Ctrl+B)" aria-label="Bold" aria-pressed="false"><b>B</b></button>
+                        <button type="button" data-f="italic" title="Italic (Ctrl+I)" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+                        <button type="button" data-f="underline" title="Underline (Ctrl+U)" aria-label="Underline" aria-pressed="false"><u>U</u></button>
+                        <button type="button" id="mdbar-color" title="Text color" aria-expanded="false"><span style="color:#C0392B;font-weight:700">A</span> Color</button>
                         <span class="pal" id="mdbar-pal" hidden>
                             ${['#C0392B', '#D97706', '#1E8449', '#1D4ED8', '#6D28D9', '#DB2777', '#6B7280', '#000000'].map(c => `<button type="button" class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('')}
                             <input type="color" id="mdbar-custom" value="#C0392B" title="Pick any color">
                         </span>
                         <span class="mdbar-sep" aria-hidden="true"></span>
-                        <button type="button" data-f="link" title="Link to a page or site">🔗 Link</button>
-                        <button type="button" data-f="photo" title="Put a photo here in the text">🖼️ Photo</button>
-                        <input type="file" id="mdbar-photo" accept="image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp" hidden>
+                        <button type="button" data-f="link" title="Link (Ctrl+K)" aria-pressed="false">🔗 Link</button>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" data-f="ul" title="Bulleted list" aria-label="Bulleted list" aria-pressed="false">• List</button>
+                        <button type="button" data-f="ol" title="Numbered list" aria-label="Numbered list" aria-pressed="false">1. List</button>
+                        <button type="button" data-f="check" title="Checklist" aria-label="Checklist" aria-pressed="false">☑ Checklist</button>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" data-f="quote" title="Quote or callout" aria-label="Quote" aria-pressed="false">❝ Quote</button>
+                        <button type="button" data-f="code" title="Code" aria-label="Code" aria-pressed="false">‹›</button>
+                        <button type="button" data-f="table" title="Insert a table (Tab moves between cells and adds a row at the end)">▦ Table</button>
+                        <button type="button" data-f="rule" title="Horizontal line">― Line</button>
+                        <button type="button" data-f="photo" title="Put a photo here (you can also paste or drop one)">🖼️ Photo</button>
+                        <input type="file" id="mdbar-photo" accept="image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp" multiple hidden>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" data-f="undo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+                        <button type="button" data-f="redo" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+                        <button type="button" data-f="clear" title="Clear formatting from the selection">Clear</button>
                     </div>
-                    <textarea class="i" id="ed-body" rows="16" placeholder="Steps, examples and the pitfalls you ran into. Use the buttons above, or type: # heading, **bold**, *italic*, ++underline++, - list, - [ ] checklist, | table |">${esc(d.body)}</textarea>
+                    <div class="rich md preview" id="ed-rich" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Content" spellcheck="true"
+                        data-placeholder="Steps, examples and the pitfalls you ran into. Paste from Word or Google Docs and the formatting comes along."></div>
+                    <label class="sr" for="ed-body">Content, as the library stores it</label>
+                    <textarea class="i" id="ed-body" rows="16" hidden placeholder="# heading, **bold**, *italic*, ++underline++, - list, - [ ] checklist, | table |">${esc(d.body)}</textarea>
                     <div class="preview md" id="ed-prev" hidden></div>
+                    <p class="muted ed-hint" id="ed-hint">Paste or drop a photo to put it in the text. Formatting pasted from Word, Google Docs or a spreadsheet comes along.</p>
                 </div>
                 <label class="f">Credits <small>(teammates who helped, comma-separated)</small><input class="i" id="ed-cred" value="${esc(d.credits.join(', '))}"></label>
                 ${s.admin ? `<label class="check"><input type="checkbox" id="ed-off"${d.official ? ' checked' : ''}> Official: an approved LSH SOP or resource</label>` : ''}
@@ -678,7 +697,16 @@
                 <p class="muted" id="ed-err" role="alert" style="margin:0"></p>
                 <div class="row"><button class="btn primary" type="submit" id="ed-save">${direct ? (e ? 'Save changes' : 'Publish') : e ? (suggesting ? 'Send suggestion' : 'Resend for review') : 'Send for review'}</button>
                     <a class="btn" href="${e ? '#/e/' + id : '#/'}">Cancel</a></div>
-            </form>`);
+            </form>
+            <dialog class="linkdlg" id="ed-link" aria-labelledby="ln-h">
+                <form method="dialog" id="ln-form" novalidate>
+                    <h2 id="ln-h">Link</h2>
+                    <label class="f">Text to show<input class="i" id="ln-text" maxlength="300" autocomplete="off"></label>
+                    <label class="f">Address <small>(a web address, an e-mail address, or a library page like /e/12)</small><input class="i" id="ln-href" maxlength="2000" autocomplete="off" placeholder="https://…"></label>
+                    <p class="muted" id="ln-err" role="alert" style="margin:0"></p>
+                    <div class="row"><button class="btn primary" value="save" id="ln-save">Save link</button><button class="btn" value="remove" id="ln-remove" hidden>Remove link</button><button class="btn" value="cancel" id="ln-cancel">Cancel</button></div>
+                </form>
+            </dialog>`);
 
         const up = document.getElementById('up'), save = document.getElementById('ed-save');
         const here = location.hash;
@@ -697,14 +725,14 @@
             leaveGuard = busy ? here : null;
         }
         paint();
-        async function add(list, onReady) {
+        async function add(list, onReady, onFail) {
             for (const file of list) {
                 const kind = guessKind(file.name);
                 const f = { name: file.name, size: file.size, kind, state: 'uploading', progress: 0, ctl: new AbortController() };
                 files.push(f); paint();
                 window.KBUpload.upload(file, { signal: f.ctl.signal, onProgress: (p) => { f.progress = p; paint(); } })
                     .then(meta => { Object.assign(f, meta, { state: 'ready' }); delete f.ctl; paint(); if (onReady && files.includes(f)) onReady(f); })
-                    .catch(err => { if (files.includes(f)) { f.state = 'error'; f.error = err.message; paint(); } });
+                    .catch(err => { if (files.includes(f)) { f.state = 'error'; f.error = err.message; paint(); } if (onFail) onFail(err); });
             }
         }
         const drop = document.getElementById('drop'), input = document.getElementById('ed-file');
@@ -715,18 +743,316 @@
         drop.ondragleave = () => drop.classList.remove('over');
         drop.ondrop = (ev) => { ev.preventDefault(); drop.classList.remove('over'); add([...ev.dataTransfer.files]); };
 
-        // The formatting toolbar: it writes the markup around whatever is selected, so the Preview shows exactly what readers get.
-        const ta = document.getElementById('ed-body');
-        function wrapSel(before, after, fallback) {
-            const s = ta.selectionStart || 0, e2 = ta.selectionEnd || 0;
-            const sel = ta.value.slice(s, e2) || fallback;
-            ta.setRangeText(before + sel + after, s, e2);
-            ta.focus();
-            ta.setSelectionRange(s + before.length, s + before.length + sel.length);
+        // ---- the writing surface ----
+        // The entry as readers see it (js/md.js renders it), edited in place like a Word document. #ed-body, shown
+        // on the Markdown tab, stays the one copy that is saved: the surface writes into it as you type, and an
+        // entry nobody typed into is saved exactly as it was, so its review diff shows nothing.
+        const ta = document.getElementById('ed-body'), rich = document.getElementById('ed-rich'), bar = document.getElementById('mdbar');
+        const prevBox = document.getElementById('ed-prev'), hint = document.getElementById('ed-hint'), blockSel = document.getElementById('mdbar-block');
+        let dirty = false, syncT = 0, tab = 'write', saved = null;
+        const sync = () => { clearTimeout(syncT); if (dirty) ta.value = window.KBRich.toMarkdown(rich); };
+        const touched = () => { dirty = true; clearTimeout(syncT); syncT = setTimeout(sync, 250); blank(); };
+        const blank = () => rich.classList.toggle('blank', !rich.textContent.trim() && !rich.querySelector('img,hr,table,li'));
+        function fill() {
+            rich.innerHTML = window.KBmd.render(ta.value) || '<p><br></p>';
+            rich.querySelectorAll('li.md-check').forEach(li => { li.kbSeen = true; });
+            checks(); blank();
         }
-        const insertAt = (text) => { const s = ta.selectionStart || ta.value.length; ta.setRangeText(text, s, ta.selectionEnd || s, 'end'); ta.focus(); };
-        // Autoformatting: pasting a table, or bold/italic/underlined text, from Word, Google Docs or a
-        // spreadsheet turns it into this library's own markdown instead of flattening it to plain text.
+        fill();
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+        document.execCommand('styleWithCSS', false, false);
+
+        // The toolbar's buttons never take the focus, so the caret stays put. The paragraph-style list, the color
+        // picker, the link dialog and the photo picker do take it: the caret is noted the moment the surface loses
+        // the focus, and put back when they hand it over. (Noting it on selectionchange instead was a race: that
+        // event arrives late, after the list has already acted on an older caret.)
+        const caretEl = () => { const s = getSelection(); if (!s.rangeCount) return null; let n = s.anchorNode; if (n && n.nodeType === 3) n = n.parentElement; return n && rich.contains(n) ? n : null; };
+        const keep = () => { const s = getSelection(); if (s.rangeCount && rich.contains(s.anchorNode)) saved = s.getRangeAt(0).cloneRange(); };
+        const back = (always) => {
+            if (!always && document.activeElement === rich && caretEl()) return;   // the focus never left: the live caret is the right one
+            rich.focus();
+            if (saved) { const s = getSelection(); s.removeAllRanges(); s.addRange(saved); }
+        };
+        const cmd = (name, value) => { back(); document.execCommand(name, false, value); keep(); touched(); state(); };
+        rich.addEventListener('blur', keep);
+        const onSel = () => { if (!rich.isConnected) return document.removeEventListener('selectionchange', onSel); if (tab === 'write' && caretEl()) { pastBox(); state(); } };
+        document.addEventListener('selectionchange', onSel);
+        bar.addEventListener('mousedown', (ev) => { if (ev.target.closest('button')) ev.preventDefault(); });   // buttons leave the caret where it is
+
+        // Which buttons are lit follows the caret.
+        function state() {
+            const at = caretEl();
+            const lit = (f, on) => { const b = bar.querySelector(`[data-f="${f}"]`); if (b) b.setAttribute('aria-pressed', String(!!on)); };
+            for (const f of ['bold', 'italic', 'underline']) lit(f, at && document.queryCommandState(f));
+            const h = at && at.closest('h2,h3,h4');
+            if (document.activeElement !== blockSel) blockSel.value = h && rich.contains(h) ? h.tagName.toLowerCase() : 'p';
+            lit('link', at && at.closest('a')); lit('quote', at && at.closest('blockquote')); lit('code', at && at.closest('code,pre'));
+            lit('check', at && at.closest('li.md-check')); lit('ol', at && at.closest('ol') && !at.closest('li.md-check')); lit('ul', at && at.closest('ul') && !at.closest('li.md-check'));
+        }
+
+        // Checklists: each item starts with its box, which a click ticks; a new item starts unticked. The caret is
+        // never left in front of a box, where typing would land before it.
+        function pastBox() {
+            const s = getSelection();
+            if (!s.rangeCount || !s.isCollapsed) return;
+            const r = s.getRangeAt(0), li = r.startContainer.nodeType === 1 && r.startContainer.matches && r.startContainer.matches('li.md-check') ? r.startContainer : null;
+            const box = li && li.firstElementChild && li.firstElementChild.classList.contains('md-box') ? li.firstElementChild : null;
+            if (!box || !rich.contains(li) || r.startOffset > [...li.childNodes].indexOf(box)) return;
+            const x = document.createRange(); x.setStartAfter(box); x.collapse(true); s.removeAllRanges(); s.addRange(x);
+        }
+        function checks() {
+            rich.querySelectorAll('.md-box').forEach(b => { if (!b.parentElement || !b.parentElement.matches('li.md-check')) b.remove(); });
+            rich.querySelectorAll('li.md-check').forEach(li => {
+                const own = [...li.children].filter(c => c.classList.contains('md-box'));
+                own.slice(1).forEach(b => b.remove());
+                let b = own[0];
+                if (!b) { b = document.createElement('span'); b.className = 'md-box'; b.setAttribute('aria-hidden', 'true'); li.prepend(b); }
+                if (!li.kbSeen) { b.classList.remove('on'); b.textContent = ''; li.kbSeen = true; }
+                b.contentEditable = 'false';
+            });
+            pastBox();
+        }
+        rich.addEventListener('click', (ev) => {
+            const b = ev.target.closest('.md-box');
+            if (!b || !rich.contains(b)) return;
+            const on = !b.classList.contains('on');
+            b.classList.toggle('on', on); b.textContent = on ? '✓' : '';
+            touched();
+        });
+        rich.addEventListener('input', () => { checks(); touched(); });
+
+        // ---- toolbar ----
+        const listOf = () => { const at = caretEl(); return at && at.closest('ul,ol'); };
+        function toggleChecklist() {
+            back();
+            let list = listOf();
+            if (!list) { document.execCommand('insertUnorderedList'); list = listOf(); }
+            if (!list) return;
+            const items = [...list.children].filter(c => c.tagName === 'LI');
+            const all = items.every(li => li.classList.contains('md-check'));
+            for (const li of items) { li.classList.toggle('md-check', !all); li.kbSeen = all; }   // turning it on: every box starts unticked
+            if (all) list.querySelectorAll(':scope > li > .md-box').forEach(b => b.remove());
+            checks(); keep(); touched(); state();
+        }
+        // An empty checklist item and Enter: out of the list, as in Word. Done by hand, since the browser's own list
+        // command won't take an item holding only its box. A nested item steps out one level instead.
+        function leaveList(li) {
+            const list = li.parentElement;
+            if (list.parentElement && list.parentElement.tagName === 'LI') return cmd('outdent');
+            const para = document.createElement('p'); para.innerHTML = '<br>';
+            const rest = []; for (let n = li.nextElementSibling; n; n = n.nextElementSibling) rest.push(n);
+            list.after(para);
+            if (rest.length) { const tail = document.createElement(list.tagName); rest.forEach(r => tail.appendChild(r)); para.after(tail); }
+            li.remove();
+            if (!list.children.length) list.remove();
+            const r = document.createRange(); r.setStart(para, 0); r.collapse(true);
+            const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+            keep(); touched(); state();
+        }
+        function unwrap(el) { const p = el.parentNode; while (el.firstChild) p.insertBefore(el.firstChild, el); p.removeChild(el); }
+        function toggleQuote() {
+            back();
+            const q = caretEl() && caretEl().closest('blockquote');
+            if (q && rich.contains(q)) {
+                // a quote holding only text becomes a paragraph; one holding blocks gives them back
+                if ([...q.childNodes].some(n => n.nodeType === 1 && /^(P|H[2-4]|UL|OL|PRE|DIV|TABLE)$/.test(n.tagName))) unwrap(q);
+                else { const p = document.createElement('p'); while (q.firstChild) p.appendChild(q.firstChild); q.replaceWith(p); }
+                keep(); touched(); state();
+            } else cmd('formatBlock', '<blockquote>');
+        }
+        function toggleCode() {
+            back();
+            const at = caretEl(), s = getSelection(), code = at && at.closest('code'), pre = at && at.closest('pre');
+            if (pre && rich.contains(pre)) return cmd('formatBlock', '<p>');
+            if (code && rich.contains(code)) { unwrap(code); keep(); return touched(); }
+            const text = s.toString();
+            if (text && !text.includes('\n')) cmd('insertHTML', `<code>${esc(text)}</code>`);
+            else cmd('formatBlock', '<pre>');
+        }
+        const TABLE = '<div class="md-table"><table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></tbody></table></div><p><br></p>';
+        const photoInput = document.getElementById('mdbar-photo');
+        bar.addEventListener('click', (ev) => {
+            const b = ev.target.closest('[data-f]');
+            if (!b) return;
+            const f = b.dataset.f;
+            if (f === 'bold' || f === 'italic' || f === 'underline' || f === 'undo' || f === 'redo') return cmd(f);
+            if (f === 'ul') return cmd('insertUnorderedList');
+            if (f === 'ol') return cmd('insertOrderedList');
+            if (f === 'check') return toggleChecklist();
+            if (f === 'quote') return toggleQuote();
+            if (f === 'code') return toggleCode();
+            if (f === 'table') return cmd('insertHTML', TABLE);
+            if (f === 'rule') return cmd('insertHTML', '<hr><p><br></p>');
+            if (f === 'clear') return cmd('removeFormat');
+            if (f === 'link') return openLink();
+            if (f === 'photo') { keep(); photoInput.click(); }
+        });
+        blockSel.onchange = (ev) => cmd('formatBlock', `<${ev.target.value}>`);
+        const pal = document.getElementById('mdbar-pal'), colorBtn = document.getElementById('mdbar-color');
+        colorBtn.onclick = () => { pal.hidden = !pal.hidden; colorBtn.setAttribute('aria-expanded', String(!pal.hidden)); };
+        const applyColor = (c) => { pal.hidden = true; colorBtn.setAttribute('aria-expanded', 'false'); cmd('foreColor', c); };
+        pal.querySelectorAll('[data-c]').forEach(b => b.onclick = () => applyColor(b.dataset.c));
+        const custom = document.getElementById('mdbar-custom');
+        custom.onchange = (ev) => applyColor(ev.target.value);
+
+        // Keys: Ctrl/⌘+K for a link; in a list, Tab and Shift+Tab nest and un-nest; in a table they move between
+        // cells, and Tab in the last cell adds a row, as in Word.
+        rich.addEventListener('keydown', (ev) => {
+            if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && ev.key.toLowerCase() === 'k') { ev.preventDefault(); keep(); return openLink(); }
+            if (ev.key === 'Enter' && !ev.shiftKey) {
+                const li = caretEl() && caretEl().closest('li.md-check');
+                if (li && rich.contains(li) && !li.textContent.replace('✓', '').trim()) { ev.preventDefault(); return leaveList(li); }
+            }
+            if (ev.key !== 'Tab') return;
+            const at = caretEl(), cell = at && at.closest('td,th'), li = at && at.closest('li');
+            if (cell && rich.contains(cell)) {
+                ev.preventDefault();
+                const table = cell.closest('table'), cells = [...table.querySelectorAll('th,td')];
+                let i = cells.indexOf(cell) + (ev.shiftKey ? -1 : 1);
+                if (i >= cells.length) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = [...table.rows[0].cells].map(() => '<td><br></td>').join('');
+                    (table.tBodies[0] || table).appendChild(row);
+                    i = cells.length; touched();
+                }
+                const next = table.querySelectorAll('th,td')[Math.max(0, i)];
+                if (next) { const r = document.createRange(); r.selectNodeContents(next); r.collapse(true); const s = getSelection(); s.removeAllRanges(); s.addRange(r); keep(); }
+            } else if (li && rich.contains(li)) {
+                ev.preventDefault();
+                keep(); cmd(ev.shiftKey ? 'outdent' : 'indent');
+            }
+        });
+
+        // ---- links ----
+        const dlg = document.getElementById('ed-link'), lnText = document.getElementById('ln-text'), lnHref = document.getElementById('ln-href');
+        const lnErr = document.getElementById('ln-err'), lnRemove = document.getElementById('ln-remove');
+        let editing = null;
+        function openLink() {
+            back();
+            const at = caretEl(), a = at && at.closest('a');
+            editing = a && rich.contains(a) ? a : null;
+            if (editing) { const r = document.createRange(); r.selectNodeContents(editing); const s = getSelection(); s.removeAllRanges(); s.addRange(r); keep(); }
+            lnText.value = editing ? editing.textContent : getSelection().toString().trim();
+            lnHref.value = editing ? editing.getAttribute('href') : '';
+            lnRemove.hidden = !editing; lnErr.textContent = '';
+            dlg.showModal();
+            (lnText.value ? lnHref : lnText).focus();
+        }
+        // An address as written: a bare e-mail gets mailto:, a bare www. gets https://.
+        const address = (v) => { v = v.trim(); if (/^[^\s@/:]+@[^\s@/]+\.[a-z]{2,}$/i.test(v)) return 'mailto:' + v; if (/^www\./i.test(v)) return 'https://' + v; return v; };
+        document.getElementById('ln-form').addEventListener('submit', (ev) => {
+            const how = ev.submitter && ev.submitter.value;
+            if (how !== 'save') return;
+            const href = address(lnHref.value);
+            if (!/^(https?:\/\/\S+|mailto:\S+@\S+|\/\S*)$/i.test(href)) { ev.preventDefault(); lnErr.textContent = 'The address has to be a web address (https://…), an e-mail address, or a library page (/e/12).'; lnHref.focus(); return; }
+            lnHref.value = href;
+        });
+        dlg.addEventListener('close', () => {
+            const how = dlg.returnValue; dlg.returnValue = '';
+            if (how === 'remove' && editing) { back(true); const r = document.createRange(); r.selectNodeContents(editing); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cmd('unlink'); }
+            else if (how === 'save') {
+                const href = lnHref.value, text = lnText.value.trim() || href;
+                if (editing) { editing.setAttribute('href', href); if (editing.textContent !== text) editing.textContent = text; back(true); touched(); }
+                else { back(true); const sel = getSelection().toString(); if (sel && sel.trim() === text) cmd('createLink', href); else cmd('insertHTML', `<a href="${esc(href)}">${esc(text)}</a>`); }
+            } else back(true);
+            editing = null; state();
+        });
+
+        // ---- photos: paste, drop, or 🖼️ Photo ----
+        // Each goes in at once, faded while it uploads, and becomes ![name](/files/<id>/<name>) when it's done. The
+        // save button waits for uploads, so a photo's temporary copy never reaches the library.
+        const PHOTO = /^image\/(png|jpeg|gif|webp)$/, PHOTO_EXT = /\.(png|jpe?g|gif|webp)$/i;
+        let upN = 0;
+        const stamp = (type) => { const d = new Date(), p = (n) => String(n).padStart(2, '0');
+            return `pasted-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}${upN ? '-' + upN : ''}.${(type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`; };
+        function putPhotos(list) {
+            const ok = list.filter(f => PHOTO.test(f.type) || PHOTO_EXT.test(f.name || ''));
+            if (ok.length < list.length) toast(`Only PNG, JPG, GIF and WebP photos go in the text${ok.length ? '; the others were left out' : ''}. Other files belong in the Files box above.`, true);
+            for (const raw of ok) {
+                // a pasted screenshot comes named "image.png" (or not at all): it gets a name of its own
+                const file = !raw.name || /^image\.\w+$/i.test(raw.name) ? new File([raw], stamp(raw.type || 'image/png'), { type: raw.type || 'image/png' }) : raw;
+                const key = 'up' + (++upN), url = URL.createObjectURL(file);
+                cmd('insertHTML', `<img class="md-img uploading" data-up="${key}" src="${url}" alt="${esc(file.name)}">`);
+                const img = () => rich.querySelector(`img[data-up="${key}"]`);
+                add([file], (f) => {
+                    const el = img();
+                    URL.revokeObjectURL(url);
+                    if (!el) return;   // taken out again while it uploaded
+                    el.src = `/files/${f.id}/${encodeURIComponent(f.name).replace(/\(/g, '%28').replace(/\)/g, '%29')}`;
+                    el.alt = f.name.replace(/[\[\]]/g, ''); el.removeAttribute('data-up'); el.classList.remove('uploading');
+                    touched();
+                }, (err) => {
+                    const el = img(); if (el) el.remove();
+                    URL.revokeObjectURL(url); touched();
+                    toast(`The photo didn't upload: ${err.message}`, true);
+                });
+            }
+        }
+        photoInput.onchange = () => { const picked = [...photoInput.files]; photoInput.value = ''; if (picked.length) { back(true); putPhotos(picked); } };
+        rich.addEventListener('dragover', (ev) => { if ([...ev.dataTransfer.types].includes('Files')) { ev.preventDefault(); rich.classList.add('over'); } });
+        rich.addEventListener('dragleave', () => rich.classList.remove('over'));
+        rich.addEventListener('drop', (ev) => {
+            const dropped = [...ev.dataTransfer.files];
+            rich.classList.remove('over');
+            if (!dropped.length) return;
+            ev.preventDefault();
+            const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(ev.clientX, ev.clientY)
+                : (() => { const p = document.caretPositionFromPoint && document.caretPositionFromPoint(ev.clientX, ev.clientY); if (!p) return null; const x = document.createRange(); x.setStart(p.offsetNode, p.offset); return x; })();
+            if (r && rich.contains(r.startContainer)) { rich.focus(); const s = getSelection(); s.removeAllRanges(); s.addRange(r); saved = r; }
+            putPhotos(dropped);
+        });
+
+        // Pasted blocks (paragraphs, lists, tables) go in by hand: the browser's own insertHTML folds the first item of a
+        // pasted list into the paragraph around the caret. The paragraph is split at the caret, as Word does, and the
+        // blocks go between its halves. A paste with no blocks in it still goes through insertHTML, which Undo knows.
+        const BLOCKY = /^(P|H[1-6]|UL|OL|BLOCKQUOTE|PRE|HR|TABLE|DIV)$/;
+        function insertBlocks(html) {
+            const box = document.createElement('div'); box.innerHTML = html;
+            if (![...box.childNodes].some(n => n.nodeType === 1 && BLOCKY.test(n.tagName))) return cmd('insertHTML', html);
+            back();
+            const s = getSelection();
+            if (!s.rangeCount) return;
+            const r = s.getRangeAt(0); r.deleteContents();
+            let top = r.startContainer; while (top && top.parentNode !== rich) top = top.parentNode;
+            const nodes = [...box.childNodes].filter(n => n.nodeType === 1 || n.nodeValue.trim());
+            if (!top) { rich.append(...nodes); }
+            else if (/^(P|H[2-4]|DIV)$/.test(top.tagName)) {
+                const tail = document.createRange(); tail.setStart(r.startContainer, r.startOffset); tail.setEnd(top, top.childNodes.length);
+                const rest = document.createElement(top.tagName); rest.appendChild(tail.extractContents());
+                top.after(...nodes);
+                if (rest.textContent.trim() || rest.querySelector('img')) nodes[nodes.length - 1].after(rest);
+                if (!top.textContent.trim() && !top.querySelector('img')) top.remove();
+            } else top.after(...nodes);   // in a list, table or quote: the blocks go after it
+            const last = nodes[nodes.length - 1], end = document.createRange();
+            end.selectNodeContents(last); end.collapse(false); s.removeAllRanges(); s.addRange(end);
+            checks(); keep(); touched(); state();
+        }
+
+        // ---- pasting ----
+        // A photo on its own (a screenshot, a picture copied from a page) is uploaded. Text keeps the formatting the
+        // library can show, rebuilt by js/rich.js so nothing else from the clipboard comes along; a spreadsheet's
+        // cells become a table.
+        rich.addEventListener('paste', (ev) => {
+            const cd = ev.clipboardData;
+            if (!cd) return;
+            const pics = [...(cd.files || [])].filter(f => /^image\//.test(f.type));
+            const html = cd.getData('text/html'), text = cd.getData('text/plain');
+            const words = html ? new DOMParser().parseFromString(html, 'text/html').body.textContent.trim() : '';
+            ev.preventDefault();
+            keep();
+            if (pics.length && !words && !text.trim()) return putPhotos(pics);
+            if (html && words) {
+                const r = window.KBRich.sanitize(html);
+                insertBlocks(r.html);
+                if (r.droppedImages || pics.length) toast('Pictures inside pasted text aren’t brought along. Paste or drop each picture on its own to put it in.');
+                return;
+            }
+            const F = window.KBPasteFormat;
+            if (F && F.looksLikeTabTable(text)) return insertBlocks(window.KBmd.render(F.tabTextToMarkdown(text)));
+            cmd('insertText', text);
+        });
+
+        // The Markdown tab's own paste keeps turning Word, Docs and spreadsheet formatting into markdown.
         ta.addEventListener('paste', (ev) => {
             const cd = ev.clipboardData;
             const F = window.KBPasteFormat;
@@ -740,37 +1066,6 @@
             ta.setRangeText(converted, ta.selectionStart || 0, ta.selectionEnd || 0, 'end');
             ta.focus();
         });
-        const pal = document.getElementById('mdbar-pal'), colorBtn = document.getElementById('mdbar-color');
-        colorBtn.onclick = () => { pal.hidden = !pal.hidden; colorBtn.setAttribute('aria-expanded', String(!pal.hidden)); };
-        const applyColor = (c) => { pal.hidden = true; colorBtn.setAttribute('aria-expanded', 'false'); wrapSel(`{color:${c}}`, '{/color}', 'colored text'); };
-        pal.querySelectorAll('[data-c]').forEach(b => b.onclick = () => applyColor(b.dataset.c));
-        document.getElementById('mdbar-custom').onchange = (ev) => applyColor(ev.target.value);
-        const photoInput = document.getElementById('mdbar-photo');
-        document.getElementById('mdbar').addEventListener('click', (ev) => {
-            const b = ev.target.closest('[data-f]');
-            if (!b) return;
-            if (b.dataset.f === 'bold') wrapSel('**', '**', 'bold text');
-            if (b.dataset.f === 'italic') wrapSel('*', '*', 'italic text');
-            if (b.dataset.f === 'underline') wrapSel('++', '++', 'underlined text');
-            if (b.dataset.f === 'link') {
-                const url = (prompt('Where should the link go? (https://… , or a path like /files/…)') || '').trim();
-                if (!url) return;
-                if (!/^(https?:\/\/|mailto:|\/)/i.test(url)) { toast('A link has to start with https://, mailto: or /.', true); return; }
-                wrapSel('[', `](${url})`, 'link text');
-            }
-            if (b.dataset.f === 'photo') photoInput.click();
-        });
-        photoInput.onchange = () => {
-            const picked = [...photoInput.files];
-            photoInput.value = '';
-            if (!picked.length) return;
-            if (picked.some(f => guessKind(f.name) !== 'image')) { toast('Photos only here: PNG, JPG, GIF or WebP. Other files go in the Files box above.', true); return; }
-            toast('Uploading the photo… it drops into the text when it’s done.');
-            add(picked, (f) => {
-                const src = encodeURIComponent(f.name).replace(/\(/g, '%28').replace(/\)/g, '%29');   // parens would end the markdown link early
-                insertAt(`\n![${f.name.replace(/[\[\]]/g, '')}](/files/${f.id}/${src})\n`); toast('Photo added to the text.');
-            });
-        };
 
         const colSel = document.getElementById('ed-col');
         // The typed collection: an existing one's slug (matched by name or slug, any case), or '' when it's new.
@@ -785,18 +1080,25 @@
         };
         colSel.onchange = fillSections; fillSections();
 
+        // Write / Markdown / Preview. Leaving Write puts the surface's latest into #ed-body; coming back draws the
+        // surface again from #ed-body, so it shows exactly what will be saved, Markdown-tab edits included.
         app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+            const to = b.dataset.t;
+            if (to === tab) return;
+            if (tab === 'write') sync();
+            if (to === 'write') { fill(); dirty = false; }
+            tab = to;
             app.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-            const prev = b.dataset.t === 'preview';
-            document.getElementById('ed-body').hidden = prev;
-            document.getElementById('mdbar').hidden = prev;
-            const pv = document.getElementById('ed-prev');
-            pv.hidden = !prev;
-            if (prev) pv.innerHTML = window.KBmd.render(val('ed-body')) || '<p class="muted">Nothing to preview yet.</p>';
+            rich.hidden = bar.hidden = hint.hidden = to !== 'write';
+            ta.hidden = to !== 'markdown';
+            prevBox.hidden = to !== 'preview';
+            if (to === 'preview') prevBox.innerHTML = window.KBmd.render(ta.value) || '<p class="muted">Nothing to preview yet.</p>';
+            if (to === 'write') rich.focus(); else if (to === 'markdown') ta.focus();
         });
 
         document.getElementById('ed').onsubmit = async (ev) => {
             ev.preventDefault();
+            if (tab === 'write') sync();
             const err = document.getElementById('ed-err');
             if (files.some(f => f.state === 'error')) { err.textContent = 'Remove the files that failed to upload, or add them again.'; return; }
             const body = { collection: colSel.value, section: val('ed-sec'), type: val('ed-type'), title: val('ed-title'), summary: val('ed-sum'),
@@ -814,7 +1116,7 @@
     }
     function guessKind(name) {
         const e = (name.toLowerCase().match(/\.([a-z0-9]+)$/) || [])[1] || '';
-        const map = { video: 'mp4 m4v mov webm mkv avi wmv', audio: 'mp3 m4a wav ogg aac', pdf: 'pdf', image: 'png jpg jpeg gif webp heic', doc: 'doc docx odt rtf txt md', sheet: 'xls xlsx csv ods', slides: 'ppt pptx odp key', archive: 'zip' };
+        const map = { video: 'mp4 m4v mov webm mkv avi wmv', audio: 'mp3 m4a wav ogg aac', pdf: 'pdf', image: 'png jpg jpeg gif webp', doc: 'doc docx odt rtf txt md', sheet: 'xls xlsx csv ods', slides: 'ppt pptx odp key', archive: 'zip' };
         return Object.keys(map).find(k => map[k].split(' ').includes(e)) || 'other';
     }
 

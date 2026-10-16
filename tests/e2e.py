@@ -160,6 +160,7 @@ with sync_playwright() as p:
     v.fill('#ed-sec', 'Day 17 · Lien Negotiator Training')
     v.fill('#ed-title', 'Walkthrough: negotiating a hospital lien')
     v.fill('#ed-sum', 'A recorded session on reducing a hospital lien with the pro rata formula.')
+    v.click('[data-t="markdown"]')   # the markdown itself, on its own tab; the Word-style surface is tests/rich-editor.cjs
     v.fill('#ed-body', '## Steps\n\n1. Pull the itemized bill\n2. Apply the **pro rata** reduction\n\n- [ ] Send the reduction letter\n\n| Item | Amount |\n|---|---|\n| Bill | $12,000 |')
     v.fill('#ed-tags', 'hospital lien, reduction')
     v.set_input_files('#ed-file', [D + 'demo.webm', D + 'worksheet.pdf', D + 'big-walkthrough.mp4'])
@@ -180,6 +181,7 @@ with sync_playwright() as p:
     # suggest an edit on the imported Medicare post
     v.goto(B + f"/#/e/{med['id']}/edit"); v.wait_for_selector('#ed')
     check(v.inner_text('#ed-save') == 'Send suggestion', 'VA editing someone else’s entry sends a suggestion')
+    v.click('[data-t="markdown"]')
     v.fill('#ed-body', v.input_value('#ed-body').replace('65 days', '45 to 65 days'))
     v.fill('#ed-note', 'Updated the typical wait'); v.click('#ed-save'); v.wait_for_selector('.entry-head')
     check('Your suggested edit is waiting' in v.inner_text('#app'), 'suggestion waits; live version unchanged')
