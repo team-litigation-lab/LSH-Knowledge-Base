@@ -119,26 +119,11 @@ Window audited: <commit range / dates>
 <commands and their results>
 ```
 
-**The Gantt chart.** Then update the project Gantt / Milestone chart in Google Drive. Load the
-`anthropic-skills:google-workspace` skill first, and find the chart with Drive search rather than a
-remembered file ID — see `references/projects.md` for which copy to write to. On the `Gantt Chart`
-sheet, for the rows this week's work touched:
-
-- `% Completion` (I) and `Status` (H) — use only the standard values: `Not Started`, `In Progress`,
-  `Testing Phase`, `Completed`, `On Hold / Blocked`
-- `Actual Start Date` (E) when work began this week; `Finish Date` (K) when it finished (Duration in
-  L is a formula — leave it alone)
-- `Challenges / Completion Blockers` (J) — one short line per blocker from **Needs a decision**;
-  replace a stale line, do not append forever
-- `Report as of:` (E3) — set to the run date
-
-Leave formula cells, the baseline columns and the week grid to recalculate themselves; never retype
-a value a formula produces. If the run falls at month-end, also add the month's row to the
-`Monthly Progress Log` sheet (Key Accomplishments from "Fixed this week", Challenges from "Needs a
-decision", Focus for Next Month from what stayed open).
-
-If the chart cannot be written (read-only copy, no access), say so plainly in the closing summary
-with the exact row-and-value changes it should have received, so they can be pasted in by hand.
+**The Gantt chart.** Then invoke the `gantt-chart-update` skill and hand it this run's results:
+the rows the week's work touched, what moved and on what evidence, and each **Needs a decision** item
+as a blocker line. That skill owns the file ID, the column map and the write rules — do not restate
+them here or write the sheet directly. If it reports the chart could not be written, carry its
+row-and-value list into the closing summary so the changes can be pasted in by hand.
 
 **Closing.** Finish with a short summary naming, in this order: what needs a decision, what was
 fixed and pushed, the report paths, and the Gantt rows updated. Keep it to what a project lead needs

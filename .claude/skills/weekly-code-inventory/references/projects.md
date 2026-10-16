@@ -59,35 +59,10 @@ belongs in both reports.
 
 ## The Gantt / Milestone chart
 
-Title: `Web-Based_Platform_Project_Gantt_Chart_Oct2026_Baseline`. Sheets: `Gantt Chart` (the task
-rows), `Monthly Progress Log`, `Settings & Calendar` (working-day inputs and the holiday table —
-every projected date recalculates from these), `Required Columns Checklist`.
+Owned by the `gantt-chart-update` skill: the file ID, the column map, the status values and the write
+rules all live there. Invoke it for phase 5 rather than writing the sheet from here.
 
-Write to `1C6CojhC_bxhyUtJgnO9M_jjyOWUehYxoxfbBYHST_DE` (owner `info@legalsupporthelp.com`,
-`team-litigation@legalsupporthelp.com` has writer). That is the reporting copy: it carries the live
-summary block and the Monthly Progress Log history. Confirm the ID still resolves each run:
-
-```
-search_files: title contains 'Gantt_Chart' and mimeType = 'application/vnd.google-apps.spreadsheet'
-```
-
-Other files share the title and are **not** interchangeable. In particular
-`1q0nVZND_v9_9V1ItJBYD0jwXvmXAH-RHArk5iMkzZNM` is a different layout — a tab per project
-(`Overview`, `Platforms & Links`, `Foundation Builds`, `LSH TRC Portal`, `New Training Programs`,
-`Rollout & Handover`, `Reporting & Check-ins`) with a `Checklist` sheet driving each task's %. The
-column map below does not apply to it. Never write to it on the strength of a title match; if it is
-the one that should be updated, stop and ask, because the update protocol differs.
-
-Column map on `Gantt Chart` (header row 8, task rows below): A WBS · B Priority / Topic ·
-C Effort (hrs) · D Plan Start · E Actual Start · F Projected Timeline (working days) ·
-G Projected End · H Status · I % Completion · J Challenges / Completion Blockers · K Finish Date ·
-L Duration (formula) · M Plan End (baseline) · N onward the weekly grid (`◆` marks a milestone).
-Summary block rows 5–6; `Report as of:` is E3.
-
-Gantt colours, for reference: navy = Completed, orange = In Progress, purple = Testing Phase,
-red = On Hold / Blocked, grey = Not Started.
-
-Which rows this skill touches: the ones whose work the week's findings and fixes belong to — the
-LSH TRC centralized portal rows, the CM System / Training CRM rows, the EA/PA program rows and the
-Knowledge Base rows. Do not invent new WBS rows for a bug fix; a fix is progress on an existing row.
-Add a row only for work that is genuinely a new workstream, and say so in the summary.
+What this skill is responsible for is the *input* to it: which rows the week's work belongs to, what
+moved and on what evidence, and the live blockers. Training-Portal work lands on the LSH TRC Portal
+and Foundation Builds rows; LSH-Knowledge-Base work lands on the LSH TRC Portal and Knowledge Base
+rows. A fix is progress on an existing row — never a new WBS row.
