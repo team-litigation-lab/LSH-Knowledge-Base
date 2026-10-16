@@ -337,7 +337,7 @@ def main(src):
             continue
         s = summary_of(md)
         yrs = years(md)
-        tags = ['from-tettra']             # the one visible sign that a page came from the firm's Tettra
+        tags = []                          # where a page came from is not the reader's concern; nothing marks it
         if yrs and yrs[-1] <= '2023':      # only cites dates up to 2023: a reviewer should confirm it is still current
             tags.append('needs-review')
             md = f'> **Needs review:** this page was last updated in {x["updated_at"][:4]} and its dates stop at {yrs[-1]}. A reviewer should confirm it is still current.\n\n' + md
