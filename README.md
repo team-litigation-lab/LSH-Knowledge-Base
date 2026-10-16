@@ -63,9 +63,11 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 
 Every page ends with a **Comments · update current info** section. Tenured team members, reviewers and admins can send a note that something is out of date and what it should say now (`kind` = `update`), or add a plain comment; Info Access readers see the notes but cannot send any (a note is a suggested edit, so it follows the same rule). A note waits for a reviewer (it appears in the review queue with an *Update to current info* badge) unless a reviewer or admin wrote it. Once approved it shows on the page; a reviewer updates the page and presses **Mark page updated**, which adds a *✓ Page updated* badge. The `kind` column is added to `kb_comments` automatically.
 
-## How Tettra pages are marked
+## Pages that came from Tettra
 
-Every page that came from the firm's Tettra carries the tag `from-tettra`, shown as a small **From our Tettra** badge in lists and on the page (the badge on a page opens a search of all such pages). The page text itself no longer mentions Tettra: links to other Tettra pages go to their Knowledge Base pages, and the five file attachments (four PDFs and a training video) are copied into the library and linked as `/att/<id>`, so no link points at Tettra's storage. Step 2 (Copy images) copies the images and the attachments. Re-running step 1 updates pages imported earlier.
+Nothing marks them: a page that came from the firm's Tettra reads like any other, with no tag and no badge. Where it came from is not the reader's concern. The text does not mention Tettra either — links to other Tettra pages go to their Knowledge Base pages, and the five file attachments (four PDFs and a training video) are copied into the library and linked as `/att/<id>`, so no link points at Tettra's storage. Step 2 (Copy images) copies the images and the attachments.
+
+Re-running step 1 updates pages imported earlier, and archives any page that is no longer in `public/seed/tettra.json` — that is how the company-policy and software-tutorial pages (Tools & Applications, Automation, Marketing, Accounting, Document Generation, Company Information, VA and Client Management) left the library: the converter excludes those categories, so the import archives what it no longer carries. Archived pages keep every version and an admin can bring one back.
 
 ## Glossary (top bar → Glossary)
 

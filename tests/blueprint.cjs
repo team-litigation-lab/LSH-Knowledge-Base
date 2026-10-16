@@ -73,7 +73,8 @@ async function walk(page, label) {
   const a = await mk({ width: 1366, height: 768 });
   await a.goto(B + '/'); await a.waitForSelector('#f-va');
   await a.click('[data-tab="admin"]'); await a.fill('#g-user', 'trainer1'); await a.fill('#g-pass', 'admin-pass');
-  await a.click('#f-admin button[type=submit]'); await a.waitForSelector('.hero');
+  // the program opens on Featured, so the landmark for 'signed in' is the top bar, not the library's .hero
+  await a.click('#f-admin button[type=submit]'); await a.waitForSelector('#top-nav');
   await a.evaluate(async (code) => fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set-code', code }) }), CODE);
   await a.waitForTimeout(800);
   if (await a.$('#lbp-open-btn')) fail('an admin still has a 🧭 Blueprint button: the blueprints live on the Main Portal');
@@ -94,7 +95,7 @@ async function walk(page, label) {
   const v = await mk({ width: 1366, height: 768 });
   await v.goto(B + '/'); await v.waitForSelector('#f-va');
   await v.fill('#g-name', 'Blue Print'); await v.fill('#g-batch', 'Batch 9'); await v.fill('#g-code', CODE);
-  await v.click('#f-va button[type=submit]'); await v.waitForSelector('.hero');
+  await v.click('#f-va button[type=submit]'); await v.waitForSelector('#top-nav');
   await v.waitForTimeout(800);
   if (await v.$('#lbp-open-btn')) fail('a VA still has a 🧭 Blueprint button: the blueprints live on the Main Portal');
   await v.evaluate(() => { location.hash = '#/blueprint'; }); await v.waitForSelector('#lbp-slide', { timeout: 5000 }).catch(() => fail('#/blueprint did not open the Blueprint for a VA')); await v.waitForTimeout(300);

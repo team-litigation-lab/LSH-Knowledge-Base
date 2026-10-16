@@ -65,7 +65,7 @@
             <span class="ic${e.hasVideo ? ' video' : e.official ? ' official' : ''}" aria-hidden="true">${e.hasVideo ? '▶' : TYPE_ICON[e.type] || '📄'}</span>
             <span><h3>${esc(e.title)}</h3>${snip}
             <span class="meta-line">
-                ${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}${(e.tags || []).includes('from-tettra') ? '<span class="badge">From our Tettra</span>' : ''}
+                ${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}
                 ${showStatus ? statusBadge(e.status) : ''}
                 <span>${esc(e.type)}</span>
                 ${showCollection ? `<span>${esc(colName(e.collection))}${e.section ? ' › ' + esc(e.section) : ''}</span>` : ''}
@@ -423,7 +423,7 @@
         view(`<h1>Featured</h1><p class="muted" style="margin-top:0">The articles the team has starred as front-page reading.</p>
             ${L.featured.length ? '<div id="featured-wall"></div>' : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
         // Featured is the screen the program opens on, so it is laid out like the library: the same
-        // wall of cards, five across, so the ten featured articles read as two rows.
+        // wall of cards, five across, so the fifteen featured articles read as three rows.
         if (L.featured.length) wall('featured-wall', L.featured);
     }
 
@@ -528,13 +528,13 @@
             <div class="entry-layout">
                 <article>
                     <header class="entry-head">
-                        <div class="row">${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}<span class="badge">${esc(e.type)}</span>${(e.tags || []).includes('from-tettra') ? '<a class="badge" href="#/search?tag=from-tettra" title="See every page that came from our Tettra">From our Tettra</a>' : ''}${e.featured ? '<span class="badge">★ Featured</span>' : ''}${statusBadge(e.status)}</div>
+                        <div class="row">${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}<span class="badge">${esc(e.type)}</span>${e.featured ? '<span class="badge">★ Featured</span>' : ''}${statusBadge(e.status)}</div>
                         <h1>${esc(e.title)}</h1>
                         ${e.summary ? `<p class="lead">${esc(e.summary)}</p>` : ''}
                     </header>
                     ${mediaHTML(e.files, e.body)}
                     <div class="md">${window.KBmd.render(e.body)}</div>
-                    ${e.tags.filter(t => t !== 'from-tettra').length ? `<div class="tags" style="margin-top:18px">${e.tags.filter(t => t !== 'from-tettra').map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
+                    ${e.tags.length ? `<div class="tags" style="margin-top:18px">${e.tags.map(t => `<a href="#/search?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join('')}</div>` : ''}
                     ${e.credits.length ? `<p class="muted">With help from ${e.credits.map(esc).join(', ')}.</p>` : ''}
                     ${e.status === 'published' ? `<div class="row" style="margin-top:18px"><button class="btn" id="helpful" aria-pressed="${r.voted}">👍 ${r.voted ? 'You found this helpful' : 'Helpful'} · <span id="helpful-n">${r.stats.helpful}</span></button><span class="muted">${plural(r.stats.views, 'view')}</span></div>` : ''}
                     <section class="section" id="replies"><h2>Comments · update current info</h2>
