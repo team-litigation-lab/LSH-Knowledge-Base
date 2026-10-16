@@ -152,12 +152,15 @@ textarea.i{resize:vertical;line-height:1.55;}
 @media (max-width:560px){.tiles{grid-template-columns:1fr;height:auto!important;}}
 /* A tile is the same card as a row, stood on end: icon and badges at the top, then the title,
    the summary (clipped to what fits), and the meta line along the bottom edge. */
-.tiles .item{grid-template-columns:auto minmax(0,1fr);align-items:stretch;gap:10px;padding:14px 16px;min-height:0;overflow:hidden;}
+.tiles .item{position:relative;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:0;padding:14px 16px;min-height:0;overflow:hidden;}
 .tiles .item > span:last-child{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-.tiles .item .ic{width:32px;height:32px;font-size:16px;align-self:start;}
+/* The icon is lifted out of the flow and pinned to the top-left corner, so the summary and the
+   meta line start at the card's own padding instead of being indented past an icon column. */
+.tiles .item .ic{position:absolute;left:16px;top:14px;width:32px;height:32px;font-size:16px;align-self:start;}
 .tiles .item .badge{font-size:12.5px;}
-/* The title is centred over the card and divided from the summary by its own rule. */
-.tiles .item h3{flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.28;text-align:center;margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--card-gridline);
+/* The title is centred over the card and divided from the summary by its own rule. It keeps a
+   gutter on both sides so the centred text clears the pinned icon. */
+.tiles .item h3{flex:0 0 auto;font-size:19px;font-weight:700;line-height:1.28;text-align:center;margin:0 0 8px;padding:0 38px 8px;border-bottom:1px solid var(--card-gridline);
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden;}
 /* The summary is a one-liner: clipped to three lines so every card is the same height and the
    whole wall lands on one screen. The full summary is a click away, on the article itself.
