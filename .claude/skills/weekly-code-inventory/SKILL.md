@@ -49,6 +49,13 @@ Blueprint engine, session code shared between repos), routes defined twice, `_re
 rules that shadow each other, two sources of truth for the same setting, and CSS rules fighting
 across `styles.css`/`theme.css`/page-local blocks.
 
+**Request budget.** Run the `request-budget-guard` skill's probe over the repo's pages and work
+anything it flags. A page that re-renders or re-fetches at frame rate spends the Cloudflare
+allowance every LSH site shares — one tab can cost thousands of requests a minute — and it usually
+shows only in an empty state (no saved records yet), so it survives ordinary use and review. This is
+the one category where a finding is a live cost rather than a latent risk, so it goes near the top of
+the report.
+
 **Stale setups.** Pinned versions in `package.json`, `package-lock.json` and the CI workflows that
 have drifted apart or trail the runtime; `wrangler.json`/`wrangler.toml` bindings that name
 resources no longer used; env vars and secrets referenced in code but absent from config (and the
