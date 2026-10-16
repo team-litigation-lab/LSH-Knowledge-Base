@@ -84,6 +84,7 @@
     function fitTiles() {
         document.querySelectorAll('.tiles').forEach(g => {
             g.style.height = '';
+            g.style.minHeight = '';
             if (window.innerWidth <= 560) return;   // one column: let it scroll
             const top = g.getBoundingClientRect().top;
             const pager = g.parentElement && g.parentElement.querySelector('.pager');
@@ -98,7 +99,9 @@
             const below = (pager ? pager.offsetHeight + 12 : 0) + tail
                 + 8;   // a little slack, so rounding in the row heights can't start a scrollbar
             const h = window.innerHeight - top - below;
-            if (h > 280) g.style.height = h + 'px';
+            // A floor, not a ceiling: the wall still reaches the fold, but a card that needs
+            // more room for its summary grows past it instead of clipping the text.
+            if (h > 280) g.style.minHeight = h + 'px';
         });
     }
     window.addEventListener('resize', fitTiles);
