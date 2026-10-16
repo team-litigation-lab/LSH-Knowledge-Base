@@ -248,6 +248,30 @@ textarea.i{resize:vertical;line-height:1.55;}
 .mdbar .sw:hover{transform:scale(1.15);}
 .mdbar input[type=color]{width:28px;height:24px;border:1px solid var(--line);border-radius:6px;padding:1px;background:#fff;cursor:pointer;}
 .mdbar+textarea.i{border-top-left-radius:0;border-top-right-radius:0;}
+.mdbar button[aria-pressed="true"]{background:#fff;border-color:var(--navy-soft);color:var(--navy);box-shadow:inset 0 -2px 0 var(--orange);}
+.mdbar .mdbar-block{border:1px solid var(--line);border-radius:7px;background:#fff;padding:4px 6px;font-size:13.5px;font-weight:600;color:var(--navy);cursor:pointer;}
+
+/* The writing surface: the entry as readers see it (it carries .md), edited in place. */
+.writer{display:grid;}
+.writer .tabs{margin-bottom:8px;}
+.rich{position:relative;max-width:none;min-height:320px;max-height:72vh;overflow:auto;padding:14px 18px;cursor:text;border-radius:0 0 10px 10px;}
+.rich[hidden]{display:none;}
+.rich:focus{outline:none;border-color:var(--navy-soft);box-shadow:0 0 0 3px rgba(219,132,55,.28);}
+.rich.blank::before{content:attr(data-placeholder);position:absolute;left:18px;right:18px;top:16px;color:var(--muted);pointer-events:none;}
+.rich.over{border-color:var(--orange);background:var(--orange-soft);}
+.rich .md-box{cursor:pointer;user-select:none;}
+.rich img.uploading{opacity:.45;outline:2px dashed var(--orange);outline-offset:3px;animation:kb-pulse 1.2s ease-in-out infinite;}
+@keyframes kb-pulse{50%{opacity:.7;}}
+.rich td,.rich th{min-width:60px;}
+.ed-hint{font-size:12.5px;margin:6px 0 0;}
+.ed-hint[hidden]{display:none;}
+/* The link dialog. */
+.linkdlg{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(460px,calc(100% - 32px));box-shadow:0 24px 60px -20px rgba(20,23,41,.45);}
+.linkdlg::backdrop{background:rgba(20,23,41,.38);}
+.linkdlg form{display:grid;gap:12px;}
+.linkdlg h2{margin:0;}
+.btn[hidden]{display:none;}   /* .btn's own display would otherwise show a hidden button */
+@media (max-width:640px){.mdbar button{padding:4px 7px;}.rich{min-height:260px;padding:12px;}}
 
 /* ---------- history / diff ---------- */
 .versions{display:grid;gap:8px;}

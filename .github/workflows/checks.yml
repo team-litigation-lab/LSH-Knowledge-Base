@@ -60,5 +60,9 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/pw/node_modules
         run: node tests/blueprint.cjs || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
+      - name: Word-style editor (every article survives a round trip; typing, links, pasting from Word, photo paste and drop)
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+        run: node tests/rich-editor.cjs || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
       - name: Single sign-on (a Portal ticket signs a trainee in; no second sign-in; admins type the password)
         run: node tests/portal.cjs || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev2.log"; exit 1; }
