@@ -38,12 +38,13 @@ h3{font-size:16px;margin:0 0 6px;}
    navy bar that half dropped out and the mark read as cut off. A frosted panel sits behind it
    and dissolves away before the page's name, the same treatment the Training Portal's bars use:
    it lifts the logo off the navy without putting a solid block on the bar, and never passes
-   under any text. Its width tracks the bar's own side padding, so it follows that clamp down
-   to phone widths. */
+   under any text. The fade is in the colour itself rather than a mask over a blur: a filter
+   does not follow its element's mask in every browser, which left the blurred area ending on
+   a hard vertical line. Its width tracks the bar's own side padding, so it follows that
+   clamp down to the narrow layout. */
 .top::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--kb-panel);
-  background:rgba(210,223,239,.50);-webkit-backdrop-filter:saturate(118%) blur(10px);backdrop-filter:saturate(118%) blur(10px);
-  -webkit-mask-image:linear-gradient(100deg,#000 0,#000 26%,rgba(0,0,0,.82) 44%,rgba(0,0,0,.52) 60%,rgba(0,0,0,.26) 76%,rgba(0,0,0,.09) 88%,transparent 100%);
-  mask-image:linear-gradient(100deg,#000 0,#000 26%,rgba(0,0,0,.82) 44%,rgba(0,0,0,.52) 60%,rgba(0,0,0,.26) 76%,rgba(0,0,0,.09) 88%,transparent 100%);
+  background:linear-gradient(to right,rgba(210,223,239,.50) 0,rgba(210,223,239,.50) 26%,rgba(210,223,239,.41) 44%,
+    rgba(210,223,239,.26) 60%,rgba(210,223,239,.13) 76%,rgba(210,223,239,.045) 88%,rgba(210,223,239,0) 100%);
   pointer-events:none;}
 .top-in{position:relative;z-index:1;max-width:none;margin:0 auto;padding-inline:clamp(16px,1in,1in);padding-block:10px;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
 /* The gap is what keeps "Knowledge Base" clear of the panel's fade. */
