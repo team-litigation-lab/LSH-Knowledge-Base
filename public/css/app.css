@@ -32,12 +32,25 @@ h2{font-size:19px;margin:0 0 12px;color:var(--navy);}
 h3{font-size:16px;margin:0 0 6px;}
 
 /* ---------- header ---------- */
-.top{background:var(--navy-deep);color:#fff;position:sticky;top:0;z-index:20;border-bottom:2px solid var(--orange);}
-.top-in{max-width:none;margin:0 auto;padding-inline:clamp(16px,1in,1in);padding-block:10px;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
-.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;flex:0 0 auto;}
-/* the standard LSH logo (lsh-logo-dark.png, the same file every LSH site uses), straight on the navy bar
-   the way the Training Directory and every program show it: no tile around it */
-.brand img{height:46px;width:auto;background:none;padding:0;border-radius:6px;object-fit:contain;flex:none;}
+.top{background:var(--navy-deep);color:#fff;position:sticky;top:0;z-index:20;border-bottom:2px solid var(--orange);
+  --kb-panel:calc(clamp(16px,1in,1in) + 152px);}
+/* The standard logo is navy down its left side and through its wordmark, so straight on the
+   navy bar that half dropped out and the mark read as cut off. A frosted panel sits behind it
+   and dissolves away before the page's name, the same treatment the Training Portal's bars use:
+   it lifts the logo off the navy without putting a solid block on the bar, and never passes
+   under any text. Its width tracks the bar's own side padding, so it follows that clamp down
+   to phone widths. */
+.top::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--kb-panel);
+  background:rgba(210,223,239,.50);-webkit-backdrop-filter:saturate(118%) blur(10px);backdrop-filter:saturate(118%) blur(10px);
+  -webkit-mask-image:linear-gradient(100deg,#000 0,#000 26%,rgba(0,0,0,.82) 44%,rgba(0,0,0,.52) 60%,rgba(0,0,0,.26) 76%,rgba(0,0,0,.09) 88%,transparent 100%);
+  mask-image:linear-gradient(100deg,#000 0,#000 26%,rgba(0,0,0,.82) 44%,rgba(0,0,0,.52) 60%,rgba(0,0,0,.26) 76%,rgba(0,0,0,.09) 88%,transparent 100%);
+  pointer-events:none;}
+.top-in{position:relative;z-index:1;max-width:none;margin:0 auto;padding-inline:clamp(16px,1in,1in);padding-block:10px;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
+/* The gap is what keeps "Knowledge Base" clear of the panel's fade. */
+.brand{display:flex;align-items:center;gap:58px;color:#fff;text-decoration:none;flex:0 0 auto;}
+/* The standard LSH logo (lsh-logo-dark.svg, the same mark every LSH site uses), as a vector so
+   the wordmark stays sharp at bar size, and at the size that wordmark needs to stay legible. */
+.brand img{height:58px;width:auto;background:none;padding:0;border-radius:0;object-fit:contain;flex:none;}
 /* The standard page header (the Training Directory's): the mark, then the page's name in capitals, and nothing beside it. */
 .brand b{display:block;font-size:clamp(16px,2vw,22px);font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
 .page-search{display:flex;gap:8px;margin:4px 0 12px;max-width:560px;}
@@ -299,7 +312,7 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy-deep);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);z-index:50;max-width:calc(100% - 32px);}
 .toast.bad{background:var(--bad);}
 @media (max-width:1500px){.top-nav{gap:0;}.top-nav a,.top-nav button{font-size:13px;padding:6px 6px;}}
-@media (max-width:1300px){.top-in{padding-inline:12px;}.brand img{height:30px;width:auto;}.brand b{font-size:15px;}}
+@media (max-width:1300px){.top{--kb-panel:150px;}.top-in{padding-inline:12px;}.brand{gap:62px;}.brand img{height:44px;width:auto;}.brand b{font-size:15px;}}
 @media (max-width:700px){.top{position:static;}.toc{top:0;}.brand b{font-size:14px;}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
 .gate [hidden]{display:none !important;}
