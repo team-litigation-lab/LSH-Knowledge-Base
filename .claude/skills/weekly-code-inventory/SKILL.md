@@ -1,13 +1,18 @@
 ---
 name: weekly-code-inventory
-description: Weekly Saturday-morning code inventory of the LSH platform repos (Training-Portal and LSH-Knowledge-Base) — finds bugs, dead code, conflicts and stale setups, fixes what is safe to fix on the designated branch, writes a dated summary report, and updates the project Gantt / Milestone chart. Use when asked to run the weekly code inventory, the Saturday audit, a repo health check, or when a scheduled task fires asking for it.
+description: Weekly Saturday-morning code inventory across every LSH platform repository — the Training Portal, the Knowledge Base, the Training CRM, Ring Channel and each training program — finding bugs, dead code, drifted duplicates, runaway request loops and stale setups, fixing what is safe to fix on the designated branch, writing a dated report per repo, and updating the project Gantt / Milestone chart. Use when asked to run the weekly code inventory, the Saturday audit or a repo health check, for one repo or all of them, and when a scheduled task fires asking for it.
 ---
 
 # Weekly Code Inventory
 
-A once-a-week sweep of the LSH platform repositories that ends with three things: fixes pushed,
-a summary written, and the Gantt chart current. Read `references/projects.md` for what each repo is,
-how to validate it, and where the Gantt chart lives.
+A once-a-week sweep of the LSH platform that ends with three things: fixes pushed, a summary
+written, and the Gantt chart current. Read `references/projects.md` first — it lists all eleven
+repositories, what each one is, how to validate it, and what they share.
+
+Scope it to what was asked. Given no repo, sweep the ones the work has been in lately rather than
+all eleven at once: a sweep that runs out of room halfway through is worse than a smaller one that
+finishes, and the report is per repo either way. Say in the closing summary which repos you covered
+and which you did not, so the next run can pick them up.
 
 Run it in five phases, in order. Do not skip the validation phase — a push that reddens CI costs
 more than the findings are worth.
