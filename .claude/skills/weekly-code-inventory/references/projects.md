@@ -63,19 +63,20 @@ Title: `Web-Based_Platform_Project_Gantt_Chart_Oct2026_Baseline`. Sheets: `Gantt
 rows), `Monthly Progress Log`, `Settings & Calendar` (working-day inputs and the holiday table —
 every projected date recalculates from these), `Required Columns Checklist`.
 
-Several copies exist. Find them each run rather than trusting an ID:
+Write to `1C6CojhC_bxhyUtJgnO9M_jjyOWUehYxoxfbBYHST_DE` (owner `info@legalsupporthelp.com`,
+`team-litigation@legalsupporthelp.com` has writer). That is the reporting copy: it carries the live
+summary block and the Monthly Progress Log history. Confirm the ID still resolves each run:
 
 ```
 search_files: title contains 'Gantt_Chart' and mimeType = 'application/vnd.google-apps.spreadsheet'
 ```
 
-Write to the most recently modified copy the account can edit — the one owned by
-`team-litigation@legalsupporthelp.com` in the shared drive, not a `sharedWithMe` copy owned by
-someone else, which may be read-only. As of October 2026 that is
-`1q0nVZND_v9_9V1ItJBYD0jwXvmXAH-RHArk5iMkzZNM`, and the most recently touched copy overall is the
-read-only `1C6CojhC_bxhyUtJgnO9M_jjyOWUehYxoxfbBYHST_DE` (owner `info@legalsupporthelp.com`) — verify
-before writing, and if the writable copy is clearly behind the other, say so instead of guessing
-which is authoritative.
+Other files share the title and are **not** interchangeable. In particular
+`1q0nVZND_v9_9V1ItJBYD0jwXvmXAH-RHArk5iMkzZNM` is a different layout — a tab per project
+(`Overview`, `Platforms & Links`, `Foundation Builds`, `LSH TRC Portal`, `New Training Programs`,
+`Rollout & Handover`, `Reporting & Check-ins`) with a `Checklist` sheet driving each task's %. The
+column map below does not apply to it. Never write to it on the strength of a title match; if it is
+the one that should be updated, stop and ask, because the update protocol differs.
 
 Column map on `Gantt Chart` (header row 8, task rows below): A WBS · B Priority / Topic ·
 C Effort (hrs) · D Plan Start · E Actual Start · F Projected Timeline (working days) ·
