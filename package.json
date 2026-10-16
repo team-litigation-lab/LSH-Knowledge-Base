@@ -9,7 +9,8 @@
     "test": "python3 tests/e2e.py",
     "test:blueprint": "node tests/blueprint.cjs",
     "test:paste-format": "node tests/paste-format.cjs",
-    "test:autoformat-body": "node tests/autoformat-body.cjs"
+    "test:autoformat-body": "node tests/autoformat-body.cjs",
+    "test:portal": "node tests/portal.cjs"
   },
   "dependencies": {
     "wrangler": "^3.114.17"
