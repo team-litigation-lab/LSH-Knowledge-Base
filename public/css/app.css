@@ -348,3 +348,41 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .on-page a{color:var(--ink);text-decoration:none;padding:3px 8px;border-radius:6px;}
 .on-page a:hover{background:var(--line-soft);}
 .on-page a.l3{padding-left:20px;font-size:13px;color:var(--muted);}
+
+/* Back and Back to top: one pair of buttons, bottom right, over everything.
+   Back to top appears once the page has been scrolled; Back only when there is somewhere in the
+   library to go back to. The 🧭 Blueprint's own full-screen layer sits above these (z-index 2147483000). */
+.jump{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.jump button{display:none;align-items:center;gap:6px;border:2px solid var(--navy);background:var(--navy);color:#fff;font:600 13.5px/1 var(--sans);
+  border-radius:999px;padding:11px 15px;cursor:pointer;box-shadow:0 10px 24px -12px rgba(22,24,41,.7);}
+.jump button:hover{background:var(--navy-soft);}
+.jump button:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.jump button.on{display:inline-flex;}
+.jump #jump-back{background:#fff;color:var(--navy);}
+.jump #jump-back:hover{background:var(--orange-soft);}
+@media print{.jump{display:none;}}
+@media (max-width:560px){.jump{right:10px;bottom:10px;}.jump button{padding:10px 13px;}}
+
+/* ✨ AI Editor (js/ai-editor.js): one card per heading, each with its own suggestion. */
+.mdbar-ai{font-weight:600;}
+.aidlg{width:min(1040px,96vw);max-height:92vh;border:none;border-radius:16px;padding:0;background:var(--paper);color:var(--ink);box-shadow:0 30px 70px -20px rgba(22,24,41,.6);overflow:auto;}
+.aidlg::backdrop{background:rgba(22,24,41,.5);}
+.ai-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);z-index:1;}
+.ai-head h2{font-family:var(--serif);margin:0;font-size:22px;}
+.ai-head p{margin:4px 0 0;font-size:13.5px;}
+.ai-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line-soft);}
+.ai-modes{display:flex;gap:6px;}
+.ai-bar>.btn:last-child{margin-left:auto;}
+.ai-cards{display:grid;gap:12px;padding:14px 18px 20px;}
+.ai-c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:10px;}
+.ai-c.ok{border-color:var(--good);} .ai-c.bad{border-color:var(--bad);}
+.ai-c-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.ai-c-t{font-weight:600;color:var(--navy);}
+.ai-c-head>.btn{margin-left:auto;}
+.ai-lvl{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 4px;}
+.ai-notes{margin:0;padding-left:20px;font-size:13.5px;}
+.ai-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ai-lab{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.ai-prev{background:var(--paper);border:1px solid var(--line-soft);border-radius:10px;padding:8px 12px;max-height:40vh;overflow:auto;}
+.ai-md pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;background:#f3f5f9;border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;}
+@media (max-width:760px){.ai-two{grid-template-columns:1fr;}}

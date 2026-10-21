@@ -10,6 +10,8 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
   - Videos play in the page and can seek. PDFs open inline, and everything can be downloaded.
 - **Writing that looks the way you want.** The editor has a formatting toolbar: **bold**, *italic*, underline, colored text, links and photos placed right in the text (the 🖼️ Photo button uploads the image and drops it where the cursor is). The same markup can be typed by hand (`**bold**`, `*italic*`, `++underline++`, `{color:#D33}…{/color}`, `[text](https://…)`), and the Preview tab shows the page as readers will see it. Everything stays safe Markdown (`js/md.js`): the text is HTML-escaped first, so nothing a VA types can run as code.
 - **Pasting keeps its formatting.** Paste a table, or bold, italic or underlined text, from Word, Google Docs or a spreadsheet straight into the Write box, and it turns into this library's own markdown instead of flattening to plain text: a pasted table becomes `| pipe | table |` rows, bold stays `**bold**` (Google Docs writes bold as a styled span, not a `<b>` tag, and that's read too), and a spreadsheet's plain tab-separated paste becomes a table the same way. A plain paste with no formatting to carry over pastes as plain text, same as before (`js/paste-format.js`; unit-tested in `tests/paste-format.cjs`).
+- **✨ AI Editor (in the editor's toolbar).** Checks what you are writing for **grammar and spelling**, or for **structure**, and does it **one card at a time**: the entry is split at its headings, so a heading and the text under it is one card (the text before the first heading is the opening card), and each card gets its own suggestion — the notes on what changed, the card as it is now and the card as suggested, side by side, and the markdown underneath. You apply the cards you agree with, card by card, and leave the rest; **Check every card** walks the whole entry. The check never saves anything: applying a card writes into the editor, and the entry still goes through Save and through review like any other edit, so an AI suggestion can't reach the library on its own. Because it lives in the editor, it is there for every article — open an article, Edit, ✨ AI Editor. It keeps the facts, names, numbers, links, tables and markdown as they are, and in structure mode it keeps the wording and only fixes heading levels, lists and paragraphs. It runs on **Workers AI** (`src/ai.js`, the `AI` binding, `POST /api/assist`, contributors only, 60 checks per 10 minutes), so there is no API key to keep and the text stays inside Cloudflare; set the plain-text var `AI_MODEL` to use a model other than `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Card splitting and applying are unit-tested in `tests/ai-editor.cjs`.
+- **Back, and back to top.** Two buttons sit in the bottom-right corner of every page: **↑ Back to top** appears as soon as the page is scrolled (a 60-step SOP is a long way down), and **← Back** goes back the way you came, or to Featured when the tab was opened straight onto a shared link. Neither one ever steps out of the library.
 - **Autoformat existing articles (Admin → Library maintenance).** Runs the same kind of cleanup on entries already in the library: a plain-text table lined up with tabs, a bare `|`, or two or more spaces becomes a real table, and a short "Label:" at the start of a line (`Note:`, `Duration:`, `Date:` and the like — the style already used by hand in most of the library's own pages) is bolded. Only an entry whose body actually changes gets a new version (`autoformatBody` in `src/util.js`, the `autoformat-body` admin action, 12 entries per call, repeated until none remain — the same pattern as **Tidy ALL-CAPS titles**; unit-tested in `tests/autoformat-body.cjs`). An entry that's already formatted, or whose author typed the markup by hand, is left exactly as it is.
 - **Nothing is lost.**
   - Every save adds a version. Nothing is overwritten.
@@ -17,6 +19,7 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
   - Admins can restore any earlier version at once; a reviewer's restore waits for approval like any other edit.
   - Removing an entry archives it. Only an admin can delete permanently, by typing DELETE.
   - Admin → **Download a backup** exports every entry and version as JSON.
+  - **A site update can't lose an edited article.** Entries, every version of them and the uploaded files live in D1 and R2, not in this repository, so deploying new code never touches them. The one thing that used to write over an edited article was re-running a bundled import (**Import documents**, **Import training topics**, **Import Tettra pages**), which brought the bundled text back: an entry is now marked `kb_edited` the moment an edit of it goes live here (an admin's own edit, or an approved suggestion), and every later import skips it for good — the same rule the Glossary already used for an edited term. Admin → **Edited articles are kept through site updates** counts how many are protected.
 - **Search that scales.** Search runs on the server (SQLite FTS5 in D1). It covers titles, summaries, content, tags, sections and the **text inside uploaded PDFs and Word, Excel and PowerPoint files**, which the browser extracts at upload. Results are ranked, highlighted and paged.
 - **Community review.**
   - **Only tenured VAs, reviewers and admins can edit.** Info Access readers can read and search, and nothing else (no entries, edits, Glossary changes or notes).
@@ -38,11 +41,11 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 ## 🧭 Blueprint (how the Knowledge Base works, for VAs and for admins)
 
 **🧭 Blueprint** in the top bar (before Sign out) opens a full-screen slide deck.
-- **VA blueprint** (shown as the Trainee blueprint; a cover and 8 slides), for everyone signed in: what the Knowledge Base is, signing in, finding what you need, videos and files, adding to the library, editing and suggesting, replies, votes and your contributions, and reviewers.
+- **VA blueprint** (shown as the Trainee blueprint; a cover and 9 slides), for everyone signed in: what the Knowledge Base is, signing in, finding what you need, videos and files, adding to the library, editing and suggesting, the ✨ AI Editor, replies, votes and your contributions, and reviewers.
 - **Admin blueprint** (shown as the Trainer blueprint; admins only; a cover and 8 slides): signing in as an admin, the team access code, the review queue, reviewers, Official and Featured, history, restore, archive and delete, collections and sections, and import and backup.
 - Admins get both as tabs; VAs and reviewers only the VA deck.
 - **Moving around:** ◀ ▶, the ← → keys or the contents strip. Esc closes it.
-- **Numbering:** the cover is ★ Cover (the counter says "Cover · 8 slides"); the slides are 1 to 8 everywhere: the contents strip, the counter ("8 / 8" on the last), the slide's heading and footer, and the PDF's page footers.
+- **Numbering:** the cover is ★ Cover (the counter says "Cover · 9 slides" on the VA deck); the slides are numbered 1 to n everywhere: the contents strip, the counter ("9 / 9" on the VA deck's last slide), the slide's heading and footer, and the PDF's page footers.
 - **⬇ Download PDF:** the deck that's showing, as a landscape PDF with one page per slide, made from the deployed site each time and stamped with the deploy (the page's ETag) and the date.
 - **Files:** the slides are in `public/js/blueprint-content.js`. `public/js/lsh-blueprint.js` (the page and the PDFs) is the same file on every LSH platform: change it in one, copy it to all. Test: `tests/blueprint.cjs`.
 
@@ -116,6 +119,7 @@ An ALL-CAPS title or heading is shown in sentence case ("WRITE A WINNING DEMAND 
 | `TRAINING_DB` (D1 `lsh-training-activities-db`) | `lib_*` tables (collections, entries, versions, files, reviewers, search) plus the old `kb_*` tables for the code, replies, votes and views | LSH Training Portal |
 | `DB` (D1 `lshcasemanagementtraining-trainingcrmlogins`) | Read-only: admin sign-in (`users`) and the site lock (`site_state`) | LSH Training Portal |
 | `FILES` (R2 `lshtraining`) | Uploaded files, under `kb/files/<year>/<month>/<id>/<name>` | EA/PA portal (its `DOCUMENTS` bucket) |
+| `AI` (Workers AI) | The ✨ AI Editor's grammar and structure checks (`src/ai.js`). Nothing is stored; the text is not used for training | — |
 
 The tables are created automatically on the first request.
 
@@ -138,16 +142,19 @@ The tables are created automatically on the first request.
 
 ## Develop and test
 
+`--local` matters now: Workers AI has no local emulator, so `wrangler dev` without it opens a remote binding session and stops unless `CLOUDFLARE_API_TOKEN` is set (`npm run dev` passes `--local`). With `--local` the `AI` binding reads "not supported", so the ✨ AI Editor answers "couldn't be reached just now" and everything else works as before. To try the AI Editor itself, use `npx wrangler dev --remote` with a Cloudflare API token, or the deployed site.
+
 ```
 npm install
 npm run seed:local                          # a test admin (trainer1 / admin-pass) and three old-style posts
 echo "SESSION_SECRET=dev-secret" > .dev.vars
-npx wrangler dev --var KB_CODE_LOGIN:on --var PORTAL_URL:http://127.0.0.1:8789   # http://127.0.0.1:8787; the end-to-end test runs a mock Portal on 8789
+npx wrangler dev --local --var KB_CODE_LOGIN:on --var PORTAL_URL:http://127.0.0.1:8789   # http://127.0.0.1:8787; the end-to-end test runs a mock Portal on 8789
 pip install playwright && npm pack pdfjs-dist@3.11.174 && mkdir -p tests/.cache/pdfjs && tar xzf pdfjs-dist-3.11.174.tgz -C tests/.cache/pdfjs
 npm test                                    # end-to-end checks; start from fresh local data (rm -rf .wrangler/state, seed again)
 npm run test:blueprint                      # the 🧭 Blueprint; needs Node Playwright and jsPDF (npm install --no-save playwright jspdf@4.2.1, npx playwright install chromium)
 npm run test:paste-format                   # paste autoformatting; pure logic, no server or browser needed
 npm run test:autoformat-body                # autoformatting existing articles; pure logic, no server or browser needed
+npm run test:ai-editor                      # the ✨ AI Editor's card splitting and applying; pure logic, no server or browser needed
 ```
 
 The tests cover:

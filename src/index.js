@@ -1,5 +1,6 @@
 import { json, fail, nowIso, clean, oneLine, fixTitle, autoformatBody, personKey, signToken, hashPassword, verifyPassword, setCookie, sameOrigin, readJson } from './util.js';
-import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf,
+import { assist } from './ai.js';
+import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf, markEdited, editedHere,
     READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
 
@@ -55,6 +56,9 @@ export default {
                     return write ? await entryAction(ctx, Number(seg[1])) : await getEntry(ctx, Number(seg[1]));
                 case 'revisions': return write ? await revisionAction(ctx, Number(seg[1])) : await getRevision(ctx, Number(seg[1]));
                 case 'review': return await reviewQueue(ctx);
+                case 'assist':   // the AI Editor: grammar and structure on one card, or on the whole entry
+                    if (!reader.contributor) return infoOnly();
+                    return await assist(ctx);
                 case 'comments': return await comments(ctx);
                 case 'people': return await people(ctx);
                 case 'files':
@@ -424,6 +428,7 @@ async function entryAction({ request, db, reader, env }, id) {
         if (reader.admin) {
             const revId = await addRevision(db, id, f.data, f.note, reader, 'pending');
             await makeLive(db, id, revId, { publish: e.status !== 'archived', reviewer });
+            await markEdited(db, id);   // edited here: a later import must not write over it
             return json({ success: true, status: 'live' });
         }
         // Anyone else's edit is a suggestion: it waits for approval and replaces their own earlier suggestion.
@@ -495,6 +500,7 @@ async function entryAction({ request, db, reader, env }, id) {
         const revId = await addRevision(db, id, d, `Restored the version from ${old.created_at.slice(0, 10)} by ${old.author_name}`, reader, 'pending');
         if (!reader.admin) return json({ success: true, status: 'pending' });   // a restore changes the page, so it needs approval like any other edit
         await makeLive(db, id, revId, { publish: e.status !== 'archived', reviewer });
+        await markEdited(db, id);
         return json({ success: true, status: 'live' });
     }
     if (body.action === 'purge') {
@@ -536,6 +542,7 @@ async function revisionAction({ request, db, reader }, revId) {
         d.title = fixTitle(d.title); delete d.base;
         await db.prepare(`UPDATE lib_revisions SET review_note = ?, data = ? WHERE id = ?`).bind(note || null, JSON.stringify(d), revId).run();
         await makeLive(db, r.entry_id, revId, { publish: e.status !== 'archived', reviewer });
+        await markEdited(db, r.entry_id);   // an approved edit is the community's copy now: the imports leave it alone
         await db.prepare(`UPDATE lib_entries SET review_note = NULL, reviewed_by = ?, reviewed_at = ? WHERE id = ?`).bind(reviewer, now, r.entry_id).run();
         return json({ success: true });
     }
@@ -606,10 +613,12 @@ async function adminInfo({ db }) {
     try { legacy = (await db.prepare(`SELECT COUNT(*) AS n FROM kb_articles`).first()).n; } catch (e) { legacy = 0; }
     const imported = (await db.prepare(`SELECT COUNT(*) AS n FROM lib_entries WHERE legacy_ref IS NOT NULL`).first()).n;
     const storage = await db.prepare(`SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes FROM lib_files WHERE status = 'ready'`).first();
+    let edited = 0;   // imported entries that were edited here, so no later import can write over them
+    try { edited = (await db.prepare(`SELECT COUNT(*) AS n FROM lib_entries WHERE kb_edited = 1 AND legacy_ref IS NOT NULL`).first()).n; } catch (e) { edited = 0; }
     return json({ success: true, codeSet: !!(await getSetting(db, 'code_hash')), codeChangedAt: await getSetting(db, 'code_changed_at'),
         roles: (roles || []).map(r => ({ key: r.person_key, name: r.name, batch: r.batch || '', role: r.role, grantedBy: r.granted_by, grantedAt: r.granted_at })),
         collections: (cols || []).map(c => ({ slug: c.slug, name: c.name, blurb: c.blurb || '', sort: c.sort, archived: !!c.archived, count: c.n })),
-        legacy: { total: legacy, imported }, storage: { files: storage.n, bytes: storage.bytes } });
+        legacy: { total: legacy, imported, edited }, storage: { files: storage.n, bytes: storage.bytes } });
 }
 
 async function adminAction({ request, env, db, reader }) {
@@ -703,7 +712,7 @@ async function adminAction({ request, env, db, reader }) {
 
 // Publishes the handouts bundled in public/seed/docs.json as pages of the library (their text, headings, lists and tables), not as
 // files in a PDF viewer. Safe to run again: a handout already imported is skipped, and one that was imported earlier as a PDF
-// attachment is rewritten as a text page.
+// attachment is rewritten as a text page. An entry edited inside the Knowledge Base (kb_edited) is never written over.
 async function importBundled(request, env, db, reader) {
     const origin = new URL(request.url).origin;
     const m = await env.ASSETS.fetch(new Request(origin + '/seed/docs.json'));
@@ -711,8 +720,10 @@ async function importBundled(request, env, db, reader) {
     const docs = await m.json();
     const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'seed:%'`).all()).results || [])
         .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
+    // An entry someone has edited here is theirs, not the bundle's: the import never writes over it.
+    const kept = await editedHere(db, 'seed:%');
     // what still needs doing: a document not imported yet, or one whose text, section or attachments changed
-    const todo = docs.filter(d => { const h = have.get('seed:' + d.file); return !h || (h.data.files || []).length || h.data.body !== d.body || h.data.title !== d.title || (h.data.section || '') !== (d.section || ''); });
+    const todo = docs.filter(d => { const h = have.get('seed:' + d.file); return !kept.has('seed:' + d.file) && (!h || (h.data.files || []).length || h.data.body !== d.body || h.data.title !== d.title || (h.data.section || '') !== (d.section || '')); });
     let imported = 0, updated = 0;
     for (const d of todo.slice(0, 10)) {   // 10 per call; the page calls again until none remain
         const ref = 'seed:' + d.file, now = nowIso();
@@ -737,7 +748,7 @@ async function importBundled(request, env, db, reader) {
     }
     const targets = [...new Set(docs.map(d => d.collection))];   // the documents' collections show again, even if the starters were tidied away
     if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
-    return json({ success: true, imported, updated, remaining: todo.length - imported - updated });
+    return json({ success: true, imported, updated, kept: kept.size, remaining: todo.length - imported - updated });
 }
 
 // ---- Glossary: a dictionary of terms (public/seed/glossary.json, made by scripts/tettra_convert.py), kept apart from the entries ----
@@ -872,9 +883,10 @@ async function importTraining(request, env, db, reader) {
     const { pages } = await res.json();
     const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'train:%'`).all()).results || [])
         .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
+    const kept = await editedHere(db, 'train:%');   // topics edited here keep their text: the lesson never writes over them
     const dataOf = (p) => ({ collection: 'foundational', section: `Lesson ${p.lesson} · ${p.lessonTitle}`, type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
         tags: ['training', 'lesson ' + p.lesson], credits: [], files: [], official: false });
-    const todo = pages.filter(p => { const h = have.get('train:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title; });
+    const todo = pages.filter(p => { const h = have.get('train:' + p.id); return !kept.has('train:' + p.id) && (!h || h.data.body !== p.body || h.data.title !== p.title); });
     let done = 0;
     for (const p of todo.slice(0, 12)) {
         const now = nowIso(), data = dataOf(p), old = have.get('train:' + p.id);
@@ -893,7 +905,7 @@ async function importTraining(request, env, db, reader) {
         done++;
     }
     await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug = 'foundational'`).run();   // the training topics live here, even if the starter shelves were tidied away
-    return json({ success: true, imported: done, remaining: todo.length - done });
+    return json({ success: true, imported: done, kept: kept.size, remaining: todo.length - done });
 }
 
 // ---- Tettra import (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
@@ -901,7 +913,7 @@ const slugOf = (name) => String(name).toLowerCase().replace(/&/g, 'and').replace
 const tettraTime = (t) => String(t || '').replace(' ', 'T') + 'Z';
 
 // Each Tettra category becomes a collection and its subcategory a section. 12 pages per call; run again until none remain.
-// Safe to run again: a page already imported (legacy_ref 'tettra:<id>') is skipped.
+// Safe to run again: a page already imported (legacy_ref 'tettra:<id>') is skipped, and a page edited here is left alone.
 async function importTettra(request, env, db, reader) {
     const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/tettra.json'));
     if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no Tettra pages to import.' });
@@ -910,9 +922,11 @@ async function importTettra(request, env, db, reader) {
     const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, e.status, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'tettra:%'`).all()).results || [])
         .map(r => [r.ref, { id: r.id, status: r.status, data: r.data ? JSON.parse(r.data) : {} }]));
     const wanted = new Set(pages.map(p => 'tettra:' + p.id));
+    // Pages edited here are the community's copy: neither the text nor the archiving below touches them.
+    const kept = await editedHere(db, 'tettra:%');
     // pages that were imported earlier but are no longer part of the Knowledge Base (company policies and management) are archived
-    const gone = [...have].filter(([ref, h]) => !wanted.has(ref) && h.status !== 'archived');
-    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title || (h.data.tags || []).join() !== (p.tags || []).join(); });
+    const gone = [...have].filter(([ref, h]) => !wanted.has(ref) && h.status !== 'archived' && !kept.has(ref));
+    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !kept.has('tettra:' + p.id) && (!h || h.data.body !== p.body || h.data.title !== p.title || (h.data.tags || []).join() !== (p.tags || []).join()); });
     const now = nowIso();
     if (!have.size || todo.some(p => !have.has('tettra:' + p.id))) {   // the shelves and the image list, for any page not yet imported
         const cats = [...new Set(pages.map(p => p.category))].sort();
@@ -952,7 +966,7 @@ async function importTettra(request, env, db, reader) {
     }
     const left = gone.length + todo.length - imported;
     if (left === 0) await archiveEmptyStarters(db);
-    return json({ success: true, imported, remaining: left });
+    return json({ success: true, imported, kept: kept.size, remaining: left });
 }
 // Once the knowledge is saved, the starter collections that have nothing in them are archived (hidden, not deleted; Admin can bring one back).
 async function archiveEmptyStarters(db) {

@@ -25,10 +25,16 @@
   <p class="muted pad">Loading the library…</p>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<!-- Back (to the page you came from) and Back to top: app.js shows each one when it has somewhere to go. -->
+<div class="jump" id="jump">
+  <button type="button" id="jump-back">← Back</button>
+  <button type="button" id="jump-top">↑ Back to top</button>
+</div>
 <script src="/js/md.js"></script>
 <script src="/js/rich.js"></script>
 <script src="/js/upload.js"></script>
 <script src="/js/paste-format.js"></script>
+<script src="/js/ai-editor.js"></script>
 <script src="/js/app.js"></script>
 <!-- 🧭 the Blueprint: a VA deck and (admins) an admin deck, with a PDF of each.
      blueprint-content.js is this site's slides; lsh-blueprint.js is the same file on every LSH platform. -->

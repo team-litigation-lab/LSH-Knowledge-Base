@@ -283,10 +283,39 @@
             view(`<div class="card"><h2>Page not found</h2><a class="btn" href="#/">Back to the library</a></div>`);
         } catch (e) { errorView(e); }
     }
+    // How many pages of this site are behind us, so "← Back" never steps out of the library. A hash the
+    // page replaced (the landing redirect to Featured) adds no history entry, so it doesn't count.
+    let depth = 0, hlen = history.length;
     window.addEventListener('hashchange', () => {
         if (leaveGuard && !confirmLeave()) return;
+        if (history.length > hlen) depth++;
+        hlen = history.length;
         route();
     });
+
+    /* ---------- Back, and Back to top ---------- */
+    // The library is one page with hash routes, so there is no browser chrome to lean on inside it:
+    // "↑ Back to top" shows as soon as the page is scrolled (it is a long way down a 60-step SOP), and
+    // "← Back" shows on every page but the one you land on, going back the way you came — or to Featured
+    // when this tab was opened straight onto an entry (a link someone shared), where there is no "back".
+    const HOME = '#/featured';
+    (function jump() {
+        const top = document.getElementById('jump-top'), back = document.getElementById('jump-back');
+        if (!top || !back) return;
+        top.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        back.onclick = () => {
+            if (leaveGuard && !confirmLeave()) return;
+            if (depth > 0) { depth--; history.back(); } else location.hash = HOME;
+        };
+        const paint = () => {
+            top.classList.toggle('on', window.scrollY > 320);
+            const here = location.hash || '';
+            back.classList.toggle('on', !(here === HOME || here === '#/' || here === '#' || here === ''));
+        };
+        addEventListener('scroll', paint, { passive: true });
+        addEventListener('hashchange', paint);
+        paint();
+    })();
     function confirmLeave() {
         // Uploads still running: stay on the editor (the browser's own prompt covers closing the tab).
         toast('Wait for the uploads to finish, or remove them, before leaving this page.', true);
@@ -687,6 +716,8 @@
                         <button type="button" data-f="undo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
                         <button type="button" data-f="redo" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
                         <button type="button" data-f="clear" title="Clear formatting from the selection">Clear</button>
+                        <span class="mdbar-sep" aria-hidden="true"></span>
+                        <button type="button" data-f="ai" class="mdbar-ai" title="Check the grammar and the structure, one card at a time">✨ AI Editor</button>
                     </div>
                     <div class="rich md preview" id="ed-rich" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Content" spellcheck="true"
                         data-placeholder="Steps, examples and the pitfalls you ran into. Paste from Word or Google Docs and the formatting comes along."></div>
@@ -890,6 +921,7 @@
             if (f === 'clear') return cmd('removeFormat');
             if (f === 'link') return openLink();
             if (f === 'photo') { keep(); photoInput.click(); }
+            // 'ai' has its own handler on the button (it opens the AI Editor panel, not a formatting command).
         });
         blockSel.onchange = (ev) => cmd('formatBlock', `<${ev.target.value}>`);
         const pal = document.getElementById('mdbar-pal'), colorBtn = document.getElementById('mdbar-color');
@@ -1083,6 +1115,21 @@
             dl.innerHTML = slug ? (await sectionsFor(slug).catch(() => [])).map(x => `<option value="${esc(x)}">`).join('') : '';
         };
         colSel.onchange = fillSections; fillSections();
+
+        // ✨ AI Editor (js/ai-editor.js): the entry is split into cards (a heading and the text under it) and each
+        // card's grammar or structure is checked on its own. Applying a card writes into #ed-body — the one copy
+        // that is saved — and redraws the writing surface, so it still goes through Save and through review.
+        const aiBtn = bar.querySelector('[data-f="ai"]');
+        if (aiBtn) aiBtn.onclick = () => {
+            if (!window.KBAiEditor) return toast('The AI Editor didn’t load. Reload the page and try again.', true);
+            if (tab === 'write') sync();
+            window.KBAiEditor.open({
+                title: val('ed-title'),
+                get: () => ta.value,
+                set: (md) => { ta.value = md; if (tab === 'write') { fill(); dirty = false; } else if (tab === 'preview') prevBox.innerHTML = window.KBmd.render(ta.value) || '<p class="muted">Nothing to preview yet.</p>'; },
+                toast
+            });
+        };
 
         // Write / Markdown / Preview. Leaving Write puts the surface's latest into #ed-body; coming back draws the
         // surface again from #ed-body, so it shows exactly what will be saved, Markdown-tab edits included.
@@ -1382,6 +1429,10 @@
             <section class="section card"><h2>Library maintenance</h2>
                 <p class="muted" style="margin-top:0">Autoformat every existing entry the way a rich paste is autoformatted now: a plain-text table (lined up by tabs, a bare <code>|</code>, or two or more spaces) becomes a real table, and a short “Label:” at the start of a line is bolded. Only entries that actually need a change get a new version (held for review like any other edit, unless you're the one making it).</p>
                 <div class="row"><button class="btn" id="autoformat-body">Autoformat existing articles</button><span class="muted" id="autoformat-status"></span></div></section>
+            <section class="section card"><h2>Edited articles are kept through site updates</h2>
+                <p class="muted" style="margin-top:0">A deploy never touches the library: entries, every version of them and the uploaded files live in D1 and R2, not in the code. The one thing that used to write over an edited article was re-running a bundled import (the handouts, the Foundational Training topics, the old Tettra pages), because it brought the bundled text back. It no longer can: once an article has been edited here — by an admin, or by an approved suggestion — it is marked as the community's copy and every later import skips it.</p>
+                <p>${r.legacy.imported ? plural(r.legacy.imported, 'article') + ' came from an import' : 'No articles came from an import'}${r.legacy.edited ? `, and <b>${plural(r.legacy.edited, 'of them has', 'of them have')} been edited here and ${r.legacy.edited === 1 ? 'is' : 'are'} protected</b>` : ''}.</p>
+                <p class="muted" style="font-size:13px">Keep a copy off-site as well: the backup below is every entry and every version as JSON.</p></section>
             <section class="section card"><h2>Storage and backup</h2>
                 <p>${plural(r.storage.files, 'file')} stored, ${fmtSize(r.storage.bytes)} in all. Files are kept in the <code>lshtraining</code> R2 bucket under <code>kb/files/</code>.</p>
                 <a class="btn" href="/api/admin/export">Download a backup of every entry and version (JSON)</a></section>`);

@@ -8,6 +8,7 @@ import { getCookie, readToken, personKey, nowIso } from './util.js';
 //   kb_comments / kb_stats / kb_votes / kb_rate   reused as-is; entries use the ref "e:<id>"
 //   lib_collections   the library's shelves: one per program or role
 //   lib_entries       one row per entry, with the live version's listing fields copied in
+//                     kb_edited = 1 once it was edited here: the bundled imports then leave it alone for good
 //   lib_revisions     every version of every entry, never overwritten
 //   lib_files         uploaded files; the bytes live in R2 (FILES) under kb/files/
 //   lib_entry_files   which files the live version of each entry shows (for access checks)
@@ -109,6 +110,7 @@ async function buildSchema(db) {
     // every request waits for, and there are two dozen statements.
     await db.batch(SCHEMA.map((s) => db.prepare(s)));
     try { await db.prepare(`ALTER TABLE kb_comments ADD COLUMN kind TEXT`).run(); } catch (e) { /* the column is already there */ }   // 'update' = a note about out-of-date information
+    try { await db.prepare(`ALTER TABLE lib_entries ADD COLUMN kb_edited INTEGER NOT NULL DEFAULT 0`).run(); } catch (e) { /* the column is already there */ }   // someone edited this entry here, so a re-import leaves it alone
     const n = await db.prepare(`SELECT COUNT(*) AS n FROM lib_collections`).first();
     if (!n || !n.n) {
         const now = nowIso();
@@ -186,6 +188,18 @@ export async function overLimit(request, db, kind, limit) {
 
 /* ---------- entries ---------- */
 export const refOf = (id) => 'e:' + id;
+
+// Note that an entry was edited inside the Knowledge Base, so no later import of the bundled
+// documents, training topics or Tettra pages can write over it. Nothing ever clears this:
+// once the community has improved an entry, the bundled text is no longer the better copy.
+export async function markEdited(db, entryId) {
+    try { await db.prepare(`UPDATE lib_entries SET kb_edited = 1 WHERE id = ?`).bind(entryId).run(); } catch (e) { /* an older database without the column */ }
+}
+// The imports skip these, and the Admin page counts them.
+export async function editedHere(db, likeRef) {
+    const { results } = await db.prepare(`SELECT legacy_ref AS ref FROM lib_entries WHERE kb_edited = 1 AND legacy_ref LIKE ?`).bind(likeRef).all();
+    return new Set((results || []).map(r => r.ref));
+}
 
 // Make a revision the live version of its entry: copy its listing fields onto
 // the entry, point lib_entry_files at its files, and refresh the search index.

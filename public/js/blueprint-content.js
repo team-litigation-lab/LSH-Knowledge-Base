@@ -25,7 +25,7 @@
           'Filter by type, Official only, or videos.',
           'Browse a collection by its sections, or start from Featured.'],
         where: 'The search box at the top · Library.',
-        tip: 'Search a phrase from the document itself: the text inside files is searchable too.' },
+        tip: 'Search a phrase from the document itself: the text inside files is searchable too. Deep in a long page? ↑ Back to top and ← Back sit in the bottom-right corner.' },
       { icon: '🎬', title: 'Videos and files', points: [
           'Training videos play in the page, and you can skip to any point.',
           'PDFs open in the page, and everything can be downloaded.',
@@ -45,6 +45,13 @@
           'The history shows every version and compares any of them with the current one.'],
         where: 'An entry → Edit · History.',
         tip: 'Say what you changed in a short note, so the reviewer can approve it quickly.' },
+      { icon: '✨', title: 'The AI Editor', points: [
+          'In the editor\'s toolbar: ✨ AI Editor checks your writing for grammar and spelling, or for structure.',
+          'It works one card at a time: a heading and the text under it is one card, and each card gets its own suggestion.',
+          'You see what it changed, the card as it is and as suggested side by side, and apply only the cards you agree with.',
+          'It saves nothing: an applied card sits in the editor, and the entry still goes through Save and through review.'],
+        where: 'An entry → Edit → ✨ AI Editor.',
+        tip: 'Check a long SOP card by card, not all at once: you read each change where it belongs.' },
       { icon: '💬', title: 'Replies, votes and your contributions', points: [
           'Tenured team members can reply to an entry with their own experience, or tell us what is out of date. Notes appear after a reviewer approves them.',
           'Helpful votes and view counts show which entries the community uses most.',
@@ -108,7 +115,8 @@
       { icon: '💾', title: 'Import and backup', points: [
           'Import the old Knowledge Base\'s posts from the Training Portal into the library.',
           'Download a backup: every entry and every version, as JSON.',
-          'Uploaded files are kept in the training file storage; nothing is lost when an entry changes.'],
+          'Uploaded files are kept in the training file storage; nothing is lost when an entry changes.',
+          'A deploy never touches the library, and an import now skips any article that was edited here: the community\'s version is the one that stays.'],
         where: 'Admin → Import · Download a backup.',
         tip: 'Download a backup before any big clean-up.' }
     ]

@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "description": "LSH Knowledge Base: the LSH VA community library",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --local",
     "deploy": "wrangler deploy",
     "seed:local": "wrangler d1 execute lshcasemanagementtraining-trainingcrmlogins --local --file tests/seed-accounts.sql && wrangler d1 execute lsh-training-activities-db --local --file tests/seed-old-kb.sql",
     "test": "python3 tests/e2e.py",
     "test:blueprint": "node tests/blueprint.cjs",
     "test:paste-format": "node tests/paste-format.cjs",
     "test:autoformat-body": "node tests/autoformat-body.cjs",
-    "test:rich": "node tests/rich-editor.cjs"
+    "test:rich": "node tests/rich-editor.cjs",
+    "test:ai-editor": "node tests/ai-editor.cjs"
   },
   "dependencies": {
     "wrangler": "4.151.1"
