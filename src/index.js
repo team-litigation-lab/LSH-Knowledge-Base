@@ -2,6 +2,7 @@ import { json, fail, nowIso, clean, oneLine, fixTitle, autoformatBody, personKey
 import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit, makeLive, reindex, ftsQuery, refOf,
     READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
+import { syncCourseHandouts } from './sync.js';
 
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
@@ -71,6 +72,11 @@ export default {
             console.error(err);
             return fail(err.message || 'Something went wrong.', 500);
         }
+    },
+    // On the schedule in wrangler.jsonc: course handouts are brought up to date with their source (src/sync.js).
+    async scheduled(event, env, ctx) {
+        const db = env.TRAINING_DB;
+        ctx.waitUntil(ensureSchema(db).then(() => syncCourseHandouts(env, db)).then(r => console.log('course handouts:', JSON.stringify(r))));
     }
 };
 
@@ -650,6 +656,7 @@ async function adminAction({ request, env, db, reader }) {
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
     if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
+    if (body.action === 'sync-course-handouts') return json({ success: true, results: await syncCourseHandouts(env, db) });   // also runs on the schedule
     if (body.action === 'reindex') {   // rebuilds the search for every published entry, 40 per call; the collection's name is searchable too
         const after = Number(body.after) || 0;
         const { results } = await db.prepare(`SELECT id FROM lib_entries WHERE status = 'published' AND id > ? ORDER BY id LIMIT 40`).bind(after).all();
