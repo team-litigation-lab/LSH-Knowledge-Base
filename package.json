@@ -10,6 +10,7 @@
     "test:blueprint": "node tests/blueprint.cjs",
     "test:paste-format": "node tests/paste-format.cjs",
     "test:autoformat-body": "node tests/autoformat-body.cjs",
+    "test:bundled-sync": "node tests/bundled-sync.cjs",
     "test:rich": "node tests/rich-editor.cjs"
   },
   "dependencies": {

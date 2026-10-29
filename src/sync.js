@@ -16,6 +16,7 @@ export const COURSE_HANDOUTS = [
 export const SYNC_NOTE = 'Updated from the course handout';
 // Versions written by the Knowledge Base's own tools, not by a person.
 const MACHINE_NOTES = new Set([SYNC_NOTE, 'Updated from the bundled document', 'Added from the bundled documents',
+    'Added from the bundled pages', 'Updated from the bundled pages',   // src/bundled.js
     'Title put in sentence case', 'Autoformatted: tables and bold labels']);
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", apos: "'", nbsp: ' ', middot: '·', mdash: '—', ndash: '–', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“' };

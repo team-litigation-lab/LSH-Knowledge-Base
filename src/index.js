@@ -3,6 +3,7 @@ import { ensureSchema, getSetting, setSetting, siteLocked, getReader, overLimit,
     READER_COOKIE, ADMIN_COOKIE, TYPES, DEFAULT_COLLECTIONS, LEGACY_COLLECTION, LEGACY_TYPE } from './db.js';
 import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFile } from './files.js';
 import { syncCourseHandouts } from './sync.js';
+import { REF_RE, resolveRef, syncBundled, forgetRef, slugOf } from './bundled.js';
 
 // LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
@@ -16,6 +17,7 @@ const portalBase = (env) => String(env.PORTAL_URL || PORTAL_URL).replace(/\/+$/,
 // The team access code only works when KB_CODE_LOGIN is set to "on" (it is off: nobody signs in a second time here).
 const MASTER_USERNAME = 'LSHADMIN123';   // the Portal's Master Account (functions/_utils.js there)
 const codeLoginOn = (env) => String(env.KB_CODE_LOGIN || '').toLowerCase() === 'on';
+const HOURLY = '23 * * * *';   // wrangler.jsonc's hourly cron (the other one runs every 10 minutes)
 
 export default {
     async fetch(request, env) {
@@ -45,11 +47,14 @@ export default {
                 case 'glossary':
                     if (write && !reader.contributor) return infoOnly();
                     return write ? await glossaryAction(ctx) : await glossary(ctx);
-                case 'resolve': {   // an old Tettra page's id, or a bundled document's file name (public/seed/docs.json) -> the library entry
-                    // that holds it (links inside imported pages use the first; the Training Portal's day decks link to an article by the second)
+                case 'resolve': {   // a link to a bundled page, by its reference (a docs.json file name, a training topic, a Tettra page id) -> its entry.
+                    // A bundled page that isn't in the library yet is added on the spot (src/bundled.js): a link to one always opens it.
                     const ref = String(url.searchParams.get('ref') || '');
-                    const row = /^(tettra:\d+|seed:[a-z0-9][\w.-]{0,160})$/i.test(ref) ? await db.prepare(`SELECT id FROM lib_entries WHERE legacy_ref = ? AND status = 'published'`).bind(ref).first() : null;
-                    return row ? json({ success: true, id: row.id }) : fail('That page isn’t in the library.', 404);
+                    if (!REF_RE.test(ref)) return fail('That isn’t a link to a page in the library.', 400);
+                    const r = await resolveRef(env, db, ref);
+                    if (r.id) return json({ success: true, id: r.id });
+                    const why = { archived: 'That page was taken out of the library.', pending: 'That page is waiting for review.', removed: 'That page was removed from the library.' };
+                    return fail(why[r.status] || 'That page isn’t in the library.', 404, { code: String(r.status || 'missing').toUpperCase() });
                 }
                 case 'entries':
                     if (!seg[1]) return write ? await createEntry(ctx) : await listEntries(ctx);
@@ -74,10 +79,14 @@ export default {
             return fail(err.message || 'Something went wrong.', 500);
         }
     },
-    // On the schedule in wrangler.jsonc: course handouts are brought up to date with their source (src/sync.js).
+    // On the schedule in wrangler.jsonc. Every run brings the bundled pages in step with the library (src/bundled.js: a run with
+    // nothing to do costs one read); the hourly run also brings the course handouts up to date with their source (src/sync.js).
     async scheduled(event, env, ctx) {
         const db = env.TRAINING_DB;
-        ctx.waitUntil(ensureSchema(db).then(() => syncCourseHandouts(env, db)).then(r => console.log('course handouts:', JSON.stringify(r))));
+        ctx.waitUntil(ensureSchema(db)
+            .then(() => syncBundled(env, db)).then(r => console.log('bundled pages:', JSON.stringify(r)))
+            .then(() => event.cron === HOURLY ? syncCourseHandouts(env, db).then(r => console.log('course handouts:', JSON.stringify(r))) : null)
+            .catch(e => console.error('scheduled run:', e)));
     }
 };
 
@@ -507,6 +516,7 @@ async function entryAction({ request, db, reader, env }, id) {
     if (body.action === 'purge') {
         if (!reader.admin) return fail('Only admins can delete entries permanently.', 403);
         if (body.confirm !== 'DELETE') return fail('Type DELETE to confirm.');
+        const was = await db.prepare(`SELECT legacy_ref FROM lib_entries WHERE id = ?`).bind(id).first();
         const { results: revs } = await db.prepare(`SELECT data FROM lib_revisions WHERE entry_id = ?`).bind(id).all();
         const fileIds = new Set();
         (revs || []).forEach(r => (JSON.parse(r.data).files || []).forEach(f => fileIds.add(f.id)));
@@ -514,6 +524,7 @@ async function entryAction({ request, db, reader, env }, id) {
             db.prepare(`DELETE FROM lib_entry_files WHERE entry_id = ?`).bind(id), db.prepare(`DELETE FROM lib_fts WHERE rowid = ?`).bind(id),
             db.prepare(`DELETE FROM kb_stats WHERE article_ref = ?`).bind(refOf(id)), db.prepare(`DELETE FROM kb_votes WHERE article_ref = ?`).bind(refOf(id)),
             db.prepare(`UPDATE kb_comments SET status = 'deleted' WHERE article_ref = ?`).bind(refOf(id))]);
+        if (was && was.legacy_ref) await forgetRef(db, was.legacy_ref);   // a bundled page an admin deleted is not added back
         // Files go too, unless another entry's version still uses them.
         for (const fid of fileIds) {
             const used = await db.prepare(`SELECT 1 AS u FROM lib_revisions WHERE data LIKE ? LIMIT 1`).bind(`%"id":"${fid}"%`).first();
@@ -656,7 +667,12 @@ async function adminAction({ request, env, db, reader }) {
         return json({ success: true, slug });
     }
     if (body.action === 'import-legacy') return importLegacy(db, reader);
-    if (body.action === 'import-bundled') return importBundled(request, env, db, reader);
+    // The bundled pages add and update themselves (src/bundled.js: on the schedule, and when a link asks for one); these only run
+    // that now, a batch a call. import-tettra also archives the Tettra pages that are no longer part of its bundle.
+    if (body.action === 'import-bundled' || body.action === 'import-training') {
+        const r = await syncBundled(env, db, { kinds: [body.action === 'import-bundled' ? 'seed' : 'train'], budget: 10, force: true });
+        return json({ success: true, imported: r.added, updated: r.updated, remaining: r.remaining });
+    }
     if (body.action === 'sync-course-handouts') return json({ success: true, results: await syncCourseHandouts(env, db) });   // also runs on the schedule
     if (body.action === 'reindex') {   // rebuilds the search for every published entry, 40 per call; the collection's name is searchable too
         const after = Number(body.after) || 0;
@@ -703,49 +719,9 @@ async function adminAction({ request, env, db, reader }) {
         return json({ success: true, fixed, remaining: todo.length - fixed });
     }
     if (body.action === 'import-glossary') return importGlossary(request, env, db);
-    if (body.action === 'import-training') return importTraining(request, env, db, reader);
-    if (body.action === 'import-tettra') return importTettra(request, env, db, reader);
+    if (body.action === 'import-tettra') return importTettra(env, db);
     if (body.action === 'copy-images') return copyImages(env, db);
     return fail('Unknown action.');
-}
-
-// Publishes the handouts bundled in public/seed/docs.json as pages of the library (their text, headings, lists and tables), not as
-// files in a PDF viewer. Safe to run again: a handout already imported is skipped, and one that was imported earlier as a PDF
-// attachment is rewritten as a text page.
-async function importBundled(request, env, db, reader) {
-    const origin = new URL(request.url).origin;
-    const m = await env.ASSETS.fetch(new Request(origin + '/seed/docs.json'));
-    if (!m.ok) return json({ success: true, imported: 0, updated: 0, remaining: 0, note: 'There are no bundled documents to import.' });
-    const docs = await m.json();
-    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'seed:%'`).all()).results || [])
-        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
-    // what still needs doing: a document not imported yet, or one whose text, section or attachments changed
-    const todo = docs.filter(d => { const h = have.get('seed:' + d.file); return !h || (h.data.files || []).length || h.data.body !== d.body || h.data.title !== d.title || (h.data.section || '') !== (d.section || ''); });
-    let imported = 0, updated = 0;
-    for (const d of todo.slice(0, 10)) {   // 10 per call; the page calls again until none remain
-        const ref = 'seed:' + d.file, now = nowIso();
-        const data = { collection: d.collection, section: d.section || '', type: d.type || 'Guide', title: d.title, summary: d.summary || '',
-            body: d.body, tags: d.tags || [], credits: [], files: [], official: false };
-        const old = have.get(ref);
-        if (old) {
-            const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Updated from the bundled document', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...old.data, ...data, official: !!old.data.official }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
-            await makeLive(db, old.id, rev.meta.last_row_id, { reviewer: reader.adminUser });
-            updated++;
-            continue;
-        }
-        const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-            VALUES ('pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.type, data.title, data.summary, data.tags.join(','),
-                reader.who.name, reader.who.batch || '', reader.who.key, ref, now, now).run();
-        const id = r.meta.last_row_id;
-        const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-            VALUES (?, ?, 'pending', 'Added from the bundled documents', ?, ?, ?, 1, ?)`).bind(id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
-        await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
-        imported++;
-    }
-    const targets = [...new Set(docs.map(d => d.collection))];   // the documents' collections show again, even if the starters were tidied away
-    if (targets.length) await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug IN (${targets.map(() => '?').join(',')})`).bind(...targets).run();
-    return json({ success: true, imported, updated, remaining: todo.length - imported - updated });
 }
 
 // ---- Glossary: a dictionary of terms (public/seed/glossary.json, made by scripts/tettra_convert.py), kept apart from the entries ----
@@ -871,96 +847,26 @@ async function importGlossary(request, env, db) {
     return json({ success: true, imported: terms.length, remaining: 0 });
 }
 
-// ---- Training topics (public/seed/training.json, made by scripts/training_topics.mjs) ----
-// One page per topic of the Foundational Training lessons, in the Foundational Training collection, one section per lesson.
-// 12 pages per call; run again until none remain. Safe to run again: a page already imported is skipped, or updated if its text changed.
-async function importTraining(request, env, db, reader) {
-    const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/training.json'));
-    if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no training topics to import.' });
-    const { pages } = await res.json();
-    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'train:%'`).all()).results || [])
-        .map(r => [r.ref, { id: r.id, data: r.data ? JSON.parse(r.data) : {} }]));
-    const dataOf = (p) => ({ collection: 'foundational', section: `Lesson ${p.lesson} · ${p.lessonTitle}`, type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
-        tags: ['training', 'lesson ' + p.lesson], credits: [], files: [], official: false });
-    const todo = pages.filter(p => { const h = have.get('train:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title; });
-    let done = 0;
-    for (const p of todo.slice(0, 12)) {
-        const now = nowIso(), data = dataOf(p), old = have.get('train:' + p.id);
-        if (old) {
-            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Training topic updated from the lesson', ?, ?, ?, 1, ?)`).bind(old.id, JSON.stringify({ ...old.data, ...data }), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
-            await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
-        } else {
-            const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-                VALUES ('pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.type, data.title, data.summary, data.tags.join(','),
-                    reader.who.name, reader.who.batch || '', reader.who.key, 'train:' + p.id, now, now).run();
-            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Made from the Foundational Training lesson', ?, ?, ?, 1, ?)`).bind(r.meta.last_row_id, JSON.stringify(data), reader.who.name, reader.who.batch || '', reader.who.key, now).run();
-            await makeLive(db, r.meta.last_row_id, rv.meta.last_row_id, { reviewer: reader.adminUser });
-        }
-        done++;
-    }
-    await db.prepare(`UPDATE lib_collections SET archived = 0 WHERE slug = 'foundational'`).run();   // the training topics live here, even if the starter shelves were tidied away
-    return json({ success: true, imported: done, remaining: todo.length - done });
-}
-
-// ---- Tettra import (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
-const slugOf = (name) => String(name).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'collection';
-const tettraTime = (t) => String(t || '').replace(' ', 'T') + 'Z';
-
-// Each Tettra category becomes a collection and its subcategory a section. 12 pages per call; run again until none remain.
-// Safe to run again: a page already imported (legacy_ref 'tettra:<id>') is skipped.
-async function importTettra(request, env, db, reader) {
-    const res = await env.ASSETS.fetch(new Request(new URL(request.url).origin + '/seed/tettra.json'));
-    if (!res.ok) return json({ success: true, imported: 0, remaining: 0, note: 'There are no Tettra pages to import.' });
-    const { pages, images } = await res.json();
-    // Pages not imported yet, and pages imported earlier whose text has since been corrected, are both still to do.
-    const have = new Map(((await db.prepare(`SELECT e.legacy_ref AS ref, e.id, e.status, r.data FROM lib_entries e LEFT JOIN lib_revisions r ON r.id = e.live_rev WHERE e.legacy_ref LIKE 'tettra:%'`).all()).results || [])
-        .map(r => [r.ref, { id: r.id, status: r.status, data: r.data ? JSON.parse(r.data) : {} }]));
+// ---- Tettra (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
+// The pages that are no longer part of the Knowledge Base (company policies and management) are archived, 12 a call; the rest
+// is the same safe sync the schedule runs (src/bundled.js: missing pages added, unedited ones updated). Run again until none
+// remain; then the starter collections with nothing in them are archived.
+async function importTettra(env, db) {
+    const res = await env.ASSETS.fetch(new Request('https://bundle.invalid/seed/tettra.json'));
+    const pages = res.ok ? ((await res.json()).pages || []) : [];
     const wanted = new Set(pages.map(p => 'tettra:' + p.id));
-    // pages that were imported earlier but are no longer part of the Knowledge Base (company policies and management) are archived
-    const gone = [...have].filter(([ref, h]) => !wanted.has(ref) && h.status !== 'archived');
-    const todo = pages.filter(p => { const h = have.get('tettra:' + p.id); return !h || h.data.body !== p.body || h.data.title !== p.title || (h.data.tags || []).join() !== (p.tags || []).join(); });
-    const now = nowIso();
-    if (!have.size || todo.some(p => !have.has('tettra:' + p.id))) {   // the shelves and the image list, for any page not yet imported
-        const cats = [...new Set(pages.map(p => p.category))].sort();
-        await db.batch(cats.map((c, i) => db.prepare(`INSERT INTO lib_collections (slug, name, blurb, sort, archived, created_at) VALUES (?, ?, '', ?, 0, ?)
-            ON CONFLICT(slug) DO NOTHING`).bind(collectionOf(c), c === 'Test. Test' ? 'General' : c, 1000 + i, now)));
-        const rows = Object.entries(images || {});
-        for (let i = 0; i < rows.length; i += 90) await db.batch(rows.slice(i, i + 90).map(([h, u]) => db.prepare(`INSERT OR IGNORE INTO lib_images (hash, src) VALUES (?, ?)`).bind(h, u)));
+    const { results } = await db.prepare(`SELECT id, legacy_ref AS ref FROM lib_entries WHERE legacy_ref LIKE 'tettra:%' AND status <> 'archived'`).all();
+    const gone = (results || []).filter(r => !wanted.has(r.ref));
+    let archived = 0;
+    for (const g of gone.slice(0, 12)) {
+        await db.prepare(`UPDATE lib_entries SET status = 'archived', updated_at = ? WHERE id = ?`).bind(nowIso(), g.id).run();
+        await reindex(db, g.id);
+        archived++;
     }
-    let imported = 0, budget = 12;
-    for (const [, h] of gone.slice(0, budget)) {
-        await db.prepare(`UPDATE lib_entries SET status = 'archived', updated_at = ? WHERE id = ?`).bind(nowIso(), h.id).run();
-        await reindex(db, h.id);
-        imported++; budget--;
-    }
-    for (const p of todo.slice(0, Math.max(0, budget))) {
-        const old = have.get('tettra:' + p.id);
-        if (old) {   // already imported: a new version with the corrected text
-            const d = { ...old.data, collection: collectionOf(p.category), section: p.subcategory || '', title: p.title, summary: p.summary || '', body: p.body, tags: p.tags || [] };
-            const rv = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-                VALUES (?, ?, 'pending', 'Updated', ?, '', ?, 1, ?)`).bind(old.id, JSON.stringify(d), p.owner || 'LSH Team', 'tettra|' + p.id, nowIso()).run();
-            await makeLive(db, old.id, rv.meta.last_row_id, { reviewer: reader.adminUser });
-            await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ?, author_batch = '', tags = ? WHERE id = ?`).bind(tettraTime(p.created), tettraTime(p.updated), tettraTime(p.updated), (p.tags || []).join(','), old.id).run();
-            imported++;
-            continue;
-        }
-        const data = { collection: collectionOf(p.category), section: p.subcategory || '', type: 'Guide', title: p.title, summary: p.summary || '', body: p.body,
-            tags: p.tags || [], credits: p.owner ? [p.owner] : [], files: [], official: false };
-        const key = 'tettra|' + p.id, created = tettraTime(p.created), updated = tettraTime(p.updated);
-        const r = await db.prepare(`INSERT INTO lib_entries (status, collection, section, type, title, summary, tags, author_name, author_batch, author_key, by_staff, legacy_ref, created_at, updated_at)
-            VALUES ('pending', ?, ?, 'Guide', ?, ?, ?, ?, '', ?, 1, ?, ?, ?)`).bind(data.collection, data.section, data.title, data.summary, data.tags.join(','), p.owner || 'LSH Team', key, 'tettra:' + p.id, created, updated).run();
-        const id = r.meta.last_row_id;
-        const rev = await db.prepare(`INSERT INTO lib_revisions (entry_id, data, status, note, author_name, author_batch, author_key, by_staff, created_at)
-            VALUES (?, ?, 'pending', 'Imported', ?, '', ?, 1, ?)`).bind(id, JSON.stringify(data), p.owner || 'LSH Team', key, created).run();
-        await makeLive(db, id, rev.meta.last_row_id, { reviewer: reader.adminUser });
-        await db.prepare(`UPDATE lib_entries SET created_at = ?, updated_at = ?, published_at = ? WHERE id = ?`).bind(created, updated, updated, id).run();
-        imported++;
-    }
-    const left = gone.length + todo.length - imported;
+    const synced = archived < 12 ? await syncBundled(env, db, { kinds: ['tettra'], budget: 12 - archived, force: true }) : null;
+    const left = gone.length - archived + (synced ? synced.remaining : 1);
     if (left === 0) await archiveEmptyStarters(db);
-    return json({ success: true, imported, remaining: left });
+    return json({ success: true, imported: archived + (synced ? synced.added + synced.updated : 0), remaining: left });
 }
 // Once the knowledge is saved, the starter collections that have nothing in them are archived (hidden, not deleted; Admin can bring one back).
 async function archiveEmptyStarters(db) {
@@ -968,7 +874,6 @@ async function archiveEmptyStarters(db) {
     await db.prepare(`UPDATE lib_collections SET archived = 1 WHERE slug IN (${slugs.map(() => '?').join(',')})
         AND NOT EXISTS (SELECT 1 FROM lib_entries e WHERE e.collection = lib_collections.slug)`).bind(...slugs).run();
 }
-const collectionOf = (cat) => cat === 'Test. Test' ? 'general' : slugOf(cat);
 
 const IMG_HOSTS = /^https:\/\/(tettra-production\.s3\.us-west-2\.amazonaws\.com|tettra-staging\.s3-us-west-2\.amazonaws\.com|d33v4339jhl8k0\.cloudfront\.net|lh[0-9]\.googleusercontent\.com)\//;
 

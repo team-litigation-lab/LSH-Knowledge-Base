@@ -89,6 +89,7 @@ const SCHEMA = [
         source TEXT, ref TEXT UNIQUE, edited INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS lib_terms_term ON lib_terms (term COLLATE NOCASE)`,
     `CREATE TABLE IF NOT EXISTS lib_term_gone (ref TEXT PRIMARY KEY)`,   // bundled terms an admin removed: a re-import must not bring them back
+    `CREATE TABLE IF NOT EXISTS lib_ref_gone (ref TEXT PRIMARY KEY, at TEXT)`,   // bundled pages an admin deleted: src/bundled.js leaves them out
     // Glossary changes wait here for approval: a new term, an edit to one, or a request to remove one.
     `CREATE TABLE IF NOT EXISTS lib_term_changes (
         id INTEGER PRIMARY KEY AUTOINCREMENT, term_id INTEGER, action TEXT NOT NULL, term TEXT, definition TEXT, example TEXT, category TEXT,
