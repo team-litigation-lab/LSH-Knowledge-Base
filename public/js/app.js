@@ -262,6 +262,10 @@
                     if (parts[2] === 'edit') return await editor(id);
                     if (parts[2] === 'history') return await history(id);
                     return await entry(id);
+                case 'doc': {   // a bundled document by its file name: how the Training Portal's day decks link to an article, before it has an id
+                    const r = await api('/api/resolve?ref=' + encodeURIComponent('seed:' + decodeURIComponent(parts[1] || '')));
+                    return location.replace('#/e/' + r.id);
+                }
                 case 'go': {   // a link from an imported Tettra page to another one
                     const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
                     return location.replace('#/e/' + r.id);
