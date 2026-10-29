@@ -281,6 +281,17 @@ with sync_playwright() as p:
     ex = jget(a, B + '/api/admin/export')
     check('versions' in ex and len(ex['versions']) >= 5, 'backup export has every version')
 
+    # a bundled document by its file name: the Training Portal's day decks link to an article this way (#/doc/<file>)
+    for _ in range(12):
+        r = jpost(a, B + '/api/admin', {'action': 'import-bundled'})['body']
+        if not r.get('remaining'):
+            break
+    res = jget(a, B + '/api/resolve?ref=seed:lesson-3p-claims-what-to-share')
+    check(res.get('success') and res.get('id'), 'a bundled document resolves by its file name')
+    a.goto(B + '/#/doc/lesson-3p-claims-what-to-share')
+    a.wait_for_function("location.hash.startsWith('#/e/') && document.getElementById('app').innerText.includes('share with the insurer')", timeout=15000)
+    check(a.evaluate('location.hash') == f"#/e/{res.get('id')}", 'a #/doc/ link opens that article')
+
     check(not errs, 'no page errors ' + '; '.join(errs[:3]))
     br.close()
 

@@ -45,9 +45,10 @@ export default {
                 case 'glossary':
                     if (write && !reader.contributor) return infoOnly();
                     return write ? await glossaryAction(ctx) : await glossary(ctx);
-                case 'resolve': {   // an old Tettra page's id -> the library entry that replaced it (links inside imported pages use this)
+                case 'resolve': {   // an old Tettra page's id, or a bundled document's file name (public/seed/docs.json) -> the library entry
+                    // that holds it (links inside imported pages use the first; the Training Portal's day decks link to an article by the second)
                     const ref = String(url.searchParams.get('ref') || '');
-                    const row = /^tettra:\d+$/.test(ref) ? await db.prepare(`SELECT id FROM lib_entries WHERE legacy_ref = ? AND status = 'published'`).bind(ref).first() : null;
+                    const row = /^(tettra:\d+|seed:[a-z0-9][\w.-]{0,160})$/i.test(ref) ? await db.prepare(`SELECT id FROM lib_entries WHERE legacy_ref = ? AND status = 'published'`).bind(ref).first() : null;
                     return row ? json({ success: true, id: row.id }) : fail('That page isn’t in the library.', 404);
                 }
                 case 'entries':
