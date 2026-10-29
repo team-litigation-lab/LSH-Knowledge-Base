@@ -54,6 +54,8 @@ jobs:
         run: node tests/paste-format.cjs
       - name: Autoformat existing articles (Admin → Library maintenance)
         run: node tests/autoformat-body.cjs
+      - name: Bundled pages and link rules
+        run: node tests/bundled-sync.cjs
       - name: End-to-end (sign-in, import, uploads, video, search, review, history)
         run: python tests/e2e.py || { echo "--- server log ---"; cat "$RUNNER_TEMP/dev.log"; exit 1; }
       - name: Blueprint (the VA and admin decks and their PDFs)

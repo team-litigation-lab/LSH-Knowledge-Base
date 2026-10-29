@@ -292,6 +292,30 @@ with sync_playwright() as p:
     a.wait_for_function("location.hash.startsWith('#/e/') && document.getElementById('app').innerText.includes('share with the insurer')", timeout=15000)
     check(a.evaluate('location.hash') == f"#/e/{res.get('id')}", 'a #/doc/ link opens that article')
 
+    # bundled pages add themselves when a link asks for one (src/bundled.js): a training topic that was never imported
+    res = jget(a, B + '/api/resolve?ref=train:L6-T5')
+    check(res.get('success') and res.get('id'), 'a training topic that was never imported resolves (added on the spot)')
+    a.goto(B + '/#/topic/L6-T5')
+    a.wait_for_function("location.hash.startsWith('#/e/')", timeout=15000)
+    check(a.evaluate('location.hash') == f"#/e/{res.get('id')}", 'a #/topic/ link opens that topic')
+    # a bundled page an admin deleted is not added back, and its link says so
+    gone = jget(a, B + '/api/resolve?ref=seed:lesson-ody-invoices')
+    r = jpost(a, B + f"/api/entries/{gone.get('id')}", {'action': 'purge', 'confirm': 'DELETE'})
+    jpost(a, B + '/api/admin', {'action': 'import-bundled'})
+    after = jget(a, B + '/api/resolve?ref=seed:lesson-ody-invoices')
+    check(r['ok'] and not after.get('success') and 'removed' in (after.get('error') or ''), 'a bundled page an admin deleted stays out of the library')
+    # a link opened before signing in: the page opens right after the sign-in
+    C2 = br.new_context(); c2 = C2.new_page()
+    c2.goto(B + '/#/doc/lesson-insurance-coverage'); c2.wait_for_selector('#f-va')
+    c2.fill('#g-name', 'Jo Cruz'); c2.fill('#g-batch', 'Batch 11'); c2.fill('#g-code', 'lsh-team-2026'); c2.click('#f-va button[type=submit]')
+    try:
+        c2.wait_for_function("location.hash.startsWith('#/e/') && document.getElementById('app').innerText.toLowerCase().includes('coverage')", timeout=15000)
+        landed = True
+    except Exception:
+        landed = False
+    check(landed, f"a link opened before signing in lands on its page after the sign-in ({c2.evaluate('location.hash')})")
+    C2.close()
+
     check(not errs, 'no page errors ' + '; '.join(errs[:3]))
     br.close()
 

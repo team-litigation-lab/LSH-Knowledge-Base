@@ -196,6 +196,7 @@
                     <p class="muted" id="g-err" role="alert"></p>
                 </form>` : `<div id="f-va"${wantAdmin ? ' hidden' : ''} style="display:grid;gap:12px">
                     <p style="margin:0">Sign in once, on the LSH Training Portal. Open the Knowledge Base from there and you come straight in: there is no second sign-in here.</p>
+                    ${isLanding(location.hash) ? '' : '<p class="muted" style="margin:0">The page you opened is remembered: once you’re signed in, the Knowledge Base takes you straight to it.</p>'}
                     ${msg ? `<p class="note" role="alert">${esc(msg)}</p>` : ''}
                     <a class="btn primary" href="${esc(portal)}/programs.html">Go to the LSH Training Portal</a>
                 </div>`}
@@ -229,6 +230,22 @@
     }
     const val = (id) => (document.getElementById(id) || {}).value || '';
 
+    /* ---------- a link that lands here signed out ----------
+       Someone who opens a link to a page (from a course's slide, another page, an e-mail) before they are signed in is sent to
+       the LSH Training Portal to sign in, and the Portal opens the library at its start. The page they asked for is remembered
+       in this browser for half an hour and opened as soon as they are signed in. */
+    const RETURN_KEY = 'kb-return', RETURN_MS = 30 * 60 * 1000;
+    const isLanding = (h) => !h || h === '#' || h === '#/' || h === '#/featured';
+    function rememberReturn() {
+        if (isLanding(location.hash)) return;
+        try { localStorage.setItem(RETURN_KEY, JSON.stringify({ hash: location.hash, at: Date.now() })); } catch (e) { /* private window */ }
+    }
+    function takeReturn() {
+        let r = null;
+        try { r = JSON.parse(localStorage.getItem(RETURN_KEY) || 'null'); localStorage.removeItem(RETURN_KEY); } catch (e) { r = null; }
+        return r && typeof r.hash === 'string' && r.hash.startsWith('#/') && Date.now() - Number(r.at) < RETURN_MS ? r.hash : null;
+    }
+
     /* ---------- router ---------- */
     function parseHash() {
         const h = location.hash.slice(1) || '/';
@@ -247,7 +264,9 @@
             }
             if (!S.session) await loadSession();
         } catch (e) { return errorView(e); }
-        if (!S.session.unlocked) return gate(gateMsg);
+        if (!S.session.unlocked) { rememberReturn(); return gate(gateMsg); }
+        const back = takeReturn();
+        if (back && isLanding(location.hash)) return location.replace(back);   // the hashchange this fires routes to it
         const { parts, q } = parseHash();
         try {
             await ensureLib();
@@ -262,8 +281,11 @@
                     if (parts[2] === 'edit') return await editor(id);
                     if (parts[2] === 'history') return await history(id);
                     return await entry(id);
-                case 'doc': {   // a bundled document by its file name: how the Training Portal's day decks link to an article, before it has an id
-                    const r = await api('/api/resolve?ref=' + encodeURIComponent('seed:' + decodeURIComponent(parts[1] || '')));
+                case 'doc':     // a bundled document by its file name (docs.json): how a course's slides link to an article, before it has an id
+                case 'topic': { // a Foundational Training lesson topic by its id (training.json, L<lesson>-T<topic>)
+                    // A bundled page that isn't in the library yet is added on the spot (src/bundled.js), so these links always open it.
+                    const ref = (parts[0] === 'doc' ? 'seed:' : 'train:') + decodeURIComponent(parts[1] || '');
+                    const r = await api('/api/resolve?ref=' + encodeURIComponent(ref));
                     return location.replace('#/e/' + r.id);
                 }
                 case 'go': {   // a link from an imported Tettra page to another one
