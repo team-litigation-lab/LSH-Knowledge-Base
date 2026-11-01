@@ -124,6 +124,17 @@ A fourth is **Opening a 3P claim: what you can and can't share with the insurer*
 
 A fifth is **Common Insurance Providers** (in Insurance Communication), from the Foundational Training's Day 7 Intake Specialist Training: the eight auto insurers trainees hear most on intake calls (UAIG, State Farm, Progressive, Allstate, Liberty Mutual, GEICO, Travelers, USAA), who each is, the company and brand names on their cards and letters, their general claims lines, where to find the right carrier (ID card, declarations page, police report, adjuster's letter), what to collect about insurance on an intake call, and non-standard, rideshare and commercial policies. The Training Portal's Day 7 Insurance Providers slide links to it as `#/doc/lesson-common-insurance-providers`. The claims numbers were checked against the carriers' own sites in October 2026; a reviewer should re-check them now and then.
 
+**Foundational Training · Supplemental Reading** (`scripts/lessons/ft-supplemental/`, 12 written lessons, about 2,000–3,000 words each). These cover laws, rules and processes the 18-day course only touches on. Each one sits in the collection of the role it supports, under the section "Foundational Training · Supplemental Reading":
+- Foundational: *Legal ethics rules every non-lawyer VA must know* (ABA Model Rules 5.3, 1.6, 1.4, 4.2, 4.3, 7.3, 1.15, 1.8(e)), *Information security for remote legal VAs* (phishing, settlement wire fraud) and *Professional writing in a law firm: emails and case notes*.
+- Calendar Management: *Computing legal deadlines: how courts count days* (Day 6; FRCP 6 and Florida Rule 2.514).
+- Intake: *Statutes of limitations and other claim deadlines in personal injury*, *Negligence and comparative fault* and *Special clients: minors, incapacitated adults and wrongful death* (Days 7–9).
+- Insurance Communication: *Evidence preservation and spoliation letters* (Days 10–12).
+- Provider Communication & Records: *HIPAA for legal VAs* and *Reading medical bills and records: claim forms, codes and balances* (Days 13–16).
+- Lien Negotiation: *Liens in personal injury cases* (Days 17–18; Medicare MSP, Medicaid, ERISA, hospital liens, LOPs).
+- Medsum & Demands: *Documenting economic damages*.
+
+They are written from general knowledge of US practice, as of 2026. An attorney should check the state-specific points: SOL periods, the Florida HB 837 changes, government notice deadlines, minors' settlement rules and lien law.
+
 **Linking to a page from outside** (the Training Portal and other platforms):
 - `#/doc/<file>` opens a bundled document by its file name in `docs.json` (a written lesson's is `lesson-<name>`), e.g. `#/doc/lesson-3p-claims-what-to-share`;
 - `#/topic/<lesson>-T<topic>` opens a training topic, e.g. `#/topic/L6-T5`;
