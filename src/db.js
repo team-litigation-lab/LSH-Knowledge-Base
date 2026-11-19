@@ -141,6 +141,50 @@ export async function siteLocked(env) {
 export const READER_COOKIE = 'lshkb';
 export const ADMIN_COOKIE = 'lshkb_admin';
 
+/* 🔁 Still allowed on the Portal? (code inventory 2026-10-16 #7) A Knowledge Base session is signed for hours, but the Portal can
+   revoke or suspend the account behind it in the meantime: every request re-checks the Portal's own users table (env.DB, the
+   same database the Portal uses), with the answer kept for a minute per person so a page's burst of requests reads it once.
+   Refused when the Portal's account for this person exists and is not Approved, or was deleted (Revoke: the Portal keeps the
+   username in deleted_users). Allowed when the table can't be read (never lock everyone out on a database hiccup), for the
+   Master Account, and for a name no Portal account has ever had (the old team-code sign-in, a name typed with the Master
+   password). */
+const PORTAL_OK_TTL_MS = 60 * 1000;
+const portalOkCache = new Map();
+const squash = (t) => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+const fullNames = (u) => [squash([u.first_name, u.last_name].join(' ')),
+    squash([u.first_name, u.mi ? String(u.mi).replace(/\.$/, '') + '.' : '', u.last_name].filter(Boolean).join(' ') + (u.suffix ? ', ' + u.suffix : ''))];
+export function _resetPortalCheck() { portalOkCache.clear(); }
+async function portalStillAllows(env, kind, ident) {
+    if (!env.DB) return true;
+    const key = kind + '|' + JSON.stringify(ident);
+    const hit = portalOkCache.get(key);
+    if (hit && Date.now() - hit.at < PORTAL_OK_TTL_MS) return hit.ok;
+    let ok = true;
+    try {
+        let rows = [], gone = false;
+        if (kind === 'username') {
+            const u = await env.DB.prepare(`SELECT status FROM users WHERE username = ?`).bind(ident.username).first();
+            rows = u ? [u] : [];
+            if (!rows.length) gone = !!(await env.DB.prepare(`SELECT 1 AS x FROM deleted_users WHERE username = ? LIMIT 1`).bind(ident.username).first().catch(() => null));
+        } else {
+            const name = squash(ident.name), batch = String(ident.batch || '').trim();
+            const admin = kind === 'admin-name';
+            const { results } = await env.DB.prepare(`SELECT * FROM users WHERE ${admin ? "user_type = 'Admin'" : "(user_type IS NULL OR user_type != 'Admin')"} AND ? LIKE lower(trim(first_name)) || ' %'`).bind(name).all();
+            rows = (results || []).filter(u => fullNames(u).includes(name) && (admin || !batch || String(u.batch_id || '').trim() === batch));
+            if (!rows.length) {
+                const del = await env.DB.prepare(`SELECT full_name, batch_id, user_type FROM deleted_users`).all().catch(() => ({ results: [] }));
+                gone = (del.results || []).some(d => (admin ? d.user_type === 'Admin' : d.user_type !== 'Admin')
+                    && (squash(d.full_name) === name || squash(String(d.full_name || '').replace(/ \S+\.? (?=\S+$)/, ' ')) === name)
+                    && (admin || !batch || String(d.batch_id || '').trim() === batch));
+            }
+        }
+        ok = rows.length ? rows.some(u => u.status === 'Approved') : !gone;
+    } catch (e) { ok = true; }
+    portalOkCache.set(key, { ok, at: Date.now() });
+    if (portalOkCache.size > 5000) portalOkCache.clear();
+    return ok;
+}
+
 // { admin, reviewer, staff, tenured, contributor, tier, adminUser, who:{name,batch,key} } or null (no access).
 // Tiers: "info" (a trainee: reads the library, nothing else), "tenured" (can add, edit and upload; every change waits for approval),
 // "reviewer" (approves other people's changes; their own still wait for someone else), "admin" (the only one whose edits go live at once).
@@ -149,6 +193,13 @@ export async function getReader(request, env) {
     const adm = await readToken(getCookie(request, ADMIN_COOKIE), env.SESSION_SECRET);
     if (adm && adm.adm) {
         const name = adm.name || adm.username;
+        // (the Portal account behind it: a Portal admin's own username, or the trainer named on their Portal ticket; the Master
+        // Account and a name typed with the Master password have none)
+        const u = String(adm.username || '');
+        const still = u === 'LSHADMIN123' || adm.src === 'master' ? true
+            : u.startsWith('admin:') ? await portalStillAllows(env, 'admin-name', { name: adm.name || u.slice(6) })
+            : await portalStillAllows(env, 'username', { username: u });
+        if (!still) return null;
         return { admin: true, reviewer: false, staff: true, tenured: false, contributor: true, tier: 'admin', adminUser: adm.username,
             who: { name, batch: 'Admin', key: 'admin|' + String(adm.username).toLowerCase() } };
     }
@@ -160,6 +211,8 @@ export async function getReader(request, env) {
         const version = await getSetting(db, 'code_version');
         if (!version || p.v !== version) return null;   // the code changed since they signed in
     }
+    // a Portal sign-in: the trainee's Portal account must still be Approved (a team-code session has no Portal account)
+    if (!legacy && !(await portalStillAllows(env, 'reader', { name: p.name, batch: p.batch || '' }))) return null;
     let key = personKey(p.name, p.batch);
     if (key.startsWith('admin|')) key = 'user:' + key;   // only a real admin sign-in gets an 'admin|' key
     const role = legacy ? null : await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();   // a team code proves nothing about who is typing, so it never carries a role

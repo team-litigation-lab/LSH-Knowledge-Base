@@ -171,7 +171,9 @@ async function session(request, env) {
         if (r.status === 429) return fail('Too many wrong passwords. Wait 10 minutes and try again.', 429);
         if (!r.ok) return fail('Incorrect admin password.', 401);
         if (!typed || typed === MASTER_USERNAME) return give(MASTER_USERNAME, 'System Administrator');
-        return give('admin:' + typed.toLowerCase(), typed);
+        // (src: master: a name typed with the Master password, so no Portal account is behind it to re-check: db.js getReader)
+        return signToken({ adm: 1, username: 'admin:' + typed.toLowerCase(), name: typed, src: 'master' }, env.SESSION_SECRET, ADMIN_HOURS * 3600)
+            .then(token => json({ success: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) }));
     }
     return fail('Unknown action.');
 }
