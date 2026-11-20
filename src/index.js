@@ -129,11 +129,12 @@ async function session(request, env) {
             } catch (e) { return fail('This sign-in link was already used. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'used' }); }
             const name = oneLine(v.name, 80);
             const username = name ? 'admin:' + name.toLowerCase() : MASTER_USERNAME;
-            const token = await signToken({ adm: 1, username, name: name || 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
+            // (u: their Portal account id, which every request re-checks: db.js getReader)
+            const token = await signToken(Object.assign({ adm: 1, username, name: name || 'System Administrator', src: 'ticket' }, v.u ? { u: String(v.u) } : {}), env.SESSION_SECRET, ADMIN_HOURS * 3600);
             return json({ success: true, admin: true }, 200, { 'Set-Cookie': setCookie(ADMIN_COOKIE, token, ADMIN_HOURS * 3600) });
         }
         const name = oneLine(`${v.first} ${v.last}`, 80), batch = oneLine(v.batch, 40);
-        const token = await signToken({ kb: 1, sso: 1, name, batch }, env.SESSION_SECRET, PORTAL_READER_HOURS * 3600);
+        const token = await signToken(Object.assign({ kb: 1, sso: 1, name, batch }, v.u ? { u: String(v.u) } : {}), env.SESSION_SECRET, PORTAL_READER_HOURS * 3600);
         return json({ success: true }, 200, { 'Set-Cookie': setCookie(READER_COOKIE, token, PORTAL_READER_HOURS * 3600) });
     }
     if (body.action === 'unlock') {

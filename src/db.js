@@ -151,8 +151,10 @@ export const ADMIN_COOKIE = 'lshkb_admin';
 const PORTAL_OK_TTL_MS = 60 * 1000;
 const portalOkCache = new Map();
 const squash = (t) => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
-const fullNames = (u) => [squash([u.first_name, u.last_name].join(' ')),
-    squash([u.first_name, u.mi ? String(u.mi).replace(/\.$/, '') + '.' : '', u.last_name].filter(Boolean).join(' ') + (u.suffix ? ', ' + u.suffix : ''))];
+// A name in one comparable form: lower case, no dots or commas, no single-letter middle initial, no suffix (Jr, Sr, II…). "Tom R.
+// Admin", "Tom R Admin" and "Tom Admin, Jr" are all "tom admin"; "Maria Q De la Cruz" is "maria de la cruz". (Security review 2026-11-19)
+const plain = (t) => squash(String(t || '').replace(/[.,]/g, ' ')).split(' ').filter((w, i, a) => w && !(i > 0 && i < a.length - 1 && w.length === 1) && !(i > 0 && /^(jr|sr|ii|iii|iv)$/.test(w))).join(' ');
+const fullNames = (u) => [plain([u.first_name, u.last_name].join(' ')), plain([u.first_name, u.mi, u.last_name, u.suffix].filter(Boolean).join(' '))];
 export function _resetPortalCheck() { portalOkCache.clear(); }
 async function portalStillAllows(env, kind, ident) {
     if (!env.DB) return true;
@@ -162,24 +164,32 @@ async function portalStillAllows(env, kind, ident) {
     let ok = true;
     try {
         let rows = [], gone = false;
-        if (kind === 'username') {
+        if (kind === 'uid') {
+            // the Portal account id the ticket carried: the exact account, never a name. Gone (deleted) or not Approved: refused,
+            // and an admin's must still be an admin
+            const u = await env.DB.prepare(`SELECT status, user_type FROM users WHERE id = ?`).bind(ident.u).first();
+            rows = u && (!ident.admin || u.user_type === 'Admin') ? [u] : [];
+            gone = !u || (ident.admin && u.user_type !== 'Admin');
+        } else if (kind === 'username') {
             const u = await env.DB.prepare(`SELECT status FROM users WHERE username = ?`).bind(ident.username).first();
             rows = u ? [u] : [];
             if (!rows.length) gone = !!(await env.DB.prepare(`SELECT 1 AS x FROM deleted_users WHERE username = ? LIMIT 1`).bind(ident.username).first().catch(() => null));
         } else {
-            const name = squash(ident.name), batch = String(ident.batch || '').trim();
+            const name = plain(ident.name), batch = String(ident.batch || '').trim();
             const admin = kind === 'admin-name';
-            const { results } = await env.DB.prepare(`SELECT * FROM users WHERE ${admin ? "user_type = 'Admin'" : "(user_type IS NULL OR user_type != 'Admin')"} AND ? LIKE lower(trim(first_name)) || ' %'`).bind(name).all();
+            const { results } = await env.DB.prepare(`SELECT * FROM users WHERE ${admin ? "user_type = 'Admin'" : "(user_type IS NULL OR user_type != 'Admin')"} AND ? LIKE lower(trim(first_name)) || ' %'`).bind(squash(ident.name)).all();
             rows = (results || []).filter(u => fullNames(u).includes(name) && (admin || !batch || String(u.batch_id || '').trim() === batch));
             if (!rows.length) {
                 const del = await env.DB.prepare(`SELECT full_name, batch_id, user_type FROM deleted_users`).all().catch(() => ({ results: [] }));
                 gone = (del.results || []).some(d => (admin ? d.user_type === 'Admin' : d.user_type !== 'Admin')
-                    && (squash(d.full_name) === name || squash(String(d.full_name || '').replace(/ \S+\.? (?=\S+$)/, ' ')) === name)
+                    && plain(d.full_name) === name
                     && (admin || !batch || String(d.batch_id || '').trim() === batch));
             }
         }
         ok = rows.length ? rows.some(u => u.status === 'Approved') : !gone;
-    } catch (e) { ok = true; }
+        // an admin session named by a Portal ticket must find its Portal admin account: none found at all is refused (fail closed)
+        if (kind === 'admin-name' && !rows.length) ok = false;
+    } catch (e) { ok = !(kind === 'admin-name' || (kind === 'uid' && ident.admin)); }   // (a database error never locks a reader out; an admin's check fails closed)
     portalOkCache.set(key, { ok, at: Date.now() });
     if (portalOkCache.size > 5000) portalOkCache.clear();
     return ok;
@@ -197,6 +207,7 @@ export async function getReader(request, env) {
         // Account and a name typed with the Master password have none)
         const u = String(adm.username || '');
         const still = u === 'LSHADMIN123' || adm.src === 'master' ? true
+            : adm.u ? await portalStillAllows(env, 'uid', { u: String(adm.u), admin: true })
             : u.startsWith('admin:') ? await portalStillAllows(env, 'admin-name', { name: adm.name || u.slice(6) })
             : await portalStillAllows(env, 'username', { username: u });
         if (!still) return null;
@@ -212,7 +223,7 @@ export async function getReader(request, env) {
         if (!version || p.v !== version) return null;   // the code changed since they signed in
     }
     // a Portal sign-in: the trainee's Portal account must still be Approved (a team-code session has no Portal account)
-    if (!legacy && !(await portalStillAllows(env, 'reader', { name: p.name, batch: p.batch || '' }))) return null;
+    if (!legacy && !(await (p.u ? portalStillAllows(env, 'uid', { u: String(p.u) }) : portalStillAllows(env, 'reader', { name: p.name, batch: p.batch || '' })))) return null;
     let key = personKey(p.name, p.batch);
     if (key.startsWith('admin|')) key = 'user:' + key;   // only a real admin sign-in gets an 'admin|' key
     const role = legacy ? null : await db.prepare(`SELECT role FROM lib_roles WHERE person_key = ?`).bind(key).first();   // a team code proves nothing about who is typing, so it never carries a role
