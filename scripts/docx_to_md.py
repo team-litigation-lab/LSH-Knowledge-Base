@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turns a Word (.docx) file into the Knowledge Base's Markdown: headings, bold and italic, links, bullet and numbered lists
+"""Turns a Word (.docx) file into LSH Atlas's Markdown: headings, bold and italic, links, bullet and numbered lists
 (nested), and tables.     python3 scripts/docx_to_md.py file.docx > file.md        Needs: pip install python-docx"""
 import re, sys
 import docx

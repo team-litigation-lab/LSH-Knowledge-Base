@@ -1,4 +1,4 @@
-// LSH Knowledge Base: one page, hash routes.
+// LSH Atlas: one page, hash routes.
 //   #/                     library home          #/c/<collection>    a collection, grouped by section
 //   #/search?q=…           search                #/videos            training videos
 //   #/e/<id>               an entry              #/e/<id>/edit       edit (or suggest an edit)
@@ -45,7 +45,7 @@
     const FILE_ICON = { video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️', doc: '📝', sheet: '📊', slides: '📽️', archive: '🗜️', other: '📎' };
     const fileUrl = (f) => `/files/${f.id}/${encodeURIComponent(f.name)}`;   // shown in the page; the library has no downloads
     const colName = (slug) => ((S.lib && S.lib.collections.find(c => c.slug === slug)) || {}).name || slug;
-    const setTitle = (t) => { document.title = t ? `${t} · LSH Knowledge Base` : 'LSH Knowledge Base'; };
+    const setTitle = (t) => { document.title = t ? `${t} · LSH Atlas` : 'LSH Atlas'; };
     const view = (html) => { app.innerHTML = html; window.scrollTo(0, 0); };
     const errorView = (e) => view(`<div class="card"><h2>That didn’t load</h2><p>${esc(e.message)}</p><a class="btn" href="#/">Back to the library</a></div>`);
 
@@ -131,7 +131,7 @@
     }
 
     /* ---------- session / chrome ---------- */
-    // "Switch view": an admin can see the Knowledge Base exactly as a trainee (Info Access) sees it.
+    // "Switch view": an admin can see LSH Atlas exactly as a trainee (Info Access) sees it.
     // The real session stays in S.real; the pages read S.session, which is the masked copy while the switch is on.
     const maskedSession = () => ({ ...S.real, admin: false, reviewer: false, contributor: false, tier: 'info' });
     async function loadSession() {
@@ -156,7 +156,7 @@
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
             s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
-            real.admin ? `<button type="button" id="switch-view" aria-pressed="${!!S.vaView}" title="${S.vaView ? 'Back to the admin view' : 'See the Knowledge Base as a trainee sees it'}">${S.vaView ? 'Admin view' : 'Switch view'}</button>` : '',
+            real.admin ? `<button type="button" id="switch-view" aria-pressed="${!!S.vaView}" title="${S.vaView ? 'Back to the admin view' : 'See LSH Atlas as a trainee sees it'}">${S.vaView ? 'Admin view' : 'Switch view'}</button>` : '',
             `<button type="button" id="signout" title="Signed in as ${esc(s.who.name)}${s.who.batch ? ' (' + esc(s.who.batch) + ')' : ''}">Sign out</button>`
         ].join('');
         if (window.LSHBlueprint) LSHBlueprint.refresh();   // 🧭 Blueprint, before Sign out
@@ -180,7 +180,7 @@
         const wantAdmin = new URLSearchParams(location.search).get('admin') === '1';
         const codeLogin = !!(S.session && S.session.codeLogin), open = !!(S.session && S.session.configured);
         view(`<div class="gate">
-            <h1>LSH Knowledge Base</h1>
+            <h1>📚 LSH Atlas</h1>
             <p class="lead">SOPs, training videos and know-how from the whole LSH VA community.</p>
             <div class="card">
                 <div class="tabs" role="tablist">
@@ -188,15 +188,15 @@
                     <button type="button" role="tab" aria-selected="${wantAdmin}" data-tab="admin">Admin Portal</button>
                 </div>
                 ${codeLogin ? `<form id="f-va" autocomplete="on"${wantAdmin ? ' hidden' : ''}>
-                    ${open ? '' : '<p class="note">The Knowledge Base isn’t open yet. An admin needs to sign in and set the team access code.</p>'}
+                    ${open ? '' : '<p class="note">LSH Atlas isn’t open yet. An admin needs to sign in and set the team access code.</p>'}
                     <label class="f">Full name<input class="i" id="g-name" name="name" required autocomplete="name"></label>
                     <label class="f">Batch <small>(optional)</small><input class="i" id="g-batch" name="batch" placeholder="e.g. Batch 12"></label>
                     <label class="f">Team access code<input class="i" id="g-code" name="code" type="password" required autocomplete="off"><small>Your trainer or team lead gives you this code.</small></label>
                     <button class="btn primary" type="submit"${open ? '' : ' disabled'}>Open the library</button>
                     <p class="muted" id="g-err" role="alert"></p>
                 </form>` : `<div id="f-va"${wantAdmin ? ' hidden' : ''} style="display:grid;gap:12px">
-                    <p style="margin:0">Sign in once, on the LSH Training Portal. Open the Knowledge Base from there and you come straight in: there is no second sign-in here.</p>
-                    ${isLanding(location.hash) ? '' : '<p class="muted" style="margin:0">The page you opened is remembered: once you’re signed in, the Knowledge Base takes you straight to it.</p>'}
+                    <p style="margin:0">Sign in once, on the LSH Training Portal. Open LSH Atlas from there and you come straight in: there is no second sign-in here.</p>
+                    ${isLanding(location.hash) ? '' : '<p class="muted" style="margin:0">The page you opened is remembered: once you’re signed in, LSH Atlas takes you straight to it.</p>'}
                     ${msg ? `<p class="note" role="alert">${esc(msg)}</p>` : ''}
                     <a class="btn primary" href="${esc(portal)}/programs.html">Go to the LSH Training Portal</a>
                 </div>`}
@@ -1392,7 +1392,7 @@
                     <button class="btn primary" type="submit">${r.codeSet ? 'Change the code' : 'Set the code'}</button></form>
                 <p class="muted" style="font-size:13px">This is the same code as the Knowledge Base in the LSH Training Portal.</p></section>` : ''}
             <section class="section card"><h2>Who can add to the library</h2>
-                <p class="muted" style="margin-top:0"><b>Info Access</b> is the default for everyone who opens the Knowledge Base from the Portal: they can read, search and play videos, and nothing else. <b>Tenured</b> team members are the only ones who can add or edit: new entries, edits, Glossary terms and update notes, and every one waits for approval. <b>Reviewers</b> are trusted VAs who approve other people’s changes (never their own; their own edits wait for another reviewer or an admin) and can archive. Only admins’ own edits go live at once, and only admins can mark entries official, delete permanently or change settings. Type the name exactly as it shows in the LSH Training Portal.</p>
+                <p class="muted" style="margin-top:0"><b>Info Access</b> is the default for everyone who opens LSH Atlas from the Portal: they can read, search and play videos, and nothing else. <b>Tenured</b> team members are the only ones who can add or edit: new entries, edits, Glossary terms and update notes, and every one waits for approval. <b>Reviewers</b> are trusted VAs who approve other people’s changes (never their own; their own edits wait for another reviewer or an admin) and can archive. Only admins’ own edits go live at once, and only admins can mark entries official, delete permanently or change settings. Type the name exactly as it shows in the LSH Training Portal.</p>
                 ${r.roles.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Batch</th><th>Access</th><th>Added</th><th></th></tr></thead><tbody>${r.roles.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.batch)}</td><td>${x.role === 'tenured' ? 'Tenured' : 'Reviewer'}</td><td>${fmtDate(x.grantedAt)} by ${esc(x.grantedBy || '')}</td><td><button class="btn small danger" data-revoke="${esc(x.key)}">Remove</button></td></tr>`).join('')}</tbody></table></div>` : '<p>Nobody has tenured or reviewer access yet: everyone has Info Access.</p>'}
                 <form class="row" id="rev-form" style="margin-top:10px"><input class="i" id="rev-name" placeholder="Full name, as in the Portal" style="max-width:260px"><input class="i" id="rev-batch" placeholder="Batch, as in the Portal" style="max-width:180px"><select class="i" id="rev-role" style="max-width:150px"><option value="tenured">Tenured</option><option value="reviewer">Reviewer</option></select><button class="btn" type="submit">Give access</button></form></section>
             <section class="section card"><h2>Collections</h2>
@@ -1454,7 +1454,7 @@
     }
 
 
-    // Opening the Knowledge Base lands on Featured. Only the first load is sent there: "Library"
+    // Opening LSH Atlas lands on Featured. Only the first load is sent there: "Library"
     // on the top bar still goes to #/ and the whole library.
     if (!location.hash || location.hash === '#' || location.hash === '#/') {
         location.replace('#/featured');   // the hashchange this fires does the routing

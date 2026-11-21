@@ -47,12 +47,12 @@ h3{font-size:16px;margin:0 0 6px;}
     rgba(210,223,239,.26) 60%,rgba(210,223,239,.13) 76%,rgba(210,223,239,.045) 88%,rgba(210,223,239,0) 100%);
   pointer-events:none;}
 .top-in{position:relative;z-index:1;max-width:none;margin:0 auto;padding-inline:clamp(16px,1in,1in);padding-block:10px;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
-/* The gap is what keeps "Knowledge Base" clear of the panel's fade. */
+/* The gap is what keeps "LSH Atlas" clear of the panel's fade. */
 .brand{display:flex;align-items:center;gap:58px;color:#fff;text-decoration:none;flex:0 0 auto;}
 /* The standard LSH logo (lsh-logo-dark.svg, the same mark every LSH site uses), as a vector so
    the wordmark stays sharp at bar size, and at the size that wordmark needs to stay legible. */
 .brand img{height:58px;width:auto;background:none;padding:0;border-radius:0;object-fit:contain;flex:none;}
-/* The standard page header (the Training Directory's): the mark, then the page's name in capitals, and nothing beside it. */
+/* The standard page header (LSH Academy Index's): the mark, then the page's name in capitals, and nothing beside it. */
 .brand b{display:block;font-size:clamp(16px,2vw,22px);font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
 .page-search{display:flex;gap:8px;margin:4px 0 12px;max-width:560px;}
 .page-search input{border-radius:999px;padding:9px 16px;}

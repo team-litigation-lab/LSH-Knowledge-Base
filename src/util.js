@@ -1,6 +1,6 @@
 // Shared helpers. Token signing and password hashing use the same formats as
 // the LSH Training Portal (functions/_utils.js), so the portal's admin
-// passwords and the Knowledge Base team access code work here unchanged.
+// passwords and the LSH Atlas team access code work here unchanged.
 
 export function json(data, status = 200, headers = {}) {
     return new Response(JSON.stringify(data), {

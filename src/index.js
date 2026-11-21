@@ -5,7 +5,7 @@ import { startUpload, putPart, finishUpload, abortUpload, saveFileText, serveFil
 import { syncCourseHandouts } from './sync.js';
 import { REF_RE, resolveRef, syncBundled, forgetRef, slugOf } from './bundled.js';
 
-// LSH Knowledge Base Worker. Static pages come from public/ (the ASSETS
+// LSH Atlas Worker. Static pages come from public/ (the ASSETS
 // binding); this Worker answers /api/* and streams uploaded files at /files/*.
 
 const infoOnly = () => fail('Info Access is view-only. Tenured team members can add to the library, and an admin approves it. Ask an admin for tenured access.', 403, { code: 'INFO_ONLY' });
@@ -33,9 +33,9 @@ export default {
             if (locked) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             if (path === '/api/session') return await session(request, env);
             const reader = await getReader(request, env);
-            if (!reader) return fail('Enter the team access code to open the Knowledge Base.', 401, { code: 'KB_LOCKED' });
+            if (!reader) return fail('Enter the team access code to open LSH Atlas.', 401, { code: 'KB_LOCKED' });
             const write = request.method !== 'GET' && request.method !== 'HEAD';
-            if (write && !sameOrigin(request)) return fail('Requests must come from the LSH Knowledge Base.', 403);
+            if (write && !sameOrigin(request)) return fail('Requests must come from LSH Atlas.', 403);
             const ctx = { request, env, db, url, reader };
 
             if (path.startsWith('/files/')) return await serveFile(ctx, path.split('/')[2]);
@@ -101,7 +101,7 @@ async function session(request, env) {
             admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer), contributor: !!(reader && reader.contributor), tier: reader ? reader.tier : null,
             who: reader ? { name: reader.who.name, batch: reader.who.batch, key: reader.who.key } : null });
     }
-    if (!sameOrigin(request)) return fail('Requests must come from the LSH Knowledge Base.', 403);
+    if (!sameOrigin(request)) return fail('Requests must come from LSH Atlas.', 403);
     const body = await readJson(request) || {};
     if (body.action === 'signout') {
         return json({ success: true }, 200, { 'Set-Cookie': setCookie(READER_COOKIE, '', 0) });
@@ -116,7 +116,7 @@ async function session(request, env) {
             const r = await fetch(portalBase(env) + '/api/verify-ticket', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticket: String(body.ticket || '') }) });
             v = await r.json();
         } catch (e) { return fail('Couldn’t reach the LSH Training Portal to check your sign-in. Try again in a moment.', 502); }
-        if (!v || !v.ok) return fail('That sign-in link has expired. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'TICKET' });
+        if (!v || !v.ok) return fail('That sign-in link has expired. Open LSH Atlas again from the LSH Training Portal.', 401, { code: 'TICKET' });
         if (v.system) return fail('This link can’t sign anyone in.', 403, { code: 'SYSTEM_TICKET' });
         // A trainer signed in to the Portal with their own admin account: an admin here, as themselves, no password.
         // An admin ticket works once (its signature is noted for 10 minutes, longer than a ticket lives).
@@ -126,7 +126,7 @@ async function session(request, env) {
                 await db.prepare(`CREATE TABLE IF NOT EXISTS kb_sso_used (sig TEXT PRIMARY KEY, at INTEGER NOT NULL)`).run();
                 await db.prepare(`DELETE FROM kb_sso_used WHERE at < ?`).bind(Date.now() - 600000).run();
                 await db.prepare(`INSERT INTO kb_sso_used (sig, at) VALUES (?, ?)`).bind(sig, Date.now()).run();
-            } catch (e) { return fail('This sign-in link was already used. Open the Knowledge Base again from the LSH Training Portal.', 401, { code: 'used' }); }
+            } catch (e) { return fail('This sign-in link was already used. Open LSH Atlas again from the LSH Training Portal.', 401, { code: 'used' }); }
             const name = oneLine(v.name, 80);
             const username = name ? 'admin:' + name.toLowerCase() : MASTER_USERNAME;
             const token = await signToken({ adm: 1, username, name: name || 'System Administrator' }, env.SESSION_SECRET, ADMIN_HOURS * 3600);
@@ -137,10 +137,10 @@ async function session(request, env) {
         return json({ success: true }, 200, { 'Set-Cookie': setCookie(READER_COOKIE, token, PORTAL_READER_HOURS * 3600) });
     }
     if (body.action === 'unlock') {
-        if (!codeLoginOn(env)) return fail('Open the Knowledge Base from the LSH Training Portal. It signs you in; there is no second sign-in here.', 403, { code: 'PORTAL_ONLY' });
+        if (!codeLoginOn(env)) return fail('Open LSH Atlas from the LSH Training Portal. It signs you in; there is no second sign-in here.', 403, { code: 'PORTAL_ONLY' });
         if (await overLimit(request, db, 'unlock', 10)) return fail('Too many tries from this connection. Wait 10 minutes and try again.', 429);
         const hash = await getSetting(db, 'code_hash');
-        if (!hash) return fail('The Knowledge Base isn’t open yet. An admin needs to set the team access code.', 409);
+        if (!hash) return fail('LSH Atlas isn’t open yet. An admin needs to set the team access code.', 409);
         const name = oneLine(body.name, 80), batch = oneLine(body.batch, 40);
         if (name.length < 2) return fail('Enter your full name.');
         if (!(await verifyPassword(String(body.code || '').trim(), hash))) return fail('That access code isn’t right. Ask your trainer or team lead for the current code.', 403);
@@ -198,7 +198,7 @@ async function library({ db, reader }) {
         db.prepare(`SELECT c.*, COUNT(e.id) AS n, SUM(CASE WHEN e.has_video = 1 THEN 1 ELSE 0 END) AS videos
             FROM lib_collections c LEFT JOIN lib_entries e ON e.collection = c.slug AND e.status = 'published'
             WHERE c.archived = 0 GROUP BY c.slug ORDER BY c.sort, c.name`),
-        // Featured is the screen the Knowledge Base opens on: fifteen cards, three rows of five.
+        // Featured is the screen LSH Atlas opens on: fifteen cards, three rows of five.
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.featured = 1 ORDER BY e.updated_at DESC LIMIT 15`),
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY e.published_at DESC LIMIT 8`),
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.has_video = 1 ORDER BY e.published_at DESC LIMIT 6`),
@@ -848,7 +848,7 @@ async function importGlossary(request, env, db) {
 }
 
 // ---- Tettra (public/seed/tettra.json, made by scripts/tettra_convert.py) ----
-// The pages that are no longer part of the Knowledge Base (company policies and management) are archived, 12 a call; the rest
+// The pages that are no longer part of LSH Atlas (company policies and management) are archived, 12 a call; the rest
 // is the same safe sync the schedule runs (src/bundled.js: missing pages added, unedited ones updated). Run again until none
 // remain; then the starter collections with nothing in them are archived.
 async function importTettra(env, db) {

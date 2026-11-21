@@ -3,7 +3,7 @@
 
   python3 scripts/tettra_convert.py <tettra-export.json>
 
-Each page's HTML becomes the Knowledge Base's safe Markdown. Images become ![alt](/img/<hash>), where <hash> is the
+Each page's HTML becomes LSH Atlas's safe Markdown. Images become ![alt](/img/<hash>), where <hash> is the
 first 16 hex characters of the SHA-1 of the image's original address; the original addresses are kept in "images" so
 the Worker can copy them into R2. Owner e-mail addresses are not carried over. Pages deleted in Tettra, pages with no\ncontent (the empty "asd" test page) and the cracked-Nitro-Pro install page are skipped; everything else is kept, including\nTettra's starter templates (pages with no category, shelved under "Tettra starter templates").
 """
@@ -14,7 +14,7 @@ from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Company-related policy and management sections of the old Tettra (company information, client management, VA management).
-# They are not part of the Knowledge Base; an import also archives any of these pages imported earlier.
+# They are not part of LSH Atlas; an import also archives any of these pages imported earlier.
 EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA Management',
                       'III. Tools & Applications', 'III. Service: Document Generation', 'III. Service: Automation',
                       'III. Service: Marketing', 'III Service: Accounting/Bookkeeping'}
@@ -22,7 +22,7 @@ EXCLUDE_CATEGORIES = {'I. Company Information', 'II. Client Management', 'II. VA
 # Company-internal pages that are not knowledge: the company's own product list, the VA task assessment manual, and
 # Tettra's ten starter templates (About the company, Social media policy, Quarterly OKRs ...). Archived if imported earlier.
 EXCLUDE_TITLES = {'LSH Marketing Products', 'LSH Task Assessment Manual (TAM)'}
-# The Knowledge Base is limited to the law practice itself (intake, claims and case work, demands, medical summaries and liens,
+# LSH Atlas is limited to the law practice itself (intake, claims and case work, demands, medical summaries and liens,
 # litigation, practice areas). Software tutorials, automation, accounting, marketing tools and general VA-skills pages are left out.
 EXCLUDE_TITLES |= {'Upskill on your FREE TIME', 'Email Management', 'Ways to Manage Your Email Inbox'}
 EXCLUDE_UNCATEGORIZED = True
@@ -216,13 +216,13 @@ def summary_of(md):
 
 
 def tidy(md, by_slug):
-    """Brings a page up to date after the move from Tettra: links to other Tettra pages point at their Knowledge Base
-    pages, "Tettra article" becomes "Knowledge Base article", attachments get their file name as link text, and the
+    """Brings a page up to date after the move from Tettra: links to other Tettra pages point at their LSH Atlas
+    pages, "Tettra article" becomes "LSH Atlas article", attachments get their file name as link text, and the
     Tettra login that was written into the Task Assessment Manual is removed."""
     md = re.sub(r'[\ue000-\uf8ff]', '', md)
     # the Tettra login written into the Task Assessment Manual (an account that is no longer used)
     md = re.sub(r'### Learn more: Introduction to LSH Tettra\n\n.*?(?=\n\n)',
-                "### Learn more: The LSH Knowledge Base\n\nThe LSH Knowledge Base is the team's internal library of SOPs, guides and training videos. "
+                "### Learn more: LSH Atlas\n\nLSH Atlas is the team's internal library of SOPs, guides and training videos. "
                 "Open it from the LSH Training Portal.", md, flags=re.S)
     md = re.sub(r'Username:\s*\[?[^\s\]]+\]?(\([^)]*\))?\s*Password:\s*\S+', '', md)
 
@@ -257,8 +257,8 @@ def tidy(md, by_slug):
         name = re.sub(r'-\d{8,}(?=\.[a-z0-9]{2,4}$)', '', m.group(1))   # drop the number Tettra added to a file name
         return '[' + name + '](/att/' + img_id(m.group(2)) + ')'
     md = re.sub(r'(?<!!)\[([^\]\n]*)\]\((https://tettra-[a-z0-9.-]+\.amazonaws\.com/[^)\s]+)\)', attachment, md)
-    md = re.sub(r'\bTettra [Aa]rticles\b', 'Knowledge Base articles', md)
-    md = re.sub(r'\bTettra [Aa]rticle\b', 'Knowledge Base article', md)
+    md = re.sub(r'\bTettra [Aa]rticles\b', 'LSH Atlas articles', md)
+    md = re.sub(r'\bTettra [Aa]rticle\b', 'LSH Atlas article', md)
     return md
 
 
@@ -331,7 +331,7 @@ def main(src):
         if x['page_title'].strip() in EXCLUDE_TITLES or (EXCLUDE_UNCATEGORIZED and not x.get('category_name')):
             continue                      # company-internal, not knowledge
         if cat in EXCLUDE_CATEGORIES:
-            continue                      # company-related policies and management: not part of the Knowledge Base
+            continue                      # company-related policies and management: not part of LSH Atlas
         md = mark_dead(tidy(convert(x.get('html') or ''), by_slug))
         if len(md) < 20:
             continue

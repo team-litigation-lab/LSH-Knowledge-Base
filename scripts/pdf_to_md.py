@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turns a PDF handout into the Knowledge Base's Markdown (headings, bold, lists, tables), so it reads as a page
+"""Turns a PDF handout into LSH Atlas's Markdown (headings, bold, lists, tables), so it reads as a page
 of the platform instead of opening in a PDF viewer.   python3 scripts/pdf_to_md.py file.pdf > file.md
 Needs: pip install pymupdf"""
 import collections, re, sys

@@ -3,7 +3,7 @@
 ## team-litigation-lab/Training-Portal
 
 LSH Training Portal — Cloudflare Pages site (static HTML/CSS/JS at the root) plus Pages Functions
-in `functions/` (API under `functions/api/`, shared middleware in the `_*.js` files). Simulators in
+in `functions/` (API under `functions/api/`, shared middleware in the `_*.js` files). LSH Sims in
 `simulators/`. Default branch `main`. Designated work branch `claude/great-ptolemy-3tezc3`.
 
 `CODEMAP.md` is an inventory of every code file with line counts from the October 2026 audit — the
@@ -29,7 +29,7 @@ and never run `playwright install`.
 
 ## team-litigation-lab/LSH-Knowledge-Base
 
-LSH Knowledge Base — a Cloudflare Worker: `src/index.js` (routes), `src/db.js` (D1), `src/files.js`
+LSH Atlas (this repo) — a Cloudflare Worker: `src/index.js` (routes), `src/db.js` (D1), `src/files.js`
 (R2), `src/util.js`. Tests in `tests/`, maintenance scripts in `scripts/`. Config in `wrangler.jsonc`,
 scripts in `package.json`. Default branch `claude/brave-newton-xors2t` (per `.github/workflows/checks.yml`;
 confirm with `git remote show origin` before branching). Designated work branch
