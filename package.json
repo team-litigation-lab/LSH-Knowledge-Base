@@ -1,7 +1,7 @@
 {
   "name": "lsh-knowledge-base",
   "version": "1.0.0",
-  "description": "LSH Knowledge Base: the LSH VA community library",
+  "description": "LSH Atlas: the LSH VA community library",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

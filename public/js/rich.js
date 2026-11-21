@@ -1,4 +1,4 @@
-// Word-style editing for the Knowledge Base. The editor's surface shows an entry exactly as readers see it
+// Word-style editing for LSH Atlas. The editor's surface shows an entry exactly as readers see it
 // (js/md.js renders it into a contenteditable box), and this file turns that surface back into the library's own
 // markdown, the format every entry is stored, searched, compared and backed up in.
 //   toMarkdown(root)  the surface → markdown, using only what js/md.js renders (its header lists the set)

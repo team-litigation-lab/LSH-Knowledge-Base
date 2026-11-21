@@ -1,4 +1,4 @@
-/* 🧭 The Knowledge Base Blueprint's slides (lsh-blueprint.js draws them and makes the PDFs; it's the same file on
+/* 🧭 The LSH Atlas Blueprint's slides (lsh-blueprint.js draws them and makes the PDFs; it's the same file on
    every LSH platform). TRAINEE: for VAs (reviewers too). TRAINER: for admins only.
    A slide is { icon, title, points: [...], where, tip }. Change the wording here; the page and the PDFs are made
    from it each time, stamped with the deployed version. README → 🧭 Blueprint. */
@@ -7,7 +7,7 @@
   const TRAINEE = {
     sub: 'How to find, use and add to the LSH Community Library',
     slides: [
-      { icon: '📚', title: 'What the Knowledge Base is', points: [
+      { icon: '📚', title: 'What LSH Atlas is', points: [
           'LSH Community Library: official SOPs, training videos, guides and know-how from the whole community.',
           'Entries sit in collections, one per program or role: Foundational Training, Reception, Intake, Case Management, EA / PA and more.',
           'Inside a collection, entries are grouped by section.',
@@ -15,11 +15,11 @@
         where: 'Top bar → Library.',
         tip: 'Look for ✓ Official: those entries are the firm\'s approved way of doing it.' },
       { icon: '🔑', title: 'Signing in', points: [
-          'Sign in once, on the LSH Training Portal. Open the Knowledge Base from the Portal and you come straight in.',
+          'Sign in once, on the LSH Training Portal. Open LSH Atlas from the Portal and you come straight in.',
           'There is no second sign-in here, and no access code to remember.',
           'Your name and batch come from your Portal account, so your contributions are credited to you.'],
-        where: 'LSH Training Portal → Knowledge Base.',
-        tip: 'If this page says you are signed out, go back to the Portal and open the Knowledge Base again.' },
+        where: 'LSH Training Portal → 📚 LSH Atlas.',
+        tip: 'If this page says you are signed out, go back to the Portal and open LSH Atlas again.' },
       { icon: '🔍', title: 'Finding what you need', points: [
           'Search covers titles, summaries, content, tags and sections, and the text inside uploaded PDFs, Word, Excel and PowerPoint files.',
           'Filter by type, Official only, or videos.',
@@ -60,7 +60,7 @@
     ]
   };
   const TRAINER = {
-    sub: 'Running the Knowledge Base: the admin side',
+    sub: 'Running LSH Atlas: the admin side',
     slides: [
       { icon: '🔑', title: 'Signing in as an admin', points: [
           'Admins sign in with the admin password, the same one as on every LSH platform.',
@@ -69,11 +69,11 @@
         where: 'The sign-in screen → Admin · Top bar → Admin.',
         tip: 'It is the same admin password as the Training Portal\'s: nothing separate to keep.' },
       { icon: '🗝', title: 'How people get in', points: [
-          'Everyone signs in once, on the LSH Training Portal, and opens the Knowledge Base from there.',
+          'Everyone signs in once, on the LSH Training Portal, and opens LSH Atlas from there.',
           'Trainees never see an admin page, the Admin tab or the admin password.',
           'Admins type the admin password on this site every time.'],
         where: 'The sign-in screen → Admin Portal.',
-        tip: 'Remove a trainee\'s access in the Portal (Master Control) and they can no longer open the Knowledge Base from it.' },
+        tip: 'Remove a trainee\'s access in the Portal (Master Control) and they can no longer open LSH Atlas from it.' },
       { icon: '✅', title: 'The review queue', points: [
           'New entries, suggested edits, Glossary changes and notes from VAs wait in Review.',
           'Approve to make a version live, or send it back.',
@@ -124,8 +124,8 @@
     return ver;
   }
   window.LSH_BLUEPRINT = {
-    product: 'Knowledge Base',
-    site: 'LSH Knowledge Base',
+    product: 'LSH Atlas',
+    site: 'LSH Atlas',
     file: 'LSH_Knowledge_Base',
     logo: '/lsh-logo-dark.png',
     trainee: TRAINEE,

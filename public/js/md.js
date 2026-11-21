@@ -1,4 +1,4 @@
-// Safe Markdown for the Knowledge Base (entries, replies and version previews).
+// Safe Markdown for LSH Atlas (entries, replies and version previews).
 // Everything is HTML-escaped first; only this small set of formatting is turned
 // back into markup, so nothing a VA types can run as code on the page:
 //   # / ## / ### headings, **bold**, *italic* / _italic_, ++underline++,
