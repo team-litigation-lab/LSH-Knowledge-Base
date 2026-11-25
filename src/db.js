@@ -1,6 +1,6 @@
 import { getCookie, readToken, personKey, nowIso } from './util.js';
 
-// Storage for the LSH Knowledge Base.
+// Storage for LSH Atlas.
 //
 // D1 TRAINING_DB (shared with the LSH Training Portal, so the old Knowledge
 // Base's team code, posts, replies, votes and views carry over):

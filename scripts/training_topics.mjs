@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Turns the Foundational Training lessons into Knowledge Base pages, one page per topic, as public/seed/training.json.
+// Turns the Foundational Training lessons into LSH Atlas pages, one page per topic, as public/seed/training.json.
 //   node scripts/training_topics.mjs <path to the Foundational-Training repo>
 // A lesson's topics are the ones its slide list is divided into (FT_TOPICS in js/ft-updates.js). Each topic's page is the text
 // of its slides (their spoken script, one line per item), under the slides' own headings. Trainer-only material (the Training

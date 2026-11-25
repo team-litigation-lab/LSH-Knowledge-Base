@@ -12,8 +12,8 @@
    deploy always gives an up-to-date PDF.
 
    Each platform sets window.LSH_BLUEPRINT (its blueprint-content.js) before or after this file:
-     product   the platform's name on the cover, e.g. "Case Management System"
-     site      the footer line, e.g. "LSH Case Management System"
+     product   the platform's name on the cover, e.g. "LSH CaseWorks"
+     site      the footer line, e.g. "LSH CaseWorks"
      file      the PDF file name's start, e.g. "LSH_CMS" → LSH_CMS_Blueprint_Trainee.pdf
      logo      an image for the navy cover band (the white-lettered LSH logo, or with brand: the LSH mark)
      brand     optional: the name shown as real text under the logo, e.g. "Legal Support Help" (sharp at any

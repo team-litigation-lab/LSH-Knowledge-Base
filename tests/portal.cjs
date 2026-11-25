@@ -1,4 +1,4 @@
-// Single sign-on: people sign in once, on the LSH Training Portal, and open the Knowledge Base from there.
+// Single sign-on: people sign in once, on the LSH Training Portal, and open LSH Atlas from there.
 // A mock Portal answers /api/verify-ticket (the real one is functions/api/verify-ticket.js in the Training Portal).
 // Run against a Worker started WITHOUT KB_CODE_LOGIN and with PORTAL_URL=http://127.0.0.1:8788:  node tests/portal.cjs
 const http = require('http');
