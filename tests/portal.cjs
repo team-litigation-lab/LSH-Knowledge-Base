@@ -4,7 +4,13 @@
 const http = require('http');
 const B = process.env.BASE || 'http://127.0.0.1:8790';
 const failures = []; const check = (ok, m) => { console.log((ok ? 'PASS ' : 'FAIL ') + m); if (!ok) failures.push(m); };
-const answers = { 'good-trainee': { ok: true, first: 'Ann', last: 'Lee', batch: 'B300926' }, 'good-admin': { ok: true, admin: true, name: 'Coach Ana' }, 'good-system': { ok: true, system: true } };
+const answers = { 'good-trainee': { ok: true, first: 'Ann', last: 'Lee', batch: 'B300926', u: '20' }, 'good-admin': { ok: true, admin: true, name: 'Coach Ana', u: '23' }, 'good-system': { ok: true, system: true },
+  // (tests/seed-accounts.sql: Rex Gone's Portal account is Suspended, Old Coach's Revoked, Dee M. Gone's deleted)
+  'suspended-trainee': { ok: true, first: 'Rex', last: 'Gone', batch: 'B300926', u: '21' }, 'revoked-admin': { ok: true, admin: true, name: 'Old Coach', u: '22' },
+  'deleted-trainee': { ok: true, first: 'Dee', last: 'Gone', batch: 'B300926', u: '99' },
+  // (security review 2026-11-19) older tickets with no account id: matched by name in every form (a middle initial, a suffix)
+  'deleted-admin-mi': { ok: true, admin: true, name: 'Tom R. Admin' }, 'deleted-admin-suffix': { ok: true, admin: true, name: 'Tom Admin, Jr' },
+  'unknown-admin': { ok: true, admin: true, name: 'Nobody Known' } };
 const mock = http.createServer((req, res) => {
   let b = ''; req.on('data', d => b += d); req.on('end', () => {
     if (req.url === '/api/login') {   // the Portal's admin sign-in: only the Master Account's password "master-ok" passes
@@ -53,6 +59,16 @@ const post = (body, cookie) => fetch(B + '/api/session', { method: 'POST', heade
   r = await post({ action: 'admin-login', username: 'LSHADMIN123', password: 'master-ok' }); check(r.status === 200, 'the Master Account signs in with the admin password (checked by the Portal)');
   const adm = (r.headers.get('set-cookie') || '').split(';')[0];
   s = await (await fetch(B + '/api/session', { headers: { Cookie: adm } })).json(); check(s.admin === true, 'and is an admin here');
+  // 🔁 the Portal account behind a session is re-checked (code inventory 2026-10-16 #7): a suspended, revoked or deleted
+  // Portal account opens nothing here, whatever cookie it holds
+  for (const [t, who] of [['suspended-trainee', 'a suspended trainee'], ['revoked-admin', 'a revoked trainer'], ['deleted-trainee', 'a deleted (revoked) trainee'],
+      ['deleted-admin-mi', 'a deleted trainer named with a middle initial'], ['deleted-admin-suffix', 'a deleted trainer named with a suffix'], ['unknown-admin', 'a trainer no Portal admin account has']]) {
+    const rr = await post({ action: 'portal-ticket', ticket: t });
+    const ck = (rr.headers.get('set-cookie') || '').split(';')[0];
+    const lib = ck ? await fetch(B + '/api/library', { headers: { Cookie: ck } }) : { status: 401 };
+    const ss = ck ? await (await fetch(B + '/api/session', { headers: { Cookie: ck } })).json() : { unlocked: false };
+    check(lib.status === 401 && !ss.unlocked && !ss.admin, `${who}'s Knowledge Base session opens nothing (library ${lib.status})`);
+  }
   mock.close();
   console.log(failures.length ? `\n${failures.length} failed` : '\nall passed'); process.exit(failures.length ? 1 : 0);
 })();
