@@ -372,14 +372,12 @@
     }
     function spotlightHTML(e) {
         const [, colour] = shelfStyle(e.collection);
-        const hook = [e.readMin ? `⏱ ${e.readMin} Min Read` : '', e.fileCount ? `📎 ${e.fileCount} Attached ${e.fileCount === 1 ? 'File' : 'Files'}` : '', e.hasVideo ? '▶ Video' : '', e.official ? '✓ Official' : ''].filter(Boolean);
         const lead = leadText(e);
         return `<article class="spot" style="--cat:${colour}" aria-labelledby="spot-title">
             <div class="spot-ribbon">⭐ Editor’s Pick <span aria-hidden="true">//</span> Essential Read</div>
             <div class="spot-body">
-                <div class="spot-head">${catBadge(e)}${hook.length ? `<span class="spot-hook">${hook.join(' <span aria-hidden="true">•</span> ')}</span>` : ''}
+                <div class="spot-head"><h2 id="spot-title"><a href="#/e/${e.id}">${esc(titleCase(e.title))}</a></h2>
                     <a class="btn spot-open" href="#/e/${e.id}">Open Playbook <span aria-hidden="true">→</span></a></div>
-                <h2 id="spot-title"><a href="#/e/${e.id}">${esc(titleCase(e.title))}</a></h2>
                 ${lead ? `<div class="spot-take"><b>Key Takeaway <span aria-hidden="true">/</span> Why It Matters</b><p>${esc(lead)}</p></div>` : ''}
             </div>
         </article>`;
@@ -429,16 +427,16 @@
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
         ${spot ? `<section class="section hub-spot">${spotlightHTML(spot)}</section>`
             : mode === 'featured' && t.entries ? `<div class="card section"><p style="margin:0">Nothing is starred yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools) and it leads this page.' : ''}</p></div>` : ''}
-        ${t.entries ? `<section class="section" aria-labelledby="qs-title"><h2 id="qs-title" class="hub-h">Quick-Start Collections</h2>
+        ${t.entries ? `<section class="section" aria-labelledby="qs-title"><h2 id="qs-title" class="hub-h"><span>Quick-Start Collections</span></h2>
             <div class="qs-strip" role="group" aria-label="Reading paths">${tiles}</div></section>` : ''}
         ${t.entries ? `<section class="section" aria-labelledby="hub-list-title">
-            <div class="hub-bar"><h2 id="hub-list-title" class="hub-h"></h2>
+            <div class="hub-bar"><h2 id="hub-list-title" class="hub-h"><span></span></h2>
                 <label class="sr" for="az-cat">Category</label>
                 <select class="i lib-cat" id="az-cat"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
                 <span class="muted lib-count" id="az-count"></span>
                 <button type="button" class="btn small" id="hub-clear" hidden>Clear filters</button></div>
             <div id="az-list"></div></section>` : ''}
-        ${t.entries && mode !== 'featured' ? `<section class="section two"><div><h2 class="hub-h">Recently added</h2><div class="hub-col">${L.recent.map(hubCard).join('')}</div></div><div><h2 class="hub-h">Most helpful</h2><div class="hub-col">${L.popular.map(hubCard).join('')}</div></div></section>` : ''}
+        ${t.entries && mode !== 'featured' ? `<section class="section two"><div><h2 class="hub-h"><span>Recently added</span></h2><div class="hub-col">${L.recent.map(hubCard).join('')}</div></div><div><h2 class="hub-h"><span>Most helpful</span></h2><div class="hub-col">${L.popular.map(hubCard).join('')}</div></div></section>` : ''}
         </div>`);
         const libForm = document.getElementById('lib-search-form');
         libForm.onsubmit = (ev) => {
@@ -467,7 +465,7 @@
             if (spot && !path && !st.cat && (!lens || lens.key === 'must')) rows = rows.filter(e => e.id !== spot.id);
             app.querySelectorAll('[data-lens]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lens === st.lens)));
             app.querySelectorAll('[data-path]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.path === st.path)));
-            document.getElementById('hub-list-title').textContent = path ? path.label.replace(/^\S+\s/, '') + ' · reading path' : lens ? lens.label.replace(/^\S+\s/, '') : 'The whole library';
+            document.querySelector('#hub-list-title span').textContent = path ? path.label.replace(/^\S+\s/, '') + ' · reading path' : lens ? lens.label.replace(/^\S+\s/, '') : 'The whole library';
             document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
             document.getElementById('hub-clear').hidden = !(st.lens !== (mode === 'featured' ? 'must' : '') || st.path || st.cat);
             const slice = rows.slice(0, st.shown);
