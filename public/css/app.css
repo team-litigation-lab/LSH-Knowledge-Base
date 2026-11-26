@@ -149,12 +149,17 @@ textarea.i{resize:vertical;line-height:1.55;}
 .hub-hero > *{position:relative;z-index:1;}
 .hub-kicker{justify-self:start;max-width:100%;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#FCD9B6;
   background:rgba(219,132,55,.16);border:1px solid rgba(219,132,55,.5);border-radius:999px;padding:5px 12px;}
-.hero.hub-hero h1{font-size:clamp(34px,5vw,56px);font-weight:800;letter-spacing:-.025em;line-height:1.08;justify-self:start;
-  /* the gold of the LSH card frame (#a8692f → #DB8437), lifted so it reads on the navy band */
-  background:linear-gradient(180deg,#FBE3B8 0%,#F0B867 45%,#DB8437 80%,#a8692f 100%);-webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;color:#E9A24F;}
-.hero.hub-hero .hub-sub{font-size:clamp(15px,1.25vw,19px);line-height:1.5;color:#D5DCEC;max-width:none;font-weight:500;}
-@media (min-width:1100px){.hero.hub-hero .hub-sub{white-space:nowrap;}}
+/* ✨ LSH gold: the white-to-gold the Training Portal's cards use for their names (training-portal programs.html), with its glow */
+.lsh-gold,.hero.hub-hero h1,.brand b{background:linear-gradient(180deg,#ffffff 0%,#fde7b0 45%,#f5c451 75%,#e0a43a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 10px rgba(245,196,81,.30)) drop-shadow(0 2px 2px rgba(0,0,0,.45));}
+.hero.hub-hero h1{font-size:clamp(34px,5vw,56px);font-weight:900;letter-spacing:-.02em;line-height:1.1;justify-self:start;padding-bottom:.04em;}
+/* the search and the filter chips share one row while there is room for both, and stack when there isn't */
+.hub-find{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:6px;}
+.hub-find .hub-search{flex:1 1 400px;max-width:none;margin-top:0;}
+.hub-find .hub-search input{font-size:15.5px;}
+.hub-find .hchips{flex:0 1 auto;gap:7px;}
+.hub-find .hchip{padding:7px 12px;font-size:14px;}
 .hub-search{display:flex;align-items:center;gap:8px;max-width:860px;margin-top:6px;padding:6px 6px 6px 16px;border-radius:16px;
   background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   box-shadow:0 18px 40px -18px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.6);}
@@ -179,7 +184,7 @@ textarea.i{resize:vertical;line-height:1.55;}
   border:2px solid var(--orange);box-shadow:0 0 0 6px rgba(219,132,55,.12),0 26px 50px -26px rgba(38,43,69,.5);}
 .spot-ribbon{align-self:flex-start;background:linear-gradient(90deg,#DB8437,#E9A24F);color:#1b1206;font-size:12.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
   padding:7px 18px 7px 20px;border-bottom-right-radius:14px;}
-.spot-body{padding:clamp(16px,2.6vw,30px) clamp(18px,3vw,36px) 8px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;}
+.spot-body{padding:clamp(16px,2.2vw,26px) clamp(18px,3vw,36px) clamp(18px,2.4vw,28px);display:grid;grid-template-columns:minmax(0,1fr);gap:14px;}
 .spot-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;}
 .spot-head .cat-pill{flex:0 1 auto;}
 .spot-hook{display:inline-flex;flex-wrap:wrap;gap:4px 8px;font-size:13.5px;font-weight:700;color:#7A3C0C;background:var(--orange-soft);border:1px solid #F2CFA5;border-radius:999px;padding:4px 12px;}
@@ -189,10 +194,8 @@ textarea.i{resize:vertical;line-height:1.55;}
 .spot-take{border-left:4px solid var(--orange);background:#FBF7F0;border-radius:0 12px 12px 0;padding:14px 20px;max-width:none;}
 .spot-take b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7A3C0C;margin-bottom:4px;}
 .spot-take p{margin:0;font-size:16.5px;line-height:1.6;color:#22273C;font-weight:500;}
-.spot-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;
-  padding:14px clamp(18px,3vw,36px);border-top:1px solid #EEE6D8;background:#FCFAF6;}
-.spot-by{font-size:14.5px;font-weight:600;color:var(--muted);}
-.btn.spot-open{background:var(--navy-deep);border-color:var(--navy-deep);color:#fff;font-size:15.5px;font-weight:800;padding:11px 22px;border-radius:12px;}
+/* no footer row: Open Playbook sits at the right end of the badge row */
+.btn.spot-open{margin-left:auto;background:var(--navy-deep);border-color:var(--navy-deep);color:#fff;font-size:15px;font-weight:800;padding:9px 20px;border-radius:12px;}
 .btn.spot-open:hover{background:var(--navy);}
 
 /* the category badge a card leads with: the shelf's icon on its own tint, then "Shelf › Section" */
@@ -245,7 +248,7 @@ textarea.i{resize:vertical;line-height:1.55;}
   .hub-search .btn{flex:1 1 100%;justify-content:center;}
   .hchip{font-size:14px;padding:7px 12px;}
   .qs-strip{grid-auto-columns:minmax(78%,1fr);}
-  .spot-foot .btn{flex:1 1 100%;justify-content:center;}
+  .spot-head .spot-open{flex:1 1 100%;justify-content:center;margin-left:0;}
   .hcard{padding:16px;}
 }
 @media (prefers-reduced-motion:reduce){.hchip:hover,.qs-tile:hover,.hcard:hover{transform:none;}}
