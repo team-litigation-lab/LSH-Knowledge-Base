@@ -58,6 +58,7 @@ h3{font-size:16px;margin:0 0 6px;}
 /* each link its own orange pill, as in the main LSH portal: outlined, filled orange when it is the page you are on */
 .top-nav{display:flex;gap:6px;flex-wrap:nowrap;align-items:center;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:12px 14px;margin-block:-10px;}
 .top-nav::-webkit-scrollbar{display:none;}
+.top-nav[hidden]{display:none;}   /* signed out: no bar at all (its padding would otherwise give an empty box a size) */
 .top-nav a,.top-nav button{color:#FCD9B6;text-decoration:none;font-size:13.5px;font-weight:700;padding:5px 12px;border-radius:999px;
   border:1.5px solid rgba(219,132,55,.75);background:rgba(219,132,55,.12);cursor:pointer;white-space:nowrap;flex:0 0 auto;font-family:inherit;line-height:1.3;}
 .top-nav a:hover,.top-nav button:hover{background:rgba(219,132,55,.28);border-color:var(--orange);color:#fff;}
