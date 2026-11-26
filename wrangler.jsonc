@@ -5,7 +5,9 @@
   "name": "lsh-knowledge-base",
   "main": "src/index.js",
   "compatibility_date": "2024-09-23",
-  "assets": { "directory": "public", "binding": "ASSETS", "run_worker_first": true },
+  // ⚡ Only these paths need the Worker; everything else is a plain file Cloudflare serves from the visitor's nearest data
+  // centre. (With true, every file went through the Worker, which runs in Singapore.) /seed/ stays on the Worker so it is never served.
+  "assets": { "directory": "public", "binding": "ASSETS", "run_worker_first": ["/api/*", "/files/*", "/img/*", "/att/*", "/seed/*"] },
   // ⚡ Run next to the databases (TRAINING_DB in Singapore, the Portal's DB in Hong Kong): a request then crosses the ocean
   // once, not once per query. Smart placement never kicked in at this traffic level.
   "placement": { "region": "aws:ap-southeast-1" },

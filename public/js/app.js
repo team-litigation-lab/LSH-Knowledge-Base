@@ -360,12 +360,11 @@
         return `<article class="spot" style="--cat:${colour}" aria-labelledby="spot-title">
             <div class="spot-ribbon">⭐ Editor’s Pick <span aria-hidden="true">//</span> Essential Read</div>
             <div class="spot-body">
-                <div class="spot-head">${catBadge(e)}${hook.length ? `<span class="spot-hook">${hook.join(' <span aria-hidden="true">•</span> ')}</span>` : ''}</div>
+                <div class="spot-head">${catBadge(e)}${hook.length ? `<span class="spot-hook">${hook.join(' <span aria-hidden="true">•</span> ')}</span>` : ''}
+                    <a class="btn spot-open" href="#/e/${e.id}">Open Playbook <span aria-hidden="true">→</span></a></div>
                 <h2 id="spot-title"><a href="#/e/${e.id}">${esc(e.title)}</a></h2>
                 ${lead ? `<div class="spot-take"><b>Key Takeaway <span aria-hidden="true">/</span> Why It Matters</b><p>${esc(lead)}</p></div>` : ''}
             </div>
-            <footer class="spot-foot"><span class="spot-by">${esc(e.author)} <span aria-hidden="true">•</span> ${fmtDate(e.publishedAt || e.updatedAt)} <span aria-hidden="true">•</span> <span aria-label="${readsLabel(e.views)}">👁 ${readsLabel(e.views)}</span></span>
-                <a class="btn spot-open" href="#/e/${e.id}">Open Playbook <span aria-hidden="true">→</span></a></footer>
         </article>`;
     }
     const HUB_PAGE = 12;   // cards per "Show more"
@@ -399,12 +398,13 @@
         <section class="hero hub-hero" aria-labelledby="hub-title">
             <span class="hub-kicker">LSH Executive Knowledge Engine</span>
             <h1 id="hub-title">LSH Atlas™</h1>
-            <p class="hub-sub">Master the exact workflows, scripts, and legal playbooks top firms rely on—distilled into fast, actionable guides.</p>
-            <form id="lib-search-form" role="search" class="hub-search"><label class="sr" for="lib-q">Search the library</label>
+            <div class="hub-find">
+            <form id="lib-search-form" role="search" class="hub-search"><label class="sr" for="lib-q">Search the library</label><span class="sr" id="lib-q-hint">Search playbooks, SOPs and templates</span>
                 <span class="hub-search-ic" aria-hidden="true">⌕</span>
-                <input id="lib-q" type="search" placeholder="What do you want to master today? Search playbooks, SOPs, templates..." autocomplete="off">
+                <input id="lib-q" type="search" placeholder="What do you want to master today?" aria-describedby="lib-q-hint" autocomplete="off">
                 <button class="btn" type="submit">Search</button></form>
             ${t.entries ? `<div class="hchips" role="group" aria-label="Filter the library">${chips}</div>` : ''}
+            </div>
         </section>
         ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
