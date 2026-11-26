@@ -29,10 +29,12 @@ export default {
         try {
             const db = env.TRAINING_DB;
             // The lock lives in the portal's database and the schema in this one: neither waits for the other.
-            const [locked] = await Promise.all([siteLocked(env), ensureSchema(db)]);
+            // ⚡ Both databases are in Asia, so each query the Worker waits on is a round trip: the lock check runs alongside the
+            // schema check and the sign-in check rather than before them.
+            const [locked, reader] = await Promise.all([siteLocked(env),
+                ensureSchema(db).then(() => path === '/api/session' ? null : getReader(request, env))]);
             if (locked) return fail('The LSH Training Portal has been locked by an administrator.', 423, { code: 'SITE_LOCKED' });
             if (path === '/api/session') return await session(request, env);
-            const reader = await getReader(request, env);
             if (!reader) return fail('Enter the team access code to open LSH Atlas.', 401, { code: 'KB_LOCKED' });
             const write = request.method !== 'GET' && request.method !== 'HEAD';
             if (write && !sameOrigin(request)) return fail('Requests must come from LSH Atlas.', 403);
@@ -96,8 +98,8 @@ export default {
 async function session(request, env) {
     const db = env.TRAINING_DB;
     if (request.method === 'GET') {
-        const reader = await getReader(request, env);
-        return json({ success: true, configured: !!(await getSetting(db, 'code_hash')), unlocked: !!reader, portalUrl: portalBase(env), codeLogin: codeLoginOn(env),
+        const [reader, codeHash] = await Promise.all([getReader(request, env), getSetting(db, 'code_hash')]);
+        return json({ success: true, configured: !!codeHash, unlocked: !!reader, portalUrl: portalBase(env), codeLogin: codeLoginOn(env),
             admin: !!(reader && reader.admin), reviewer: !!(reader && reader.reviewer), contributor: !!(reader && reader.contributor), tier: reader ? reader.tier : null,
             who: reader ? { name: reader.who.name, batch: reader.who.batch, key: reader.who.key } : null });
     }
@@ -274,8 +276,9 @@ async function listEntries({ db, url, reader }) {
         countBind = [...bind];
     }
     const pageSize = p.get('all') === '1' ? 500 : PAGE;
-    const { results } = await db.prepare(sql).bind(...bind, pageSize, (page - 1) * pageSize).all();
-    const total = await db.prepare(countSql).bind(...countBind).first();
+    // one batch: the page and its count in a single round trip
+    const [list, count] = await db.batch([db.prepare(sql).bind(...bind, pageSize, (page - 1) * pageSize), db.prepare(countSql).bind(...countBind)]);
+    const results = list.results, total = (count.results || [])[0];
     return json({ success: true, entries: (results || []).map(shapeRow), total: total ? total.n : 0, page, pageSize });
 }
 

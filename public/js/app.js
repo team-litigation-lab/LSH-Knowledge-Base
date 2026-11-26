@@ -51,8 +51,22 @@
 
     let libAt = 0;   // when the library last came back, so one visit doesn't read it twice
     async function ensureLib(force) {
-        if (!S.lib || (force && Date.now() - libAt > 1500)) { S.lib = await api('/api/library'); libAt = Date.now(); }
+        if (!S.lib || (force && Date.now() - libAt > 1500)) { S.lib = await early('/api/library'); libAt = Date.now(); }
         return S.lib;
+    }
+    /* ⚡ On first open the page asks who you are (/api/session) and only then for the library: two waits, one after the other.
+       prefetch() starts the library's own requests alongside the session check; early() hands over that answer if it came back
+       fine, and otherwise asks again the normal way (signed out, an error), so a prefetch can never show the wrong thing. */
+    const prefetched = {};
+    function prefetch(path) {
+        prefetched[path] = fetch(path, { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    }
+    async function early(path) {
+        const p = prefetched[path];
+        if (!p) return api(path);
+        delete prefetched[path];
+        const d = await p;
+        return d && d.success !== false ? d : api(path);
     }
 
     function statusBadge(status) {
@@ -208,7 +222,13 @@
                 window.history.replaceState(null, '', location.pathname + location.hash);
                 try { await post('/api/session', { action: 'portal-ticket', ticket: tk }); S.session = null; } catch (e) { gateMsg = e.message; }
             }
-            if (!S.session) await loadSession();
+            if (!S.session) {
+                if (!tk && !S.lib) {
+                    prefetch('/api/library');
+                    if (isLanding(location.hash.split('?')[0])) prefetch('/api/entries?all=1&sort=az');
+                }
+                await loadSession();
+            }
         } catch (e) { return errorView(e); }
         if (!S.session.unlocked) { rememberReturn(); return gate(gateMsg); }
         const back = takeReturn();
@@ -353,7 +373,7 @@
         // Every published entry, A to Z by title, read each time the page opens so new uploads slot in on their own.
         const base = mode === 'featured' ? '#/featured' : '#/';
         const onHub = () => (location.hash.split('?')[0] || '#/') === (at || base);
-        const [L, all] = await Promise.all([ensureLib(true), api('/api/entries?all=1&sort=az')]);
+        const [L, all] = await Promise.all([ensureLib(true), early('/api/entries?all=1&sort=az')]);
         if (!onHub()) return;   // the reader moved on while the library loaded: don't draw over the page they went to
         chrome(true); setTitle(mode === 'featured' ? 'Featured' : '');
         const t = L.totals;

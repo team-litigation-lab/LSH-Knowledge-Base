@@ -102,8 +102,22 @@ const SCHEMA = [
 
 let ready = null;   // the promise, so a cold instance's parallel requests all wait on one run, not one each
 export function ensureSchema(db) {
-    if (!ready) ready = buildSchema(db).catch((e) => { ready = null; throw e; });   // a failed run must not mark the schema ready
+    if (!ready) ready = checkSchema(db).catch((e) => { ready = null; throw e; });   // a failed run must not mark the schema ready
     return ready;
+}
+/* ⚡ A fingerprint of SCHEMA, kept in kb_settings once a build has run. A cold instance reads that one row (one round trip)
+   and builds only when it differs, instead of three round trips (the batch, the ALTER, the count) before every first request.
+   Any edit to SCHEMA changes the fingerprint, so the next cold instance runs the full build again. */
+const SCHEMA_V = (() => {
+    let h = 5381;
+    for (const ch of SCHEMA.join('\n') + '|kb_comments.kind') h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0;
+    return 's1-' + h.toString(36);
+})();
+async function checkSchema(db) {
+    const row = await db.prepare(`SELECT value FROM kb_settings WHERE key = 'schema_v'`).first().catch(() => null);   // no table yet: build
+    if (row && row.value === SCHEMA_V) return;
+    await buildSchema(db);
+    await setSetting(db, 'schema_v', SCHEMA_V);
 }
 async function buildSchema(db) {
     // One batch, not one round trip per statement: on a cold Worker instance this is the first thing
