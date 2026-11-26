@@ -98,7 +98,7 @@
         const portalHome = ((s && s.portalUrl) || 'https://cm-training-activity.pages.dev').replace(/\/+$/, '') + '/index.html?stay=1';
         nav.innerHTML = [
             `<a href="${esc(portalHome)}" title="Back to the LSH Training Portal's main screen">🏠 Home</a>`,
-            link('#/', 'Library'), link('#/featured', 'Featured'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My contributions'),
+            link('#/', 'Library'), link('#/featured', 'Featured'), link('#/glossary', 'Glossary'), link('#/videos', 'Videos'), link('#/people', 'Contributors'), link('#/mine', 'My Contributions'),
             (s.admin || s.reviewer) ? link('#/review', `Review${waiting ? `<span class="count">${waiting}</span>` : ''}`) : '',
             s.admin ? link('#/admin', 'Admin') : '',
             s.contributor ? `<a class="cta" href="#/new">+ Add to the library</a>` : '',
@@ -741,7 +741,7 @@
             <h1>${e ? (suggesting ? 'Suggest an edit' : 'Edit this entry') : 'Add to the library'}</h1>
             <p class="muted" style="margin-top:0">${direct ? 'Your changes go live as soon as you save. The previous version stays in the history.'
                 : suggesting ? 'Your changes are saved as a suggestion. They need approval, and the current version stays up until then.'
-                : 'New entries need approval before they appear in the library. You’ll see the status under My contributions.'}${!direct && staff ? ' Another reviewer or an admin has to approve your changes.' : ''}</p>
+                : 'New entries need approval before they appear in the library. You’ll see the status under My Contributions.'}${!direct && staff ? ' Another reviewer or an admin has to approve your changes.' : ''}</p>
             <form class="editor card" id="ed" novalidate>
                 <div class="grid2">
                     <label class="f">Collection <small>(pick one, or type a new one)</small><input class="i" id="ed-col" list="ed-cols" required maxlength="80" placeholder="Choose or type a new collection" value="${esc(d.collection ? colName(d.collection) : '')}"><datalist id="ed-cols">${S.lib.collections.map(c => `<option value="${esc(c.name)}">`).join('')}</datalist></label>
@@ -1382,11 +1382,11 @@
 
     /* ---------- my contributions, people ---------- */
     async function mine() {
-        setTitle('My contributions');
+        setTitle('My Contributions');
         const r = await api('/api/entries?status=mine&all=1');
         const by = (st) => r.entries.filter(e => st.includes(e.status));
         const sec = (title, items, note) => items.length ? `<section class="section"><h2>${title}</h2>${note ? `<p class="muted" style="margin-top:-6px">${note}</p>` : ''}${listHTML(items, { showStatus: true })}</section>` : '';
-        view(`<h1>My contributions</h1><p class="muted" style="margin-top:0">Signed in as <b>${esc(S.session.who.name)}</b>${S.session.who.batch ? ' · ' + esc(S.session.who.batch) : ''}. Suggested edits to other entries show in each entry’s history.</p>
+        view(`<h1>My Contributions</h1><p class="muted" style="margin-top:0">Signed in as <b>${esc(S.session.who.name)}</b>${S.session.who.batch ? ' · ' + esc(S.session.who.batch) : ''}. Suggested edits to other entries show in each entry’s history.</p>
             ${!r.entries.length ? `<div class="card"><p>You haven’t added anything yet.</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
             ${sec('Sent back to you', by(['rejected']), 'A reviewer left a note. Open the entry, make the changes and resend it.')}
             ${sec('Waiting for review', by(['pending']))}
