@@ -446,5 +446,9 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .spot,.hcard,.qs-tile:not(.soon){border:4px solid transparent !important;
   background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#1E2340 0%,#2c3360 30%,#a8692f 78%,#DB8437 100%) border-box !important;}
 .hcard:hover,.qs-tile:not(.soon):hover{border-color:transparent !important;}
+/* …and every article card in a list: a category or module page, search results, My contributions, a contributor's page */
+.item{border:4px solid transparent !important;
+  background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.97)) padding-box,linear-gradient(180deg,#1E2340 0%,#2c3360 30%,#a8692f 78%,#DB8437 100%) border-box !important;}
+.item:hover{border-color:transparent !important;}
 .qs-tile[aria-pressed="true"]{box-shadow:0 0 0 2px #DB8437,0 22px 38px -20px rgba(38,43,69,.5);}
-@media (max-width:420px){.spot,.hcard,.qs-tile:not(.soon){border-width:3px !important;}}
+@media (max-width:420px){.spot,.hcard,.qs-tile:not(.soon),.item{border-width:3px !important;}}
