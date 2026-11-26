@@ -185,7 +185,7 @@ textarea.i{resize:vertical;line-height:1.55;}
 .spot h2{margin:0;overflow-wrap:break-word;font-size:clamp(24px,2.7vw,34px);font-weight:800;line-height:1.15;letter-spacing:-.02em;}
 .spot h2 a{color:var(--ink);text-decoration:none;}
 .spot h2 a:hover{color:var(--navy-soft);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;}
-.spot-take{border-left:4px solid var(--orange);background:#FBF7F0;border-radius:0 12px 12px 0;padding:12px 16px;max-width:90ch;}
+.spot-take{border-left:4px solid var(--orange);background:#FBF7F0;border-radius:0 12px 12px 0;padding:14px 20px;max-width:none;}
 .spot-take b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7A3C0C;margin-bottom:4px;}
 .spot-take p{margin:0;font-size:16.5px;line-height:1.6;color:#22273C;font-weight:500;}
 .spot-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;
