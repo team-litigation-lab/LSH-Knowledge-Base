@@ -47,9 +47,13 @@ jobs:
           # the old team-access-code sign-in is switched on for the end-to-end run only (KB_CODE_LOGIN); the real site has it off.
           # VAs with roles sign in through the Portal, so this instance points at tests/e2e.py's mock Portal (127.0.0.1:8789).
           npx wrangler dev --port 8787 --ip 127.0.0.1 --var KB_CODE_LOGIN:on --var PORTAL_URL:http://127.0.0.1:8789 > "$RUNNER_TEMP/dev.log" 2>&1 &
+          # Both copies share .wrangler/state: started together, they can open its SQLite files at the same moment and the
+          # second dies with "database is locked: SQLITE_BUSY". The second starts once the first is serving.
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && break; sleep 1; done
           # a second copy, as the site runs (single sign-on only), pointed at a mock Portal for tests/portal.cjs
           npx wrangler dev --port 8790 --ip 127.0.0.1 --inspector-port 9331 --var PORTAL_URL:http://127.0.0.1:8788 > "$RUNNER_TEMP/dev2.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ > /dev/null && curl -sf http://127.0.0.1:8790/ > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:8787/ > /dev/null && curl -sf http://127.0.0.1:8790/ > /dev/null || { echo "a local server did not start"; tail -40 "$RUNNER_TEMP/dev.log" "$RUNNER_TEMP/dev2.log"; exit 1; }
       - name: Paste autoformatting (tables and bold/italic/underline from a pasted Word, Docs or Sheets paste)
         run: node tests/paste-format.cjs
       - name: Autoformat existing articles (Admin → Library maintenance)
