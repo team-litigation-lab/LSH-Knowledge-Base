@@ -40,6 +40,23 @@
         return (i ? n.toFixed(n < 10 ? 1 : 0) : n) + ' ' + u[i];
     }
     const mineToo = (x) => !S.session.admin && x.authorKey === S.session.who.key;   // your own change: someone else has to approve it
+    /* Aa Article titles show in title case: every main word capitalised, short joining words ("a", "of", "in", "the"…) lowercase
+       unless they start or end the title or follow a colon or dash. Only lowercase first letters change: "ACA", "8am™", "(Filevine)",
+       "iPhone" and anything else already capitalised stay as written, and the stored title is never changed (editing shows it as typed). */
+    const MINOR = new Set(['a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'yet', 'as', 'at', 'by', 'in', 'of', 'off', 'on', 'per', 'to', 'up', 'via', 'vs', 'vs.', 'with', 'from', 'into', 'onto', 'over']);
+    function titleCase(t) {
+        const words = String(t || '').split(/(\s+)/);
+        const last = words.length - 1;
+        let afterBreak = true;
+        return words.map((w, i) => {
+            if (/^\s+$/.test(w) || !w) return w;
+            const core = w.replace(/^[^A-Za-z]+/, '').toLowerCase();
+            const keepSmall = !afterBreak && i !== last && MINOR.has(core.replace(/[^a-z.]+$/, ''));
+            afterBreak = /[:—–-]$/.test(w) || w === '-' || w === '—' || w === '–';
+            if (keepSmall || /[A-Z]/.test(w.slice(1)) && /[a-z]/.test(w.charAt(0)) && !/-/.test(w)) return w;   // a minor word, or "iPhone"-style
+            return w.replace(/(^|[-/(“"'‘])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+        }).join('');
+    }
     const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
     const TYPE_ICON = { 'Training video': '▶', 'SOP': '📘', 'Guide': '🧭', 'Checklist': '☑️', 'Template': '🧩', 'Reference': '📚', 'Tip': '💡', 'Lesson learned': '🎓', 'Question': '❓' };
     const FILE_ICON = { video: '🎬', audio: '🎧', pdf: '📄', image: '🖼️', doc: '📝', sheet: '📊', slides: '📽️', archive: '🗜️', other: '📎' };
@@ -77,7 +94,7 @@
         const snip = e.snippet ? `<p class="snip">${esc(e.snippet).replace(/\[\[/g, '<mark>').replace(/\]\]/g, '</mark>')}</p>` : (e.summary ? `<p>${esc(e.summary)}</p>` : '');
         return `<a class="item" href="#/e/${e.id}">
             <span class="ic${e.hasVideo ? ' video' : e.official ? ' official' : ''}" aria-hidden="true">${e.hasVideo ? '▶' : TYPE_ICON[e.type] || '📄'}</span>
-            <span><h3>${esc(e.title)}</h3>${snip}
+            <span><h3>${esc(titleCase(e.title))}</h3>${snip}
             <span class="meta-line">
                 ${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}
                 ${showStatus ? statusBadge(e.status) : ''}
@@ -348,7 +365,7 @@
         const [, colour] = shelfStyle(e.collection);
         return `<a class="hcard" href="#/e/${e.id}" style="--cat:${colour}">
             <span class="hcard-top">${catBadge(e)}${e.readMin ? `<span class="rt" title="Reading time, from the article’s length">⏱ ${e.readMin} min</span>` : ''}</span>
-            <h3>${esc(e.title)}</h3>
+            <h3>${esc(titleCase(e.title))}</h3>
             ${e.summary ? `<p class="hsum">${esc(e.summary)}</p>` : ''}
             <span class="hcard-bar"><span class="hmeta">${e.official ? '<span class="ok">✓ Official</span>' : ''}${e.hasVideo ? '<span>▶ Video</span>' : ''}${e.fileCount ? `<span>📎 ${plural(e.fileCount, 'file')}</span>` : ''}<span aria-label="${readsLabel(e.views)}">👁 ${e.views}</span></span><span class="hread" aria-hidden="true">Read →</span></span>
         </a>`;
@@ -362,7 +379,7 @@
             <div class="spot-body">
                 <div class="spot-head">${catBadge(e)}${hook.length ? `<span class="spot-hook">${hook.join(' <span aria-hidden="true">•</span> ')}</span>` : ''}
                     <a class="btn spot-open" href="#/e/${e.id}">Open Playbook <span aria-hidden="true">→</span></a></div>
-                <h2 id="spot-title"><a href="#/e/${e.id}">${esc(e.title)}</a></h2>
+                <h2 id="spot-title"><a href="#/e/${e.id}">${esc(titleCase(e.title))}</a></h2>
                 ${lead ? `<div class="spot-take"><b>Key Takeaway <span aria-hidden="true">/</span> Why It Matters</b><p>${esc(lead)}</p></div>` : ''}
             </div>
         </article>`;
@@ -637,7 +654,7 @@
     async function entry(id) {
         const r = await api(`/api/entries/${id}`);
         const e = r.entry, s = S.session, own = e.authorKey === s.who.key;
-        setTitle(e.title);
+        setTitle(titleCase(e.title));
         // In "Switch view" (an admin previewing the trainee view) the staff tools stay hidden.
         const staff = r.can.staff && (s.admin || s.reviewer), adminUser = r.can.admin && s.admin;
         let banner = '';
@@ -654,7 +671,7 @@
                 <article>
                     <header class="entry-head">
                         <div class="row">${e.official ? '<span class="badge official">✓ Official</span>' : ''}${e.hasVideo ? '<span class="badge video">Video</span>' : ''}<span class="badge">${esc(e.type)}</span>${e.featured ? '<span class="badge">★ Featured</span>' : ''}${statusBadge(e.status)}</div>
-                        <h1>${esc(e.title)}</h1>
+                        <h1>${esc(titleCase(e.title))}</h1>
                         ${e.summary ? `<p class="lead">${esc(e.summary)}</p>` : ''}
                     </header>
                     ${mediaHTML(e.files, e.body)}
@@ -757,7 +774,7 @@
         setTitle(e ? (suggesting ? 'Suggest an edit' : 'Edit') + ': ' + e.title : 'Add to the library');
         const d = e || { collection: (q && q.get('collection')) || '', section: '', type: '', title: '', summary: '', body: '', tags: [], credits: [], files: [], official: false };
         const files = d.files.map(f => ({ ...f, state: 'ready' }));
-        view(`<div class="crumbs"><a href="#/">Library</a><span>›</span>${e ? `<a href="#/e/${id}">${esc(e.title)}</a><span>›</span><span>${suggesting ? 'Suggest an edit' : 'Edit'}</span>` : '<span>Add to the library</span>'}</div>
+        view(`<div class="crumbs"><a href="#/">Library</a><span>›</span>${e ? `<a href="#/e/${id}">${esc(titleCase(e.title))}</a><span>›</span><span>${suggesting ? 'Suggest an edit' : 'Edit'}</span>` : '<span>Add to the library</span>'}</div>
             <h1>${e ? (suggesting ? 'Suggest an edit' : 'Edit this entry') : 'Add to the library'}</h1>
             <p class="muted" style="margin-top:0">${direct ? 'Your changes go live as soon as you save. The previous version stays in the history.'
                 : suggesting ? 'Your changes are saved as a suggestion. They need approval, and the current version stays up until then.'
@@ -1250,7 +1267,7 @@
     async function history(id) {
         const r = await api(`/api/entries/${id}/history`);
         setTitle('History: ' + r.entry.title);
-        view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><a href="#/e/${id}">${esc(r.entry.title)}</a><span>›</span><span>History</span></div>
+        view(`<div class="crumbs"><a href="#/">Library</a><span>›</span><a href="#/e/${id}">${esc(titleCase(r.entry.title))}</a><span>›</span><span>History</span></div>
             <h1>Every version</h1>
             <p class="muted" style="margin-top:0">Nothing is overwritten. Each save adds a version, and ${S.session.admin ? 'you can restore any earlier one.' : S.session.reviewer ? 'a restore waits for approval like any other edit.' : 'reviewers and admins can restore any earlier one.'}</p>
             <div class="versions">${r.versions.map(v => { const [l, c] = REV_LABEL[v.status] || [v.status, '']; return `<div class="version">

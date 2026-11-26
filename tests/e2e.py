@@ -289,7 +289,7 @@ with sync_playwright() as p:
     res = jget(a, B + '/api/resolve?ref=seed:lesson-3p-claims-what-to-share')
     check(res.get('success') and res.get('id'), 'a bundled document resolves by its file name')
     a.goto(B + '/#/doc/lesson-3p-claims-what-to-share')
-    a.wait_for_function("location.hash.startsWith('#/e/') && document.getElementById('app').innerText.includes('share with the insurer')", timeout=15000)
+    a.wait_for_function("location.hash.startsWith('#/e/') && document.getElementById('app').innerText.toLowerCase().includes('share with the insurer')", timeout=15000)
     check(a.evaluate('location.hash') == f"#/e/{res.get('id')}", 'a #/doc/ link opens that article')
 
     # bundled pages add themselves when a link asks for one (src/bundled.js): a training topic that was never imported
