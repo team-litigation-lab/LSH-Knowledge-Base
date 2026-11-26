@@ -48,8 +48,8 @@
       { icon: '💬', title: 'Replies, votes and your contributions', points: [
           'Tenured team members can reply to an entry with their own experience, or tell us what is out of date. Notes appear after a reviewer approves them.',
           'Helpful votes and view counts show which entries the community uses most.',
-          'My contributions lists everything you added, suggested or replied; Contributors lists the whole community.'],
-        where: 'An entry → Reply · Top bar → My contributions · Contributors.',
+          'My Contributions lists everything you added, suggested or replied; Contributors lists the whole community.'],
+        where: 'An entry → Reply · Top bar → My Contributions · Contributors.',
         tip: 'A good reply says what you did, what happened and what you\'d do next time.' },
       { icon: '✅', title: 'Reviewers', points: [
           'Trusted VAs can be made reviewers by an admin.',
