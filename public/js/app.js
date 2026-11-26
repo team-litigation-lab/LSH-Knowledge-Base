@@ -425,10 +425,12 @@
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
+        <div class="hub-top${spot && t.entries ? ' pair' : ''}">
         ${spot ? `<section class="section hub-spot">${spotlightHTML(spot)}</section>`
             : mode === 'featured' && t.entries ? `<div class="card section"><p style="margin:0">Nothing is starred yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools) and it leads this page.' : ''}</p></div>` : ''}
         ${t.entries ? `<section class="section" aria-labelledby="qs-title"><h2 id="qs-title" class="hub-h"><span>Quick-Start Collections</span></h2>
             <div class="qs-strip" role="group" aria-label="Reading paths">${tiles}</div></section>` : ''}
+        </div>
         ${t.entries ? `<section class="section" aria-labelledby="hub-list-title">
             <div class="hub-bar"><h2 id="hub-list-title" class="hub-h"><span></span></h2>
                 <label class="sr" for="az-cat">Category</label>

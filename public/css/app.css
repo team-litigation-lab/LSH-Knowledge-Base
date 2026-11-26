@@ -217,6 +217,18 @@ textarea.i{resize:vertical;line-height:1.55;}
 .cat-pill .sep{margin:0 5px;opacity:.7;}
 
 /* Quick-Start: a row of reading paths that scrolls sideways when it runs out of room */
+/* ⬌ On a wide screen the Editor's Pick and Quick-Start Collections share one row (the tiles two by two beside the pick),
+   so the Must-Read list starts higher; narrower screens stack them as before */
+.hub-top{min-width:0;max-width:100%;}   /* lets the scrolling Quick-Start row shrink to the screen on a phone */
+@media (min-width:1200px){
+  .hub-top.pair{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:stretch;margin-top:28px;}
+  .hub-top.pair > .section{margin-top:0;display:flex;flex-direction:column;min-width:0;}
+  .hub-top.pair .spot{flex:1 1 auto;}
+  .hub-top.pair .spot h2{font-size:clamp(24px,1.8vw,32px);}
+  .hub-top.pair .spot-take p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden;}
+  .hub-top.pair .qs-strip{flex:1 1 auto;grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;padding:0 2px 4px;}
+  .hub-top.pair .hub-h{margin-bottom:12px;}
+}
 .qs-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:14px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x proximity;scrollbar-width:thin;}
 .qs-tile{scroll-snap-align:start;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;cursor:pointer;
   background:#fff;border:1px solid #E2DACB;border-radius:18px;padding:16px 18px;color:var(--ink);
