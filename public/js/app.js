@@ -435,7 +435,6 @@
             <div class="hub-bar"><h2 id="hub-list-title" class="hub-h"><span></span></h2>
                 <label class="sr" for="az-cat">Category</label>
                 <select class="i lib-cat" id="az-cat"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
-                <span class="muted lib-count" id="az-count"></span>
                 <button type="button" class="btn small" id="hub-clear" hidden>Clear filters</button></div>
             <div id="az-list"></div></section>` : ''}
         ${t.entries && mode !== 'featured' ? `<section class="section two"><div><h2 class="hub-h"><span>Recently added</span></h2><div class="hub-col">${L.recent.map(hubCard).join('')}</div></div><div><h2 class="hub-h"><span>Most helpful</span></h2><div class="hub-col">${L.popular.map(hubCard).join('')}</div></div></section>` : ''}
@@ -468,7 +467,6 @@
             app.querySelectorAll('[data-lens]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lens === st.lens)));
             app.querySelectorAll('[data-path]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.path === st.path)));
             document.querySelector('#hub-list-title span').textContent = path ? path.label.replace(/^\S+\s/, '') + ' · reading path' : lens ? lens.label.replace(/^\S+\s/, '') : 'The whole library';
-            document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
             document.getElementById('hub-clear').hidden = !(st.lens !== (mode === 'featured' ? 'must' : '') || st.path || st.cat);
             const slice = rows.slice(0, st.shown);
             listHost.innerHTML = rows.length
