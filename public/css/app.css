@@ -440,3 +440,11 @@ table.t th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:va
 .on-page a{color:var(--ink);text-decoration:none;padding:3px 8px;border-radius:6px;}
 .on-page a:hover{background:var(--line-soft);}
 .on-page a.l3{padding-left:20px;font-size:13px;color:var(--muted);}
+
+/* ✨ The LSH frame, as on the Academy Index and LSH Elev8 cards: a thick rounded outline, navy along the top fading to gold at
+   the bottom, on the spotlight, the Quick-Start tiles and every article card. A Coming Soon tile keeps its dashed, quieter look. */
+.spot,.hcard,.qs-tile:not(.soon){border:4px solid transparent !important;
+  background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#1E2340 0%,#2c3360 30%,#a8692f 78%,#DB8437 100%) border-box !important;}
+.hcard:hover,.qs-tile:not(.soon):hover{border-color:transparent !important;}
+.qs-tile[aria-pressed="true"]{box-shadow:0 0 0 2px #DB8437,0 22px 38px -20px rgba(38,43,69,.5);}
+@media (max-width:420px){.spot,.hcard,.qs-tile:not(.soon){border-width:3px !important;}}
