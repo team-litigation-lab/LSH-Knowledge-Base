@@ -385,7 +385,6 @@
                 <input id="lib-q" type="search" placeholder="What do you want to master today? Search playbooks, SOPs, templates..." autocomplete="off">
                 <button class="btn" type="submit">Search</button></form>
             ${t.entries ? `<div class="hchips" role="group" aria-label="Filter the library">${chips}</div>` : ''}
-            <div class="stats hub-stats"><span><b>${t.entries}</b>${t.entries === 1 ? 'entry' : 'entries'}</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
         </section>
         ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
