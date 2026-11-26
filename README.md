@@ -64,6 +64,16 @@ LSH Community Library: official SOPs, training videos, guides and know-how from 
 | `wrangler.jsonc` | Worker config and bindings |
 | `.github/workflows/checks.yml` | The checks GitHub runs on every pull request and push |
 
+## The front page (Featured and Library)
+
+LSH Atlas opens on **Featured** (`#/featured`); **Library** (`#/`) is the same page with no filter on, plus Recently added and Most helpful. Both are `hub()` in `public/js/app.js`. Every number on it is the entry's own data:
+
+- **Editor's Pick** is the newest starred entry (★ Feature Article, the `featured` flag), the first of `/api/library`'s `featured` list. Its *Key Takeaway* is the summary, or the first real paragraph of the body when there is no summary.
+- **⏱ N min** is the live body's word count (from the search index) at 200 words a minute, worked out by the Worker (`readMin`); it isn't shown when the body is empty. **📎** is the files attached to the live version, **👁** the reads counted on the article, **✓ Official** the official flag. The files are shown in the page, never downloaded, so the spotlight says "Attached Files".
+- The **filter chips** read the shelf (collection), section, title, tags, type and summary. Shelves are named by program, not practice area, so: **✨ Must-Read** = starred; **⚖️ Personal Injury** = Case Management, Intake, Insurance, Provider, Medsum & Demands or Lien shelves, or words like "personal injury", "injury", "accident", "PI"; **🌐 Cross-Practice** = Practice Areas, Litigation, Calendar, Reception, EA / PA, Foundational or General shelves (or a practice-area name such as family law or mass tort), unless it names personal injury; **⚡ Beyond-Legal Ops** = Tools & Systems or Productivity & Soft Skills shelves, or words like tools, software, systems, automation, productivity; **📎 Has Templates** = has files attached, or says "template".
+- The **Quick-Start Collections** are reading paths over the same fields: **🚀 Day-1 Essentials** (Foundational, or "Day 1", onboarding, overview, essentials, introduction, getting started); **📞 Intake & Call Scripts** (Intake or Reception, or intake, call, script, phone); **📑 Demand & Liens** (Medsum & Demands or Lien, or demand, lien, subrogation, reduction); **🤖 Automation & Ops** (Tools & Systems, or automation, Zapier, workflow, tools, software, systems, operations). A path with nothing in it shows *Coming soon* and can't be opened.
+- The chip, path and category stay in the address (`?lens=`, `?path=`, `?cat=`), so Back from an article returns to the same view.
+
 ## Comments · update current info
 
 Every page ends with a **Comments · update current info** section. Tenured team members, reviewers and admins can send a note that something is out of date and what it should say now (`kind` = `update`), or add a plain comment; Info Access readers see the notes but cannot send any (a note is a suggested edit, so it follows the same rule). A note waits for a reviewer (it appears in the review queue with an *Update to current info* badge) unless a reviewer or admin wrote it. Once approved it shows on the page; a reviewer updates the page and presses **Mark page updated**, which adds a *✓ Page updated* badge. The `kind` column is added to `kb_comments` automatically.

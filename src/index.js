@@ -188,11 +188,16 @@ const shapeRow = (r) => ({
     hasVideo: !!r.has_video, fileCount: r.file_count || 0, author: r.author_name, batch: r.author_batch || '',
     authorKey: r.author_key, createdAt: r.created_at, updatedAt: r.updated_at, publishedAt: r.published_at,
     reviewNote: r.review_note || '', views: r.views || 0, helpful: r.helpful || 0, comments: r.comments || 0,
-    ...(r.snip ? { snippet: r.snip } : {})
+    // Reading time isn't stored: it is the live body's word count (whitespace-separated, from the search index) at 200 words a minute.
+    readMin: r.words > 0 ? Math.max(1, Math.round(r.words / 200)) : 0,
+    ...(r.snip ? { snippet: r.snip } : {}), ...(r.lead ? { lead: r.lead } : {})
 });
 const STATS_JOIN = `LEFT JOIN kb_stats s ON s.article_ref = 'e:' || e.id
     LEFT JOIN (SELECT article_ref, COUNT(*) AS n FROM kb_comments WHERE status = 'approved' GROUP BY article_ref) c ON c.article_ref = 'e:' || e.id`;
-const LIST_COLS = `e.*, COALESCE(s.views, 0) AS views, COALESCE(s.helpful, 0) AS helpful, COALESCE(c.n, 0) AS comments`;
+const LIST_COLS = `e.*, COALESCE(s.views, 0) AS views, COALESCE(s.helpful, 0) AS helpful, COALESCE(c.n, 0) AS comments,
+    (SELECT CASE WHEN trim(fw.body) = '' THEN 0 ELSE length(fw.body) - length(replace(replace(replace(fw.body, char(10), ''), char(9), ''), ' ', '')) + 1 END FROM lib_fts fw WHERE fw.rowid = e.id) AS words`;
+// The start of the live body, for a featured card whose entry has no summary to preview.
+const LEAD_COL = `(SELECT substr(fl.body, 1, 1200) FROM lib_fts fl WHERE fl.rowid = e.id AND COALESCE(e.summary, '') = '') AS lead`;
 
 async function library({ db, reader }) {
     // Every one of these is independent, and this runs on the first screen of every visit, so they go
@@ -202,7 +207,7 @@ async function library({ db, reader }) {
             FROM lib_collections c LEFT JOIN lib_entries e ON e.collection = c.slug AND e.status = 'published'
             WHERE c.archived = 0 GROUP BY c.slug ORDER BY c.sort, c.name`),
         // Featured is the screen LSH Atlas opens on: fifteen cards, three rows of five.
-        db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.featured = 1 ORDER BY e.updated_at DESC LIMIT 15`),
+        db.prepare(`SELECT ${LIST_COLS}, ${LEAD_COL} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.featured = 1 ORDER BY e.updated_at DESC LIMIT 15`),
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY e.published_at DESC LIMIT 8`),
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' AND e.has_video = 1 ORDER BY e.published_at DESC LIMIT 6`),
         db.prepare(`SELECT ${LIST_COLS} FROM lib_entries e ${STATS_JOIN} WHERE e.status = 'published' ORDER BY (COALESCE(s.helpful, 0) * 5 + COALESCE(s.views, 0)) DESC LIMIT 6`),

@@ -76,60 +76,6 @@
     }
     const listHTML = (items, opts) => items.length ? `<div class="list">${items.map(e => itemHTML(e, opts)).join('')}</div>` : '';
 
-    /* ---------- the card wall ----------
-       The library and Featured show their entries as a wall of cards: five across, four rows
-       down, one screenful at a time. fitTiles() ends the last row at the bottom of the window,
-       so the wall never runs past the screen; the rest of the entries are a page away. */
-    const WALL_PAGE = 20;   // 5 cards across × 4 rows down
-    function fitTiles() {
-        document.querySelectorAll('.tiles').forEach(g => {
-            g.style.height = '';
-            g.style.minHeight = '';
-            if (window.innerWidth <= 560) return;   // one column: let it scroll
-            const top = g.getBoundingClientRect().top;
-            const pager = g.parentElement && g.parentElement.querySelector('.pager');
-            const app = document.getElementById('app');
-            const section = g.closest('.section');
-            // What sits under the wall: the pager, and — when the wall is the last thing on the
-            // page — the page's own bottom padding. When more sections follow (Recently added and
-            // Most helpful do, on the library page) the wall still ends at the fold and they
-            // begin a scroll below it.
-            const tail = section && section.nextElementSibling
-                ? 16 : (app ? parseFloat(getComputedStyle(app).paddingBottom) || 0 : 24);
-            const below = (pager ? pager.offsetHeight + 12 : 0) + tail
-                + 8;   // a little slack, so rounding in the row heights can't start a scrollbar
-            const h = window.innerHeight - top - below;
-            // The wall fills the screen and stops there: summaries are clipped to three lines
-            // (see .tiles .item p in app.css), so the rows divide the height evenly and the
-            // whole page fits without a scrollbar.
-            if (h > 280) { g.style.height = h + 'px'; g.style.minHeight = h + 'px'; }
-        });
-    }
-    window.addEventListener('resize', fitTiles);
-    // Draws `items` into the element with that id as a paged wall of cards. Call it again with a
-    // new list (the category picker does) and the wall starts over at the first page.
-    function wall(id, items, opts) {
-        const host = document.getElementById(id);
-        if (!host) return;
-        const pages = Math.max(1, Math.ceil(items.length / WALL_PAGE));
-        let page = 0;
-        function draw() {
-            if (!items.length) { host.innerHTML = '<p class="muted">Nothing here yet.</p>'; return; }
-            const slice = items.slice(page * WALL_PAGE, (page + 1) * WALL_PAGE);
-            host.innerHTML = `<div class="tiles">${slice.map(e => itemHTML(e, opts)).join('')}</div>`
-                + (pages > 1 ? `<div class="pager">
-                    <button class="btn" type="button" data-pg="-1"${page === 0 ? ' disabled' : ''}>← Previous</button>
-                    <span>Page ${page + 1} of ${pages} · ${plural(items.length, 'entry', 'entries')}</span>
-                    <button class="btn" type="button" data-pg="1"${page >= pages - 1 ? ' disabled' : ''}>Next →</button></div>` : '');
-            host.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => {
-                page = Math.min(pages - 1, Math.max(0, page + Number(b.dataset.pg)));
-                draw();
-            });
-            fitTiles();
-        }
-        draw();
-    }
-
     /* ---------- session / chrome ---------- */
     // "Switch view": an admin can see LSH Atlas exactly as a trainee (Info Access) sees it.
     // The real session stays in S.real; the pages read S.session, which is the masked copy while the switch is on.
@@ -273,7 +219,7 @@
             chrome(true);
             const id = Number(parts[1]);
             switch (parts[0]) {
-                case undefined: return await home();
+                case undefined: return await hub('library', q);
                 case 'c': return await collection(parts[1], q);
                 case 'search': return await search(q, false);
                 case 'videos': q.set('video', '1'); return await search(q, true);
@@ -292,7 +238,7 @@
                     const r = await api('/api/resolve?ref=' + encodeURIComponent('tettra:' + parts[1]));
                     return location.replace('#/e/' + r.id);
                 }
-                case 'featured': return await featuredView();
+                case 'featured': return await hub('featured', q);
                 case 'glossary': return await glossaryView(q);
                 case 'v': return await version(id);
                 case 'new': return await editor(null, q);
@@ -301,7 +247,7 @@
                 case 'review': return await review();
                 case 'admin': return await admin();
                 case 'blueprint': {   // the Main Portal's 🧭 Blueprint page links here; nothing in the library does
-                    await home();
+                    await hub('library', q, '#/blueprint');
                     if (window.LSHBlueprint) LSHBlueprint.open();
                     return;
                 }
@@ -321,51 +267,192 @@
     }
     window.addEventListener('beforeunload', (e) => { if (leaveGuard) { e.preventDefault(); e.returnValue = ''; } });
 
-    /* ---------- home ---------- */
-    async function home() {
-        // Every published entry, A to Z by title, read each time the home page opens so new uploads slot
-        // into place on their own. It doesn't depend on the library, so the two are asked for together.
+    /* ---------- the hub: the library home (#/) and Featured (#/featured), the screen LSH Atlas opens on ----------
+       One page in two modes. Featured opens with the ✨ Must-Read lens on (the starred articles); the
+       library opens on everything. Every badge reads the entry's own data: reading time is the live
+       body's word count at 200 words a minute (the Worker works it out), 📎 is the files attached to the
+       live version, 👁 the reads counted on the article, ✓ Official the entry's official flag. */
+    // A colour and an icon for each shelf, so a card says where it lives at a glance. A shelf someone
+    // typed in themselves takes one of the same colours by its name. Every colour is dark enough for AA
+    // text on its own 10% tint.
+    const SHELF = {
+        foundational: ['🎓', '#3C4268'], reception: ['☎️', '#1F5E7A'], calendar: ['📅', '#4A4E94'], intake: ['📞', '#1E6B5A'],
+        insurance: ['🛡️', '#2C4F86'], provider: ['🩺', '#1F6A70'], lien: ['⚖️', '#8F4512'], 'case-management': ['🗂️', '#262B45'],
+        'ea-pa': ['💼', '#5B3F8A'], litigation: ['🏛️', '#7F3232'], demands: ['📑', '#8A3F12'], 'practice-areas': ['🌐', '#3F5A26'],
+        tools: ['🛠️', '#3A4D63'], skills: ['⚡', '#6A4D0C'], general: ['📚', '#4A546B']
+    };
+    const SHELF_SPARE = ['#3C4268', '#1E6B5A', '#2C4F86', '#8F4512', '#5B3F8A', '#7F3232', '#3F5A26', '#3A4D63'];
+    function shelfStyle(slug) {
+        if (SHELF[slug]) return SHELF[slug];
+        let h = 0; for (const ch of String(slug)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+        return ['📁', SHELF_SPARE[h % SHELF_SPARE.length]];
+    }
+    // Everything a lens or a reading path looks through: the shelf's name, the section, the title,
+    // the tags, the type and the summary, in lower case.
+    const hay = (e) => [colName(e.collection), e.section, e.title, e.tags.join(' '), e.type, e.summary].join(' ').toLowerCase();
+    const inShelf = (e, ...slugs) => slugs.includes(e.collection);
+    const PI_WORDS = /personal injury|\binjur|\baccident|\bpi\b/;
+    const isPI = (e) => inShelf(e, 'case-management', 'lien', 'demands', 'provider', 'insurance', 'intake') || PI_WORDS.test(hay(e));
+    // The filter chips under the search. Shelves are named by program, not practice area, so the
+    // practice-area chips read the shelf and the words on the entry (documented in the README).
+    const LENSES = [
+        { key: 'must', label: '✨ Must-Read', hint: 'Starred by the team as essential reading', test: (e) => e.featured },
+        { key: 'pi', label: '⚖️ Personal Injury', hint: 'Personal-injury case work: case management, intake, insurance, providers, demands and liens, or anything that names personal injury', test: isPI },
+        { key: 'cross', label: '🌐 Cross-Practice', hint: 'Work that carries across practice areas: practice areas, litigation, calendaring, reception, EA / PA, foundational and general', test: (e) => !PI_WORDS.test(hay(e)) && (inShelf(e, 'practice-areas', 'litigation', 'calendar', 'reception', 'ea-pa', 'foundational', 'general') || /practice area|family law|immigration|estate planning|business law|mass tort|real estate/.test(hay(e))) },
+        { key: 'ops', label: '⚡ Beyond-Legal Ops', hint: 'Tools, systems, productivity and soft skills', test: (e) => inShelf(e, 'tools', 'skills') || /\btools?\b|software|system|automat|productivity|soft skill|time management|operations/.test(hay(e)) },
+        { key: 'files', label: '📎 Has Templates', hint: 'Has files attached, or is a template', test: (e) => e.fileCount > 0 || /template/.test(hay(e)) }
+    ];
+    // The Quick-Start reading paths: each is a search over the same fields, A to Z. A path with nothing in it says so.
+    const PATHS = [
+        { key: 'day1', label: '🚀 Day-1 Essentials', blurb: 'Overviews, onboarding and the first lessons', test: (e) => inShelf(e, 'foundational') || /\bday[ -]?1\b|onboarding|overview|essentials|introduction|getting started|orientation/.test(hay(e)) },
+        { key: 'intake', label: '📞 Intake & Call Scripts', blurb: 'New-client intake, calls and what to say', test: (e) => inShelf(e, 'intake', 'reception') || /\bintake|\bcalls?\b|script|phone|reception/.test(hay(e)) },
+        { key: 'demand', label: '📑 Demand & Liens', blurb: 'Demand letters, liens, reductions and subrogation', test: (e) => inShelf(e, 'demands', 'lien') || /\bdemand|\blien|subrogation|reduction/.test(hay(e)) },
+        { key: 'auto', label: '🤖 Automation & Ops', blurb: 'Tools, systems and the workflows behind them', test: (e) => inShelf(e, 'tools') || /automat|zapier|workflow|\btools?\b|software|\bsystems?\b|operations/.test(hay(e)) }
+    ];
+    const pillText = (e) => colName(e.collection) + (e.section ? ' › ' + e.section : '');
+    const readsLabel = (n) => plural(n, 'read');
+    // The start of the body, as plain words, for a featured entry with no summary: headings and
+    // notes in a quote are skipped, so the preview is the first real paragraph.
+    function leadText(e) {
+        if (e.summary) return e.summary;
+        const paras = String(e.lead || '').split(/\n\s*\n/).map(p => p.split('\n').filter(l => !/^\s*(#{1,6}\s|>)/.test(l)).join(' '))
+            .map(p => window.KBmd.plain(p)).filter(Boolean);
+        const t = paras.find(p => p.length >= 60) || paras[0] || '';
+        return t.length > 300 ? t.slice(0, 300).replace(/\s+\S*$/, '') + '…' : t;
+    }
+    function catBadge(e) {
+        const [icon] = shelfStyle(e.collection);
+        return `<span class="cat-ic" aria-hidden="true">${e.hasVideo ? '▶' : icon}</span><span class="cat-pill" title="${esc(pillText(e))}">${esc(colName(e.collection))}${e.section ? `<span class="sep" aria-hidden="true">›</span>${esc(e.section)}` : ''}</span>`;
+    }
+    function hubCard(e) {
+        const [, colour] = shelfStyle(e.collection);
+        return `<a class="hcard" href="#/e/${e.id}" style="--cat:${colour}">
+            <span class="hcard-top">${catBadge(e)}${e.readMin ? `<span class="rt" title="Reading time, from the article’s length">⏱ ${e.readMin} min</span>` : ''}</span>
+            <h3>${esc(e.title)}</h3>
+            ${e.summary ? `<p class="hsum">${esc(e.summary)}</p>` : ''}
+            <span class="hcard-bar"><span class="hmeta">${e.official ? '<span class="ok">✓ Official</span>' : ''}${e.hasVideo ? '<span>▶ Video</span>' : ''}${e.fileCount ? `<span>📎 ${plural(e.fileCount, 'file')}</span>` : ''}<span aria-label="${readsLabel(e.views)}">👁 ${e.views}</span></span><span class="hread" aria-hidden="true">Read →</span></span>
+        </a>`;
+    }
+    function spotlightHTML(e) {
+        const [, colour] = shelfStyle(e.collection);
+        const hook = [e.readMin ? `⏱ ${e.readMin} Min Read` : '', e.fileCount ? `📎 ${e.fileCount} Attached ${e.fileCount === 1 ? 'File' : 'Files'}` : '', e.hasVideo ? '▶ Video' : '', e.official ? '✓ Official' : ''].filter(Boolean);
+        const lead = leadText(e);
+        return `<article class="spot" style="--cat:${colour}" aria-labelledby="spot-title">
+            <div class="spot-ribbon">⭐ Editor’s Pick <span aria-hidden="true">//</span> Essential Read</div>
+            <div class="spot-body">
+                <div class="spot-head">${catBadge(e)}${hook.length ? `<span class="spot-hook">${hook.join(' <span aria-hidden="true">•</span> ')}</span>` : ''}</div>
+                <h2 id="spot-title"><a href="#/e/${e.id}">${esc(e.title)}</a></h2>
+                ${lead ? `<div class="spot-take"><b>Key Takeaway <span aria-hidden="true">/</span> Why It Matters</b><p>${esc(lead)}</p></div>` : ''}
+            </div>
+            <footer class="spot-foot"><span class="spot-by">${esc(e.author)} <span aria-hidden="true">•</span> ${fmtDate(e.publishedAt || e.updatedAt)} <span aria-hidden="true">•</span> <span aria-label="${readsLabel(e.views)}">👁 ${readsLabel(e.views)}</span></span>
+                <a class="btn spot-open" href="#/e/${e.id}">Open Playbook <span aria-hidden="true">→</span></a></footer>
+        </article>`;
+    }
+    const HUB_PAGE = 12;   // cards per "Show more"
+    async function hub(mode, q, at) {   // at: the address it is drawn for, when that isn't its own (#/blueprint)
+        // Every published entry, A to Z by title, read each time the page opens so new uploads slot in on their own.
+        const base = mode === 'featured' ? '#/featured' : '#/';
+        const onHub = () => (location.hash.split('?')[0] || '#/') === (at || base);
         const [L, all] = await Promise.all([ensureLib(true), api('/api/entries?all=1&sort=az')]);
-        chrome(true); setTitle('');
+        if (!onHub()) return;   // the reader moved on while the library loaded: don't draw over the page they went to
+        chrome(true); setTitle(mode === 'featured' ? 'Featured' : '');
         const t = L.totals;
-        // The search takes the place of the list's heading, in line with the category picker: the two
-        // controls the list is driven by, side by side above it.
-        const libBar = `<div class="lib-bar">
-            <form id="lib-search-form" role="search" class="lib-search"><label class="sr" for="lib-q">Search the library</label>
-                <input id="lib-q" type="search" placeholder="Search the library: “lien reduction”, “intake call”, “itemized bills”…" autocomplete="off">
-                <button class="btn primary" type="submit">Search</button></form>
-            <label class="sr" for="az-cat">Category</label>
-            <select class="i lib-cat" id="az-cat"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
-            <span class="muted lib-count" id="az-count">${plural(all.total, 'entry', 'entries')}</span>
-        </div>`;
+        const entries = all.entries;
+        const spot = L.featured[0] || null;   // the #1 starred article (the newest starred)
+        const known = (list, k) => list.some(x => x.key === k);
+        const lensQ = q.get('lens');
+        const st = {
+            lens: lensQ === 'all' ? '' : known(LENSES, lensQ) ? lensQ : (mode === 'featured' ? 'must' : ''),
+            path: known(PATHS, q.get('path')) ? q.get('path') : '',
+            cat: L.collections.some(c => c.slug === q.get('cat')) ? q.get('cat') : '',
+            shown: HUB_PAGE
+        };
+        if (st.path) st.lens = '';
+        const pathCount = Object.fromEntries(PATHS.map(p => [p.key, entries.filter(p.test).length]));
+        const lensCount = Object.fromEntries(LENSES.map(l => [l.key, entries.filter(l.test).length]));
+        const chips = LENSES.map(l => `<button type="button" class="hchip" data-lens="${l.key}" aria-pressed="false" title="${esc(l.hint)}">${l.label}<span class="n">${lensCount[l.key]}</span></button>`).join('');
+        const tiles = PATHS.map(p => pathCount[p.key]
+            ? `<button type="button" class="qs-tile" data-path="${p.key}" aria-pressed="false"><b>${p.label}</b><span>${esc(p.blurb)}</span><em>${plural(pathCount[p.key], 'guide')} →</em></button>`
+            : `<div class="qs-tile soon" aria-disabled="true"><b>${p.label}</b><span>${esc(p.blurb)}</span><em>Coming soon</em></div>`).join('');
         view(`
-        <section class="hero">
-            <h1>LSH Community Library</h1>
-            <p>Official SOPs, training videos, guides and hard-won know-how from across LSH, kept in one place and never lost.</p>
-            <div class="stats"><span><b>${t.entries}</b>entries</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
+        <div class="hub">
+        <section class="hero hub-hero" aria-labelledby="hub-title">
+            <span class="hub-kicker">LSH Executive Knowledge Engine</span>
+            <h1 id="hub-title">LSH Atlas™</h1>
+            <p class="hub-sub">Master the exact workflows, scripts, and legal playbooks top firms rely on—distilled into fast, actionable guides.</p>
+            <form id="lib-search-form" role="search" class="hub-search"><label class="sr" for="lib-q">Search the library</label>
+                <span class="hub-search-ic" aria-hidden="true">⌕</span>
+                <input id="lib-q" type="search" placeholder="What do you want to master today? Search playbooks, SOPs, templates..." autocomplete="off">
+                <button class="btn" type="submit">Search</button></form>
+            ${t.entries ? `<div class="hchips" role="group" aria-label="Filter the library">${chips}</div>` : ''}
+            <div class="stats hub-stats"><span><b>${t.entries}</b>${t.entries === 1 ? 'entry' : 'entries'}</span><span><b>${t.videos}</b>training videos</span><span><b>${t.files}</b>files</span><span><b>${t.people}</b>contributors</span></div>
         </section>
         ${!S.session.contributor ? '<p class="note" style="margin-top:16px"><b>Info Access:</b> you can read and search everything here. Only tenured team members can add to or edit the library, and every change is approved before it goes live. Ask an admin if you should have tenured access.</p>' : ''}
         ${L.mine.pending || L.mine.rejected ? `<p class="note" style="margin-top:16px">You have ${L.mine.pending ? plural(L.mine.pending, 'contribution') + ' waiting for review' : ''}${L.mine.pending && L.mine.rejected ? ' and ' : ''}${L.mine.rejected ? plural(L.mine.rejected, 'contribution') + ' sent back with a note' : ''}. <a href="#/mine">See my contributions</a></p>` : ''}
         ${(S.session.admin || S.session.reviewer) && L.queue && (L.queue.revisions || L.queue.comments || L.queue.terms) ? `<p class="note" style="margin-top:12px">${plural(L.queue.revisions, 'entry or edit', 'entries and edits')}${L.queue.terms ? `, ${plural(L.queue.terms, 'Glossary change')}` : ''} and ${plural(L.queue.comments, 'note')} are waiting for review. <a href="#/review">Open the review queue</a></p>` : ''}
         ${!t.entries ? `<div class="card section"><h2>The library is empty</h2><p>Add the first SOP, video or guide.${S.session.admin ? ' If the old Knowledge Base had posts, import them from <a href="#/admin">Admin</a>.' : ''}</p>${S.session.contributor ? '<a class="btn accent" href="#/new">+ Add to the library</a>' : ''}</div>` : ''}
-        ${t.entries ? `<section class="section">${libBar}<div id="az-list"></div></section>` : ''}
-        ${t.entries ? `<section class="section two"><div><h2>Recently added</h2>${listHTML(L.recent)}</div><div><h2>Most helpful</h2>${listHTML(L.popular)}</div></section>` : ''}`);
-        // The whole library as a wall of cards: the first screen is the search, the category picker
-        // and one screenful of cards. Recently added and Most helpful keep their place as rows under
-        // the wall, a scroll down from it.
-        if (t.entries) wall('az-list', all.entries);
-        const azCat = document.getElementById('az-cat');
-        if (azCat && document.getElementById('az-list')) azCat.onchange = () => {
-            const rows = azCat.value ? all.entries.filter(e => e.collection === azCat.value) : all.entries;
-            wall('az-list', rows);
-            document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
-        };
-        const libForm = document.getElementById('lib-search-form');   // not drawn while the library is empty
-        if (libForm) libForm.onsubmit = (ev) => {
+        ${spot ? `<section class="section hub-spot">${spotlightHTML(spot)}</section>`
+            : mode === 'featured' && t.entries ? `<div class="card section"><p style="margin:0">Nothing is starred yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools) and it leads this page.' : ''}</p></div>` : ''}
+        ${t.entries ? `<section class="section" aria-labelledby="qs-title"><h2 id="qs-title" class="hub-h">Quick-Start Collections</h2>
+            <div class="qs-strip" role="group" aria-label="Reading paths">${tiles}</div></section>` : ''}
+        ${t.entries ? `<section class="section" aria-labelledby="hub-list-title">
+            <div class="hub-bar"><h2 id="hub-list-title" class="hub-h"></h2>
+                <label class="sr" for="az-cat">Category</label>
+                <select class="i lib-cat" id="az-cat"><option value="">All categories</option>${L.collections.filter(c => c.count).map(c => `<option value="${c.slug}">${esc(c.name)} (${c.count})</option>`).join('')}</select>
+                <span class="muted lib-count" id="az-count"></span>
+                <button type="button" class="btn small" id="hub-clear" hidden>Clear filters</button></div>
+            <div id="az-list"></div></section>` : ''}
+        ${t.entries && mode !== 'featured' ? `<section class="section two"><div><h2 class="hub-h">Recently added</h2><div class="hub-col">${L.recent.map(hubCard).join('')}</div></div><div><h2 class="hub-h">Most helpful</h2><div class="hub-col">${L.popular.map(hubCard).join('')}</div></div></section>` : ''}
+        </div>`);
+        const libForm = document.getElementById('lib-search-form');
+        libForm.onsubmit = (ev) => {
             ev.preventDefault();
             location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('lib-q').value.trim());
         };
-
+        if (!t.entries) return;
+        const listHost = document.getElementById('az-list'), azCat = document.getElementById('az-cat');
+        azCat.value = st.cat;
+        function syncUrl() {
+            // The lens, path and category stay in the address (without a new history step), so Back from an article returns to them.
+            const p = new URLSearchParams();
+            if (st.path) p.set('path', st.path);
+            else if (mode === 'featured' ? st.lens !== 'must' : st.lens) p.set('lens', st.lens || 'all');
+            if (st.cat) p.set('cat', st.cat);
+            const h = base + (p.toString() ? '?' + p : '');
+            if (!at && onHub() && h !== location.hash) window.history.replaceState(null, '', location.pathname + location.search + h);
+        }
+        function draw() {
+            const lens = LENSES.find(l => l.key === st.lens), path = PATHS.find(p => p.key === st.path);
+            let rows = entries;
+            if (lens) rows = rows.filter(lens.test);
+            if (path) rows = rows.filter(path.test);
+            if (st.cat) rows = rows.filter(e => e.collection === st.cat);
+            // The spotlight leads the page, so the plain views don't repeat it in the grid under it.
+            if (spot && !path && !st.cat && (!lens || lens.key === 'must')) rows = rows.filter(e => e.id !== spot.id);
+            app.querySelectorAll('[data-lens]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lens === st.lens)));
+            app.querySelectorAll('[data-path]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.path === st.path)));
+            document.getElementById('hub-list-title').textContent = path ? path.label.replace(/^\S+\s/, '') + ' · reading path' : lens ? lens.label.replace(/^\S+\s/, '') : 'The whole library';
+            document.getElementById('az-count').textContent = plural(rows.length, 'entry', 'entries');
+            document.getElementById('hub-clear').hidden = !(st.lens !== (mode === 'featured' ? 'must' : '') || st.path || st.cat);
+            const slice = rows.slice(0, st.shown);
+            listHost.innerHTML = rows.length
+                ? `<div class="hub-grid">${slice.map(hubCard).join('')}</div>`
+                    + (rows.length > slice.length ? `<div class="hub-more"><button type="button" class="btn" id="hub-more">Show ${Math.min(HUB_PAGE, rows.length - slice.length)} more <span class="muted">(${slice.length} of ${rows.length})</span></button></div>` : '')
+                : `<div class="card"><p style="margin:0">Nothing here matches these filters yet. <button type="button" class="btn small" data-clear>Clear filters</button></p></div>`;
+            const more = document.getElementById('hub-more');
+            if (more) more.onclick = () => { st.shown += HUB_PAGE; draw(); const cards = listHost.querySelectorAll('.hcard'); if (cards[st.shown - HUB_PAGE]) cards[st.shown - HUB_PAGE].focus(); };
+            const c = listHost.querySelector('[data-clear]'); if (c) c.onclick = clear;
+            syncUrl();
+        }
+        function clear() { st.lens = mode === 'featured' ? 'must' : ''; st.path = ''; st.cat = ''; azCat.value = ''; st.shown = HUB_PAGE; draw(); }
+        app.querySelectorAll('[data-lens]').forEach(b => b.onclick = () => { st.lens = st.lens === b.dataset.lens ? '' : b.dataset.lens; st.path = ''; st.shown = HUB_PAGE; draw(); });
+        app.querySelectorAll('[data-path]').forEach(b => b.onclick = () => {
+            st.path = st.path === b.dataset.path ? '' : b.dataset.path; st.lens = ''; st.shown = HUB_PAGE; draw();
+            if (st.path) document.getElementById('hub-list-title').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        });
+        azCat.onchange = () => { st.cat = azCat.value; st.shown = HUB_PAGE; draw(); };
+        document.getElementById('hub-clear').onclick = clear;
+        draw();
     }
 
     /* ---------- collection ---------- */
@@ -444,17 +531,6 @@
             ev.preventDefault();
             location.hash = link('q', document.getElementById('s-q').value.trim() || null);
         };
-    }
-
-    /* ---------- featured ---------- */
-    async function featuredView() {
-        const L = await ensureLib(true);
-        chrome(true); setTitle('Featured');
-        view(`<h1>Featured</h1><p class="muted" style="margin-top:0">The articles the team has starred as front-page reading.</p>
-            ${L.featured.length ? '<div id="featured-wall"></div>' : `<div class="card"><p>Nothing is featured yet.${S.session.admin || S.session.reviewer ? ' Star an article from its page (“★ Feature Article”, under the reviewer tools).' : ''}</p><a class="btn" href="#/">Back to the library</a></div>`}`);
-        // Featured is the screen the program opens on, so it is laid out like the library: the same
-        // wall of cards, five across, so the fifteen featured articles read as three rows.
-        if (L.featured.length) wall('featured-wall', L.featured);
     }
 
     /* ---------- glossary (a dictionary of terms) ---------- */
