@@ -347,7 +347,6 @@
         { key: 'auto', label: '🤖 Automation & Ops', blurb: 'Tools, systems and the workflows behind them', test: (e) => inShelf(e, 'tools') || /automat|zapier|workflow|\btools?\b|software|\bsystems?\b|operations/.test(hay(e)) }
     ];
     const pillText = (e) => colName(e.collection) + (e.section ? ' › ' + e.section : '');
-    const readsLabel = (n) => plural(n, 'read');
     // The start of the body, as plain words, for a featured entry with no summary: headings and
     // notes in a quote are skipped, so the preview is the first real paragraph.
     function leadText(e) {
@@ -367,7 +366,6 @@
             <span class="hcard-top">${catBadge(e)}${e.readMin ? `<span class="rt" title="Reading time, from the article’s length">⏱ ${e.readMin} min</span>` : ''}</span>
             <h3>${esc(titleCase(e.title))}</h3>
             ${e.summary ? `<p class="hsum">${esc(e.summary)}</p>` : ''}
-            <span class="hcard-bar"><span class="hmeta">${e.official ? '<span class="ok">✓ Official</span>' : ''}${e.hasVideo ? '<span>▶ Video</span>' : ''}${e.fileCount ? `<span>📎 ${plural(e.fileCount, 'file')}</span>` : ''}<span aria-label="${readsLabel(e.views)}">👁 ${e.views}</span></span><span class="hread" aria-hidden="true">Read →</span></span>
         </a>`;
     }
     function spotlightHTML(e) {
@@ -411,6 +409,7 @@
         view(`
         <div class="hub">
         <section class="hero hub-hero" aria-labelledby="hub-title">
+            <img class="hub-logo" src="/lsh-logo-dark.svg" alt="Legal Support Help" width="160" height="99">
             <span class="hub-kicker">LSH Executive Knowledge Engine</span>
             <h1 id="hub-title">LSH Atlas™</h1>
             <div class="hub-find">
