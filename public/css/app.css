@@ -160,6 +160,17 @@ textarea.i{resize:vertical;line-height:1.55;}
 .hub-hero > *{position:relative;z-index:1;}
 .hub-kicker{justify-self:start;max-width:100%;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#FCD9B6;font-size:13px;
   background:rgba(219,132,55,.16);border:1px solid rgba(219,132,55,.5);border-radius:999px;padding:5px 12px;}
+/* 🏷 The LSH logo sits in the banner beside the title, as on the programs' banners (Case Management…): the banner is a grid
+   with the logo spanning the kicker and title rows, and the search row running the full width under both. On this page the
+   top bar's own small logo steps aside (the banner carries it); every other page keeps the top bar's logo. */
+.hero.hub-hero{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo kicker" "logo title" "find find";column-gap:clamp(18px,2.4vw,34px);}
+.hub-logo{grid-area:logo;align-self:center;height:clamp(78px,7vw,112px);width:auto;display:block;}
+.hub-hero .hub-kicker{grid-area:kicker;align-self:end;}
+.hub-hero h1{grid-area:title;align-self:start;margin:0;}
+.hub-hero .hub-find{grid-area:find;}
+body:has(.hub-hero) .brand img{display:none;}
+body:has(.hub-hero) .top::before{display:none;}
+@media (max-width:560px){.hub-logo{height:64px;}}
 /* ✨ LSH gold: the white-to-gold the Training Portal's cards use for their names (training-portal programs.html), with its glow */
 .lsh-gold,.hero.hub-hero h1,.brand b{background:linear-gradient(180deg,#ffffff 0%,#fde7b0 45%,#f5c451 75%,#e0a43a 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
@@ -251,7 +262,7 @@ textarea.i{resize:vertical;line-height:1.55;}
 @media (max-width:1100px){.hub-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .hub-col{display:grid;gap:14px;}
 @media (max-width:860px){.hub-grid{grid-template-columns:1fr;}}
-.hcard{display:flex;flex-direction:column;gap:10px;min-width:0;background:#fff;border:1px solid #E2DACB;border-radius:18px;padding:18px 20px 14px;
+.hcard{display:flex;flex-direction:column;gap:8px;min-width:0;background:#fff;border:1px solid #E2DACB;border-radius:18px;padding:16px 20px 16px;
   color:var(--ink);text-decoration:none;box-shadow:0 12px 26px -20px rgba(38,43,69,.5);transition:transform .18s,box-shadow .18s,border-color .18s;}
 .hcard:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--cat,#4A546B) 40%,#E2DACB);box-shadow:0 24px 40px -22px rgba(38,43,69,.55);}
 .hcard:focus-visible{outline-offset:3px;}
@@ -260,11 +271,6 @@ textarea.i{resize:vertical;line-height:1.55;}
 .rt{flex:none;margin-left:auto;font-size:13.5px;font-weight:800;color:var(--navy);background:#EEF0F6;border-radius:999px;padding:3px 9px;white-space:nowrap;}
 .hcard h3{margin:2px 0 0;font-size:20.5px;font-weight:900;line-height:1.3;color:var(--ink);}
 .hsum{margin:0;font-size:17px;font-weight:600;line-height:1.55;color:#262C40;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;}
-.hcard-bar{margin-top:auto;padding-top:10px;border-top:1px solid #F0EADF;display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap;}
-.hmeta{display:flex;gap:12px;min-width:0;overflow:hidden;font-size:14.5px;font-weight:800;color:var(--muted);}
-.hmeta .ok{color:var(--official);}
-.hread{flex:none;font-size:15.5px;font-weight:900;color:var(--navy);}
-.hcard:hover .hread{color:#8F4512;}
 .hub-more{display:flex;justify-content:center;margin-top:18px;}
 @media (max-width:560px){
   .hub-search{flex-wrap:wrap;padding:8px;}
