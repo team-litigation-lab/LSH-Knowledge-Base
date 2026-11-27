@@ -164,13 +164,15 @@ textarea.i{resize:vertical;line-height:1.55;}
    with the logo spanning the kicker and title rows, and the search row running the full width under both. On this page the
    top bar's own small logo steps aside (the banner carries it); every other page keeps the top bar's logo. */
 .hero.hub-hero{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo kicker" "logo title" "find find";column-gap:clamp(18px,2.4vw,34px);}
-.hub-logo{grid-area:logo;align-self:center;height:clamp(78px,7vw,112px);width:auto;display:block;}
+.hub-logo{grid-area:logo;align-self:center;height:100px;width:auto;display:block;}
+/* one size with every LSH banner's logo: 100px, 80px on a tablet, 56px on a phone */
+@media (max-width:1000px){.hub-logo{height:80px;}}
 .hub-hero .hub-kicker{grid-area:kicker;align-self:end;}
 .hub-hero h1{grid-area:title;align-self:start;margin:0;}
 .hub-hero .hub-find{grid-area:find;}
 body:has(.hub-hero) .brand img{display:none;}
 body:has(.hub-hero) .top::before{display:none;}
-@media (max-width:560px){.hub-logo{height:64px;}}
+@media (max-width:560px){.hub-logo{height:56px;}}
 /* ✨ LSH gold: the white-to-gold the Training Portal's cards use for their names (training-portal programs.html), with its glow */
 .lsh-gold,.hero.hub-hero h1,.brand b{background:linear-gradient(180deg,#ffffff 0%,#fde7b0 45%,#f5c451 75%,#e0a43a 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
