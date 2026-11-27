@@ -580,11 +580,15 @@
             <textarea class="i" name="definition" rows="3" required placeholder="What it means">${t ? esc(t.definition) : ''}</textarea>
             <input class="i" name="example" maxlength="1000" placeholder="Example (optional)" value="${t ? esc(t.example || '') : ''}">
             <div class="row"><button class="btn primary" type="submit">${direct ? (t ? 'Save' : 'Add the term') : 'Send for approval'}</button>${t ? '<button class="btn" type="button" data-cancel>Cancel</button>' : ''}</div></form>`;
-        view(`<h1>Glossary</h1><p class="lead" style="margin-top:0">Plain-English meanings of the legal and medical terms you meet at work. ${plural(terms.length, 'term')}. Many are general US meanings; rules differ by state and court, so confirm with the attorney.</p>
+        view(`<section class="hero gl-hero" aria-labelledby="gl-title">
+                <span class="hub-kicker">LSH Atlas · Legal &amp; Medical Terms</span>
+                <h1 id="gl-title">Glossary</h1>
+                <p class="gl-lead">Plain-English meanings of the legal and medical terms you meet at work. <b>${plural(terms.length, 'term')}.</b> Many are general US meanings; rules differ by state and court, so confirm with the attorney.</p>
+                <div class="hub-search gl-search" role="search"><span class="hub-search-ic" aria-hidden="true">⌕</span><label class="sr" for="gl-q">Search the glossary</label><input id="gl-q" type="search" placeholder="Look up a term or a word in its meaning…" value="${esc(state.q)}" autocomplete="off"></div>
+                <div class="hchips gl-cats" id="gl-cat-chips" role="group" aria-label="Category"><button type="button" class="hchip" data-cat="" aria-pressed="${!state.cat}">All</button>${cats.map(c => `<button type="button" class="hchip" data-cat="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('')}</div>
+                <nav class="gl-letters" id="gl-letters" aria-label="Jump to a letter"></nav>
+            </section>
             <datalist id="gl-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
-            <div class="gl-tools"><label class="sr" for="gl-q">Search the glossary</label><input class="i" id="gl-q" type="search" placeholder="Look up a term or a word in its meaning…" value="${esc(state.q)}" autocomplete="off">
-                <div class="gl-cats" id="gl-cat-chips"><button class="chip" data-cat="" aria-pressed="${!state.cat}">All</button>${cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('')}</div>
-                <div class="gl-letters" id="gl-letters"></div></div>
             ${direct || canSuggest ? `<details class="card" style="margin:12px 0"><summary><b>${direct ? '+ Add a term' : '+ Suggest a term'}</b></summary>${canSuggest ? '<p class="muted">An admin or another reviewer approves it before it appears in the Glossary.</p>' : ''}${form(null)}</details>` : ''}
             ${(mine || []).length ? `<section class="card" style="margin:12px 0"><b>Your Glossary suggestions</b><div class="gl-mine">${mine.map(m => `<div class="gl-mine-row"><span class="badge ${m.status === 'pending' ? 'pending' : 'rejected'}">${m.status === 'pending' ? 'Waiting for approval' : 'Sent back'}</span> <b>${esc(m.term)}</b> · ${{ add: 'new term', edit: 'edit', delete: 'removal' }[m.action]}${m.status === 'rejected' && m.reviewNote ? `<br><span class="muted">Reviewer: ${esc(m.reviewNote)}</span>` : ''}${m.status === 'pending' ? ` <button class="btn small" data-withdraw="${m.id}">Withdraw</button>` : ''}</div>`).join('')}</div></section>` : ''}
             <div id="gl-list"></div>`);
@@ -596,15 +600,15 @@
             rows.forEach(t => { const l = letterOf(t); if (!by.has(l)) by.set(l, []); by.get(l).push(t); });
             const keys = [...by.keys()].sort((a, b) => (a === '#') - (b === '#') || a.localeCompare(b));
             letters.innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('').map(l => by.has(l) ? `<a href="#/glossary" data-l="${l}">${l}</a>` : `<span>${l}</span>`).join('');
-            list.innerHTML = rows.length ? keys.map(l => `<section class="gl-group" id="gl-${l === '#' ? 'num' : l}"><h2>${l}</h2>${by.get(l).map(t => `<div class="gl-term" id="t${t.id}">
+            list.innerHTML = rows.length ? keys.map(l => `<section class="gl-group" id="gl-${l === '#' ? 'num' : l}"><h2 class="hub-h"><span>${l}</span></h2><div class="gl-grid">${by.get(l).map(t => `<div class="gl-term" id="t${t.id}">
                 <div class="gl-head"><b>${esc(t.term)}</b><span class="badge">${esc(t.category)}</span>${direct ? `<span class="gl-act"><button class="btn small" data-edit="${t.id}">Edit</button> <button class="btn small danger" data-del="${t.id}">Delete</button></span>`
                     : canSuggest ? `<span class="gl-act">${pendingFor.has(t.id) ? '<span class="badge pending">Change waiting for approval</span>' : `<button class="btn small" data-edit="${t.id}">Suggest an edit</button> <button class="btn small" data-del="${t.id}">Suggest removal</button>`}</span>` : ''}</div>
-                <p>${esc(t.definition)}</p>${t.example ? `<p class="muted"><i>${esc(t.example)}</i></p>` : ''}</div>`).join('')}</section>`).join('')
+                <p>${esc(t.definition)}</p>${t.example ? `<p class="gl-ex">${esc(t.example)}</p>` : ''}</div>`).join('')}</div></section>`).join('')
                 : `<div class="card"><p>No term matches${state.q ? ` “${esc(state.q)}”` : ''}.</p>${canSuggest ? '<p class="muted" style="margin:0">Know it? Use “Suggest a term” above. It goes live once it’s approved.</p>' : ''}</div>`;
         };
         paint();
         document.getElementById('gl-q').oninput = (ev) => { state.q = ev.target.value; paint(); };
-        document.getElementById('gl-cat-chips').onclick = (ev) => { const b = ev.target.closest('[data-cat]'); if (!b) return; state.cat = b.dataset.cat; app.querySelectorAll('#gl-cat-chips .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); };
+        document.getElementById('gl-cat-chips').onclick = (ev) => { const b = ev.target.closest('[data-cat]'); if (!b) return; state.cat = b.dataset.cat; app.querySelectorAll('#gl-cat-chips .hchip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); paint(); };
         letters.onclick = (ev) => { const a = ev.target.closest('[data-l]'); if (!a) return; ev.preventDefault(); const el = document.getElementById('gl-' + (a.dataset.l === '#' ? 'num' : a.dataset.l)); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
         const save = async (f) => {
             const d = Object.fromEntries(new FormData(f));
